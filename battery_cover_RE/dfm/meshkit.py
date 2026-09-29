@@ -27,6 +27,8 @@ def load_step(path, tol=0.005, ang=0.1):
         bd.export_stl(shape, str(stl), tolerance=tol, angular_tolerance=ang)
         mesh = trimesh.load(stl)
     mesh.merge_vertices(digits_vertex=5)
+    if not mesh.is_watertight:  # OCC can leave a micro-crack at 3-way fillet corners; the B-rep is valid
+        trimesh.repair.fill_holes(mesh)
     return shape, mesh
 
 

@@ -6,12 +6,13 @@ profiles). Changes versus the design-intent model:
   * draft on every wall parallel to the pull (+/-Y):
       DRAFT_CORE   on B-side (core) walls: perimeter, rails, lip, ribs, hook, latch, core pins
       DRAFT_CAVITY on A-side (cavity) walls: outer bumps
-      DRAFT_SHUTOFF on the hook shut-off window
+      DRAFT_LIFTER  on the hook-gap face released by the lifter
   * R >= R_MIN on internal corners (rib / rail / lip / hook-leg roots, recess-to-plate,
     latch root, bump roots) and on exposed bump edges; PL and shut-off edges stay sharp
   * minimum section 0.8 -> 1.0 mm (ribs), nominal wall unchanged at 2.0 mm
-  * straight-pull tooling: the hook-block undercut is released by a pass-through
-    (shut-off) window in the plate, so no lifter/slide is needed
+  * the closed retention hook is kept (a battery cover must stay closed: no through-holes);
+    its 1.0 mm gap is a tool undercut released by an angled lifter moving -Z, so the gap
+    face on the hook block gets DRAFT_LIFTER along the lifter's relative travel
 """
 
 from __future__ import annotations
@@ -24,16 +25,15 @@ from lib import geometry as g
 
 DRAFT_CORE = 1.0  # deg, B side
 DRAFT_CAVITY = 3.0  # deg, A side (cosmetic, texture-ready)
-DRAFT_SHUTOFF = 3.0  # deg, pass-through shut-off
+DRAFT_LIFTER = 1.0  # deg, hook-gap face along the lifter travel (-Z)
 R_MIN = 0.5  # min internal / edge radius
-R_LEG = 0.3  # hook-leg roots: limited by the adjoining shut-off window rim
 RIB_W = 1.0  # rib root width (0.5 t), was 0.8
 Y_IN = g.Y_OUTER - g.WALL  # plate inner face (18)
 TAN_C = math.tan(math.radians(DRAFT_CORE))
 
-# pass-through window under the hook block (A-side steel forms the 1.0 mm hook gap)
-WINDOW_X = g.HOOK_X
-WINDOW_Z = g.HOOK_BLOCK_Z
+# lifter that forms the 1.0 mm hook gap: head size and travel (tool data for the deck)
+LIFTER_ANGLE = 10.0  # deg from the ejection axis
+LIFTER_CLEARANCE = 0.5  # mm beyond the gap depth
 
 
 # ======================================================================== helpers
@@ -60,6 +60,12 @@ def _tilt_halfspace(z0, y0, deg, keep_above=True, size=200.0) -> bd.Part:
     """Half-space bounded by a plane through (y0, z0), tilted `deg` about X (z rises with y)."""
     box = bd.Pos(0, 0, size / 2 if keep_above else -size / 2) * bd.Box(size, size, size)
     return bd.Pos(0, y0, z0) * bd.Rot(deg, 0, 0) * box
+
+
+def _slope_y_halfspace(y0, z0, deg, size=200.0) -> bd.Part:
+    """Region below the plane y = y0 + (z - z0) * tan(deg) (plane tilted about X)."""
+    box = bd.Pos(0, -size / 2, 0) * bd.Box(size, size, size)
+    return bd.Pos(0, y0, z0) * bd.Rot(-deg, 0, 0) * box
 
 
 def _safe_fillet(part, edges, r, log, label):
@@ -105,23 +111,31 @@ def _ribs_and_legs() -> list[bd.Part]:
     parts = [_prism(_xz_rect(xc - RIB_W / 2, xc + RIB_W / 2, *g.RIB_Z, y0), y0, g.Y_RIB_TIP, DRAFT_CORE)
              for xc in g.RIB_X]
     hx0, hx1 = g.HOOK_X
-    # leg bottoms face the hook gap, which A-side steel forms through the window: z rises with Y
-    # plane through the window rim (Y_IN, Z 73): everything below it is reachable through the window
-    gap_side = _tilt_halfspace(g.HOOK_BLOCK_Z[1], Y_IN, DRAFT_CORE)
+    # legs reach 0.4 mm down into the hook block so the two fuse (their drafted faces only touch on a
+    # line otherwise); the hook gap itself (Y 17-18 below Z 73) is kept clear. Leg bottoms at Z 73
+    # face the lifter head, which pulls away in -Z.
+    z_top = g.HOOK_BLOCK_Z[1]
+    gap = bd.Pos(g.WIDTH / 2, (g.HOOK_BLOCK_Y[1] + Y_IN + 1) / 2, z_top - 5) * bd.Box(
+        g.WIDTH, Y_IN + 1 - g.HOOK_BLOCK_Y[1], 10)
     for x0 in (hx0, hx1 - g.HOOK_LEG_W):
-        leg = _prism(_xz_rect(x0, x0 + g.HOOK_LEG_W, g.HOOK_BLOCK_Z[1] - 0.2, g.LIP_Z[0] + 0.2, y0),
-                     y0, g.Y_RIB_TIP, DRAFT_CORE)
-        parts.append(leg & gap_side)
+        leg = _prism(_xz_rect(x0, x0 + g.HOOK_LEG_W, z_top - 0.4, g.LIP_Z[0] + 0.2, y0), y0, g.Y_RIB_TIP, DRAFT_CORE)
+        parts.append(leg - gap)
     return parts
 
 
 def _hook_block() -> bd.Part:
+    """Hook block: B-drafted sides; its gap face opens 1 deg toward -Z so the lifter head releases."""
     y_top = g.HOOK_BLOCK_Y[1]
-    return _prism(_xz_rect(*g.HOOK_X, *g.HOOK_BLOCK_Z, y_top), y_top, g.HOOK_BLOCK_Y[0], DRAFT_CORE)
+    block = _prism(_xz_rect(*g.HOOK_X, *g.HOOK_BLOCK_Z, y_top), y_top, g.HOOK_BLOCK_Y[0], DRAFT_CORE)
+    return block & _slope_y_halfspace(y_top, g.HOOK_BLOCK_Z[1], DRAFT_LIFTER)
 
 
-def _hook_window() -> bd.Part:
-    return _prism(_xz_rect(*WINDOW_X, *WINDOW_Z, Y_IN), Y_IN, g.Y_OUTER + 0.6, -DRAFT_SHUTOFF)
+def lifter_travel() -> dict:
+    """Lifter that moulds the hook gap: relative travel -Z and the ejector stroke it needs."""
+    travel = (g.HOOK_BLOCK_Z[1] - g.HOOK_BLOCK_Z[0]) + LIFTER_CLEARANCE
+    return {"head_mm": [g.HOOK_X[1] - g.HOOK_X[0], g.HOOK_BLOCK_Z[1] - g.HOOK_BLOCK_Z[0], Y_IN - g.HOOK_BLOCK_Y[1]],
+            "travel_mm": round(travel, 2), "angle_deg": LIFTER_ANGLE,
+            "stroke_mm": round(travel / math.tan(math.radians(LIFTER_ANGLE)), 1)}
 
 
 # ======================================================================== outer bumps (A side) + coring (B side)
@@ -194,7 +208,6 @@ def battery_cover_dfm_solid(log: list | None = None) -> bd.Part:
     for p in _ribs_and_legs():
         body = body + p
     body = body + _hook_block()
-    body = body - _hook_window()
 
     # thumb recess: lib.geometry profiles; shell clipped to the drafted perimeter
     clip = _prism(_xz_rect(0, g.WIDTH, g.Z_BOTTOM, g.Z_BOTTOM + 15, g.Y_OUTER), g.Y_OUTER, g.Y_RIB_TIP - 1,
@@ -242,11 +255,7 @@ def battery_cover_dfm_solid(log: list | None = None) -> bd.Part:
     body = _safe_fillet(body, rail_lip, R_MIN, log, "rail / lip roots")
     inner = [e for e in body.edges() if on_plane(e, Y_IN)]
     legs = pick(in_legs)
-    try:  # leg roots end on the shut-off window rim: R_MIN does not close there, R_LEG does
-        body = bd.fillet(legs, R_MIN)
-        log.append(("hook-leg roots", len(legs), f"ok R{R_MIN}"))
-    except Exception:
-        body = _safe_fillet(body, legs, R_LEG, log, f"hook-leg roots (R{R_LEG}, window-limited)")
+    body = _safe_fillet(body, legs, R_MIN, log, "hook-leg roots")
     inner = [e for e in body.edges() if on_plane(e, Y_IN)]
     ribs = pick(lambda m: any(abs(m.X - xc) < RIB_W for xc in g.RIB_X) and g.RIB_Z[0] - 0.1 < m.Z < g.RIB_Z[1] + 0.1)
     body = _safe_fillet(body, ribs, R_MIN, log, "rib roots")

@@ -121,8 +121,9 @@ def two_views(mesh, face_rgb, name, titles=("Inner face (B / core side)", "Outer
 
 
 # ============================================================ section classifier (A / B / undercut air)
-def section_map(mesh, axis, pos, lim_u, lim_v, step=0.04, ps_level=None):
-    """Raster of a planar section: 0 air-A, 1 air-B, 2 part, 3 trapped (undercut) air.
+def section_map(mesh, axis, pos, lim_u, lim_v, step=0.04, ps_level=None, lifter_mm=None):
+    """Raster of a planar section: 0 air-A, 1 air-B, 2 part, 3 trapped (undercut) air,
+    4 trapped air a lifter can pull out within `lifter_mm` along -u (x-section: -Z).
 
     axis='x': section plane X=pos, raster (u=Z, v=Y);  axis='z': plane Z=pos, raster (u=X, v=Y)."""
     from shapely import contains_xy
@@ -154,13 +155,19 @@ def section_map(mesh, axis, pos, lim_u, lim_v, step=0.04, ps_level=None):
         out[hi + 1:, j] = 0
         out[:lo, j] = 1
         out[col, j] = 2
+    if lifter_mm:
+        n = int(round(lifter_mm / step))
+        for i, j in zip(*np.nonzero(out == 3)):
+            row = out[i, max(j - n, 0):j]
+            if (row != 2).all() and (row == 1).any():  # clear path back to B-side air within the travel
+                out[i, j] = 4
     return us, vs, out
 
 
 def plot_section(ax, sm, title, xlabel):
     us, vs, img = sm
-    cmap = matplotlib.colors.ListedColormap(["#D6E4F2", "#FBE3CC", "#5B6770", C_UC])
-    ax.imshow(img, origin="lower", extent=[us[0], us[-1], vs[0], vs[-1]], cmap=cmap, vmin=-0.5, vmax=3.5,
+    cmap = matplotlib.colors.ListedColormap(["#D6E4F2", "#FBE3CC", "#5B6770", C_UC, "#9467BD"])
+    ax.imshow(img, origin="lower", extent=[us[0], us[-1], vs[0], vs[-1]], cmap=cmap, vmin=-0.5, vmax=4.5,
               interpolation="nearest", aspect="equal")
     ax.set_title(title, fontsize=10)
     ax.set_xlabel(xlabel, fontsize=8)
@@ -220,13 +227,14 @@ def main():
         cls = mk.side_classes(P["fine"], P["uc_fine"])
         P["cls"] = cls
         P["pl"] = mk.parting_edges(P["fine"], cls)
-    col = np.array([rgb(C_A), rgb(C_B), rgb(C_UC)])
+    col = np.array([rgb(C_A), rgb(C_B), rgb("#9467BD")])  # DFM undercut faces are lifter-formed
     figs = {}
     figs["parting"] = two_views(fm, col[dfm["cls"]], "f02_parting.png", lines=dfm["pl"])
 
     ps_level = lambda u: 13.0 if u < 11.5 else 20.0  # noqa: E731  stepped PS: latch end / main
     fig, axs = plt.subplots(1, 2, figsize=(11, 3.4), gridspec_kw={"width_ratios": [2.3, 1]})
-    plot_section(axs[0], section_map(fm, "x", 15.5, (0, 80), (11, 24), ps_level=ps_level),
+    plot_section(axs[0], section_map(fm, "x", 15.5, (0, 80), (11, 24), ps_level=ps_level,
+                                     lifter_mm=gd.lifter_travel()["travel_mm"]),
                  "Section X = 15.5 (centre): stepped parting surface", "Z [mm]")
     plot_section(axs[1], section_map(fm, "z", 40.0, (-3, 34), (14, 23), ps_level=lambda u: 20.0),
                  "Section Z = 40: PL at outer-face edge", "X [mm]")
@@ -268,17 +276,33 @@ def main():
     c_in[inp["uc_fine"]] = rgb(C_UC)
     figs["undercut_3d"] = two_views(inp["fine"], c_in, "f04_undercut_3d.png",
                                     titles=("AS RECEIVED - undercut faces (red)", "AS RECEIVED - outer face"))
+    lift = gd.lifter_travel()
     fig, axs = plt.subplots(1, 2, figsize=(11, 3.6))
-    for ax, key, t in ((axs[0], "input", "BEFORE: hook gap trapped (red) -> lifter needed"),
-                       (axs[1], "dfm", "AFTER: pass-through window, gap formed by A steel")):
-        plot_section(ax, section_map(parts[key]["fine"], "x", 15.5, (62, 79), (14.5, 23.5), ps_level=lambda u: 20.0), t,
-                     "Z [mm]")
+    for ax, key, t, lm in ((axs[0], "input", "BEFORE: hook gap is a straight-pull undercut (red)", None),
+                           (axs[1], "dfm", f"DFM: gap moulded by the lifter head (purple), out {lift['travel_mm']} mm in -Z",
+                            lift["travel_mm"])):
+        plot_section(ax, section_map(parts[key]["fine"], "x", 15.5, (62, 79), (14.5, 23.5), ps_level=lambda u: 20.0,
+                                     lifter_mm=lm), t, "Z [mm]")
+    zl = g.HOOK_BLOCK_Z[0]
+    axs[1].annotate("", (zl - lift["travel_mm"], 17.5), (zl + 1.5, 17.5),
+                    arrowprops={"arrowstyle": "->", "color": "#6a3d9a", "lw": 1.5})
     fig.tight_layout()
     figs["undercut_sec"] = save(fig, "f04_undercut_sections.png")
-    S["undercut"] = {"before_mm2": S["input"]["undercut_area_mm2"], "after_mm2": S["dfm"]["undercut_area_mm2"],
-                     "lifter_option": mc.lifter(g.HOOK_BLOCK_Z[1] - g.HOOK_BLOCK_Z[0]),
-                     "window_mm": [g.HOOK_X[1] - g.HOOK_X[0], g.HOOK_BLOCK_Z[1] - g.HOOK_BLOCK_Z[0]],
-                     "shutoff_draft_deg": gd.DRAFT_SHUTOFF}
+    # DFM: every straight-pull undercut face must be free within the lifter travel along -Z
+    dm = dfm["fine"]
+    idx = np.flatnonzero(dfm["uc_fine"])
+    o = dm.triangles_center[idx] + 1e-3 * dm.face_normals[idx]
+    ray = trimesh.ray.ray_triangle.RayMeshIntersector(dm)
+    loc, ri, _ = ray.intersects_location(o, np.tile([0.0, 0.0, -1.0], (len(o), 1)), multiple_hits=True)
+    first = np.full(len(o), np.inf)
+    for pt, r in zip(loc, ri):
+        first[r] = min(first[r], float(np.linalg.norm(pt - o[r])))
+    released = first > lift["travel_mm"]
+    a = dm.area_faces[idx]
+    S["undercut"] = {"before_mm2": S["input"]["undercut_area_mm2"], "dfm_straight_pull_mm2": S["dfm"]["undercut_area_mm2"],
+                     "dfm_lifter_released_mm2": round(float(a[released].sum()), 2),
+                     "dfm_unreleased_mm2": round(float(a[~released].sum()), 3), "lifter": lift,
+                     "window_rejected": "a through-hole in a battery cover exposes the cells and lets in dust"}
 
     # ---------------------------------------------------- 5. thickness maps
     cmap = plt.get_cmap("turbo")
@@ -327,7 +351,8 @@ def main():
     pins = []
     for x in (3.6, g.WIDTH / 2, g.WIDTH - 3.6):
         for z in (22.0, 44.0, 64.0):
-            if mk.flat_pad_ok(dfm["mesh"], x, z, 1.5 + 0.5, gd.Y_IN, ray=ray):
+            in_lifter = g.HOOK_X[0] - 2 < x < g.HOOK_X[1] + 2 and z > g.HOOK_BLOCK_Z[0] - 10
+            if not in_lifter and mk.flat_pad_ok(dfm["mesh"], x, z, 1.5 + 0.5, gd.Y_IN, ray=ray):
                 pins.append({"x": x, "z": z, "y": gd.Y_IN, "d": 3.0, "on": "plate inner face"})
     extra = [((g.WIDTH / 2, 70.75), 1.0 + 0.3, g.HOOK_BLOCK_Y[0], 2.0, "hook block"),
              ((g.WIDTH / 2, 9.0), 1.0 + 0.3, g.LATCH_ARM_Y[0], 2.0, "latch arm (inner face)")]
@@ -426,7 +451,8 @@ def main():
     figs["fill"] = save(fig, "f10_fill.png")
     last = fm.vertices[int(np.argmax(dist))]
     S["fill"] = {"gate": GATE_PICK, "max_flow_mm": round(float(dist.max()), 1), "last_fill_xyz": np.round(last, 1).tolist(),
-                 "weld_line": "downstream of the hook window: X 15.5, Z 73-77 (under the top lip, non-cosmetic zone)",
+                 "weld_line": "none on the cosmetic face (no openings in the plate); fronts meet only around the "
+                              "hook block on the inner side",
                  "fill_time_s_est": 0.6}
 
     # ---------------------------------------------------- 11. warpage / deflection
@@ -483,7 +509,7 @@ def main():
     S["figures"] = figs
     S["material"] = mc.ABS
     S["dfm_changes"] = {
-        "draft_core_deg": gd.DRAFT_CORE, "draft_cavity_deg": gd.DRAFT_CAVITY, "draft_shutoff_deg": gd.DRAFT_SHUTOFF,
+        "draft_core_deg": gd.DRAFT_CORE, "draft_cavity_deg": gd.DRAFT_CAVITY, "draft_lifter_deg": gd.DRAFT_LIFTER,
         "r_min_mm": gd.R_MIN, "rib_w_before": g.RIB_W, "rib_w_after": gd.RIB_W, "wall_mm": g.WALL,
     }
     (OUT / "dfm_summary.json").write_text(json.dumps(S, indent=2, default=float))

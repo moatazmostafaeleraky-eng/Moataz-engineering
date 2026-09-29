@@ -25,10 +25,9 @@ The optional PDF is the TE-12XCME assembly drawing, used for the assembly crop o
 - **Draft:** 1° on the core (B) side, 3° on the cavity (A) side, 3° on the shut-off.
 - **Radii:** R0.5 on rib, rail, lip, recess and bump roots.
 - **Ribs:** 0.8 → 1.0 mm.
-- **Hook undercut:** released by a pass-through window (6 × 4.5 mm), so no lifter is needed.
+- **Hook undercut:** the closed hook is kept, because a battery cover must not have a hole. The 1.0 mm gap is moulded by a 10° angled lifter (5 mm travel, about 28 mm stroke), and its face on the hook block has 1° draft along the lifter travel.
 - **Nominal wall:** 2.0 mm, unchanged and uniform.
 
 ## Limits
 - The fill, cooling and warpage results are hand calculations and geometric proxies, not Moldflow results.
 - The ABS values are typical datasheet ranges.
-- The four hook-leg side roots stay sharp: the blend cannot close on the shut-off rim, so add R0.3 in native CAD.

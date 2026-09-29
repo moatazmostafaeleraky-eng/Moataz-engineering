@@ -222,7 +222,8 @@ def build(S, repo: Path, out: Path):
         [(f"1,372 mm² of walls at 0° draft", {"color": AMBER})],
         [(f"{inp['undercut_area_mm2']:.0f} mm² undercut (hook gap)", {"color": AMBER})],
         [("sharp internal corners (R0)", {"color": AMBER})],
-        [("All three are fixed in part_DFM.step", {"color": WHITE, "bold": True})],
+        [("Draft + radii fixed in part_DFM.step; the hook gap is moulded by a lifter (the cover stays closed)",
+          {"color": WHITE, "bold": True})],
     ], size=12, color=WHITE)
     s.notes_slide.notes_text_frame.text = (
         "Input: input/part.step = design-intent battery cover rebuilt from the FreeCAD mesh (repo battery_cover_RE). "
@@ -232,7 +233,8 @@ def build(S, repo: Path, out: Path):
 
     # ---------------------------------------------------------------- 2 PL / PS
     s = frame(prs, 2, "Parting line & parting surface",
-              "Flat PL on the outer-face edge; one 7 mm step around the snap latch. No side actions.", "PL / PS")
+              "Flat PL on the outer-face edge; one 7 mm step around the snap latch. One lifter per cavity for the hook.",
+              "PL / PS")
     image(s, F["parting"], 0.4, 1.5, 8.3, 3.05)
     image(s, F["ps_section"], 0.4, 4.6, 8.3, 2.35)
     card(s, 8.95, 1.55, 3.9, 5.35)
@@ -242,7 +244,7 @@ def build(S, repo: Path, out: Path):
         ("B / core:", "ribs, rails, lip, hook, latch inner face (orange)."),
         ("Main PL:", "outer-face perimeter at Y 20 (red). The witness line sits on the hidden edge, not on the cosmetic face."),
         ("Stepped PS:", "drops 7 mm to Y 13 around the snap arm. Tool shut-off faces ≥ 5°."),
-        ("Hook:", "local 3° shut-off through the new window, not a lifter."),
+        ("Hook gap (purple):", "moulded by a 10° angled lifter on the B side. No hole in the cover."),
         (f"{S['parting']['pl_edges']} PL edges", "found automatically at the A/B face boundary."),
     ], size=12)
     s.notes_slide.notes_text_frame.text = (
@@ -251,8 +253,8 @@ def build(S, repo: Path, out: Path):
         "Section rasters: air reachable from +Y = A steel, from -Y = B steel, enclosed = undercut.")
 
     # ---------------------------------------------------------------- 3 draft
-    s = frame(prs, 3, "Draft analysis", "As received: every wall at 0°. DFM: 1° core side, 3° cavity side and "
-              "shut-off.", "DRAFT")
+    s = frame(prs, 3, "Draft analysis", "As received: every wall at 0°. DFM: 1° core side, 3° cavity side, 1° on the "
+              "lifter-formed hook gap.", "DRAFT")
     image(s, F["draft"], 0.35, 1.45, 7.9, 5.5)
     da, db = inp["draft_area_mm2"], dfm["draft_area_mm2"]
     rows = [["Draft band", "As received", "DFM"],
@@ -266,8 +268,9 @@ def build(S, repo: Path, out: Path):
     bullets(s, 8.5, 3.6, 4.35, 3.3, [
         ("1° core side:", "rails, lip, ribs, hook, latch, coring pins. The rib tip stays ≥ 0.93 mm."),
         ("3° cavity side:", "outer bumps, ready for texture (add 1° per 0.025 mm of texture depth)."),
-        ("PL and shut-off edges stay sharp.", "The latch catch face tilts 1° for release and keeps its 0.7 mm catch."),
-        ("Remaining < 1 mm²", "are fillet end-caps (tessellation slivers), not moulded walls."),
+        ("PL edges stay sharp.", "The latch catch face tilts 1° for release and keeps its 0.7 mm catch."),
+        (f"Remaining {db['0-0.25']:.1f} mm²", "are the two hook-leg end faces at the lifter head. The lifter pulls away "
+         "normal to them, so they need no draft."),
     ], size=12)
     s.notes_slide.notes_text_frame.text = (
         "Draft = asin(|n . Y|) per mesh face; 0.25-1 deg band in the DFM model is the 1 deg drafted walls measured "
@@ -276,31 +279,34 @@ def build(S, repo: Path, out: Path):
 
     # ---------------------------------------------------------------- 4 undercut
     uc = S["undercut"]
-    lf = uc["lifter_option"]
+    lf = uc["lifter"]
     s = frame(prs, 4, "Undercut: retention hook",
-              f"A 1.0 mm gap behind the hook block is shadowed by the plate: {uc['before_mm2']:.0f} mm² of undercut.",
+              "The 1.0 mm hook gap cannot be pulled straight. The cover must stay closed, so the tool uses a lifter.",
               "UNDERCUT")
     image(s, F["undercut_sec"], 0.4, 1.5, 7.6, 2.55)
     image(s, F["undercut_3d"], 0.4, 4.15, 7.6, 2.8)
     rows = [["Option", "Tooling", "Part impact", "Verdict"],
-            ["Angled lifter", f"{lf['angle_deg']:.0f}°, {lf['lateral_travel_mm']:.1f} mm travel → "
-                              f"{lf['ejector_stroke_mm']:.0f} mm stroke", "none", "costly, wear"],
+            ["Angled lifter", f"{lf['angle_deg']:.0f}°, {lf['travel_mm']:.1f} mm travel in −Z → "
+                              f"{lf['stroke_mm']:.0f} mm ejector stroke", "none: cover stays closed", "SELECTED"],
             ["Side slider", "gap opens toward the part interior (−Z)", "—", "not feasible"],
-            ["Pass-through window", f"A steel through a {uc['window_mm'][0]:.1f} × {uc['window_mm'][1]:.1f} window, "
-                                    f"{uc['shutoff_draft_deg']:.0f}° shut-off", "hole in the outer face at the hook",
-             "SELECTED"]]
+            ["Window through plate", "cavity steel through the plate", "hole in a battery cover: cells exposed, dust",
+             "rejected"]]
     table(s, 8.2, 1.6, 4.65, rows, col_w=[1.1, 1.5, 1.0, 1.05], size=10, row_h=0.62,
-          colors={(3, 3): GREEN, (2, 3): RED})
-    stat(s, 8.3, 4.5, 2.2, f"{uc['before_mm2']:.0f} mm²", "undercut, as received", color=RED, vsize=26)
-    stat(s, 10.6, 4.5, 2.3, "≈ 0 mm²", f"after ({uc['after_mm2']:.2f} mm² numerical slivers)", color=GREEN, vsize=26)
-    text(s, 8.3, 5.85, 4.55, 1.0, [
-        [("Check with the rear case: ", {"bold": True}),
-         ("the window sits at the hook end of the cover. If it has to stay invisible, keep the closed hook and "
-          "budget the lifter instead.", {})]], size=11, color=DARK)
+          colors={(1, 3): GREEN, (2, 3): RED, (3, 3): RED})
+    stat(s, 8.3, 4.5, 2.2, f"{uc['before_mm2']:.0f} mm²", "undercut, no release (as received)", color=RED, vsize=26)
+    stat(s, 10.6, 4.5, 2.3, f"{uc['dfm_lifter_released_mm2']:.0f} mm²",
+         f"released by the lifter  ·  {uc['dfm_unreleased_mm2']:.3f} mm² left", color=GREEN, vsize=26)
+    text(s, 8.3, 5.75, 4.55, 1.2, [
+        [("Lifter concept: ", {"bold": True}),
+         ("L-shaped head fills the gap from the −Z side. The rod stands in front of the hook block, so it clears "
+          "the block at 10°. The gap face on the block opens 1° toward −Z. Needs a mould base with ≥ 30 mm "
+          "ejector stroke.", {})]], size=11, color=DARK)
     s.notes_slide.notes_text_frame.text = (
         "Undercut test: every face must see free space along its own release direction (+Y for A, -Y for B); "
-        "vertical faces must escape either way. Lifter sized for the gap depth 4.5 mm + 0.5 mm clearance at "
-        "10 deg max lifter angle.")
+        "vertical faces must escape either way. For the DFM part, each remaining undercut face is checked for free "
+        "travel over the lifter stroke along -Z (relative motion of the lifter head). Lifter travel = gap depth "
+        "4.5 mm + 0.5 mm clearance at 10 deg. A pass-through window would remove the lifter but puts a hole in a "
+        "battery cover, so it was rejected.")
 
     # ---------------------------------------------------------------- 5 thickness
     ti, to = inp["thickness_mm"], dfm["thickness_mm"]
@@ -350,19 +356,19 @@ def build(S, repo: Path, out: Path):
     G = S["gates"]
     pick = S["gate_pick"]
     s = frame(prs, 6, "Gate location & type",
-              "Tunnel gate at the latch end: gate mark hidden, the snap arm fills first, weld line under the top lip.",
+              "Tunnel gate at the latch end: gate mark hidden, the snap arm fills first, no weld line on the cosmetic face.",
               "GATE")
     image(s, F["gates"], 0.4, 1.45, 8.4, 3.55)
-    verdict = {"G1": ("hidden", "centre of cosmetic face", "reject"),
-               "G2": ("side wall", "across cosmetic face", "reject"),
-               "G3": ("hidden (end face)", "under top lip (Z 73–77)", "SELECTED"),
-               "G4": ("B face, 3-plate", "above window", "cost")}
-    rows = [["Gate", "Type", "Max flow", "L / t", "Gate mark", "Weld line", "Verdict"]]
+    verdict = {"G1": ("hidden (top end)", "snap latch fills last", "reject"),
+               "G2": ("visible side wall", "flow splits at recess", "reject"),
+               "G3": ("hidden (end face)", "snap latch fills first", "SELECTED"),
+               "G4": ("B face, 3-plate", "3-plate tool cost", "reject")}
+    rows = [["Gate", "Type", "Max flow", "L / t", "Gate mark", "Fill behaviour", "Verdict"]]
     for k in ("G1", "G2", "G3", "G4"):
         rows.append([k, G[k]["label"].split(" - ")[1], f"{G[k]['max_flow_mm']:.0f} mm", f"{G[k]['L_over_t']:.0f}",
                      *verdict[k]])
     table(s, 0.5, 5.05, 8.3, rows, col_w=[0.55, 1.45, 0.95, 0.6, 1.55, 1.95, 1.25], size=10, row_h=0.36,
-          colors={(3, 6): GREEN, (1, 6): RED, (2, 6): RED})
+          colors={(3, 6): GREEN, (1, 6): RED, (2, 6): RED, (4, 6): RED})
     card(s, 9.05, 1.55, 3.8, 5.35)
     text(s, 9.25, 1.7, 3.4, 0.4, f"Selected: {pick}", size=16, font=HEAD, bold=True, color=AMBER)
     bullets(s, 9.25, 2.2, 3.45, 4.6, [
@@ -370,7 +376,8 @@ def build(S, repo: Path, out: Path):
         ("Size:", "Ø1.0 mm tip (0.5 × wall), 40° tunnel, 1.2 mm land."),
         ("Where:", "bottom end face beside the thumb recess (X 3, Z 11.5), below the PL."),
         ("Flow:", f"L/t {G[pick]['L_over_t']:.0f}, far below the ABS limit of about {mc_limit(mat)}:1 at 2 mm."),
-        ("Why not G2 / G4:", "shorter flow, but the weld line crosses the cosmetic face or needs a 3-plate tool."),
+        ("Why not the others:", "G1 fills the snap latch last (short-shot and air-trap risk on the critical "
+                                "feature). G2 leaves a visible gate mark. G4 needs a 3-plate tool."),
     ], size=12)
     s.notes_slide.notes_text_frame.text = (
         "Flow length = shortest surface path from the gate on a ~1.4 mm remeshed surface (Dijkstra). This is a "
@@ -392,6 +399,7 @@ def build(S, repo: Path, out: Path):
     bullets(s, 5.9, 5.3, 3.0, 1.6, [
         "Pins are checked to land fully on flat faces.",
         "Ø2 pin on the latch arm stops the catch from dragging.",
+        "The lifter pushes the hook end, so no pin sits in its zone.",
     ], size=11)
     s.notes_slide.notes_text_frame.text = (
         "Each Ø3 pin site is verified by casting 17 rays over a disc of radius 2.0 mm (pin + 0.5 mm) and requiring "
@@ -466,8 +474,8 @@ def build(S, repo: Path, out: Path):
         ("0–20 %:", "snap arm and recess fill first, so orientation runs along the arm (strongest direction)."),
         ("20–80 %:", "the plate fills as a straight front; ribs fill along their length, with no hesitation."),
         ("80–100 %:", f"top lip, hook and bumps. Last to fill: X {lf3[0]:.0f}, Z {lf3[2]:.0f} (top corner)."),
-        ("Vents:", "0.02 mm deep at the top corners, bump tips and hook window."),
-        ("Weld line:", "short, just downstream of the hook window (Z 73–77), in the zone under the top lip."),
+        ("Vents:", "0.02 mm deep at the top corners, bump tips and the hook gap (vent along the lifter)."),
+        ("Weld line:", "none on the cosmetic face (the plate has no openings). Fronts meet only around the hook block, on the inside."),
         ("Fill time ≈ 0.6 s", "then pack at 50–70 % of fill pressure."),
     ], size=11)
     s.notes_slide.notes_text_frame.text = (
@@ -538,7 +546,7 @@ def build(S, repo: Path, out: Path):
     # ---------------------------------------------------------------- 12 changes
     ch_ = S["dfm_changes"]
     s = frame(prs, 12, "DFM changes: before / after",
-              "Straight-pull, 2-plate, 4-cavity tool: no lifters or sliders, every wall drafted, every internal corner radiused.",
+              "2-plate, 4-cavity tool with one lifter per cavity: closed cover, every wall drafted, every internal corner radiused.",
               "CHANGES")
     for i, (k, lab) in enumerate((("r_input_outer", "before · outer"), ("r_input_inner", "before · inner"),
                                   ("r_dfm_outer", "after · outer"), ("r_dfm_inner", "after · inner"))):
@@ -548,8 +556,8 @@ def build(S, repo: Path, out: Path):
         text(s, x, 4.72, 1.45, 0.3, lab, size=10, color=RED if i < 2 else GREEN, align=PP_ALIGN.CENTER, bold=True)
     rows = [["Item", "Before", "After (part_DFM.step)"],
             ["Draft", "0° on all walls", f"{ch_['draft_core_deg']:.0f}° core · {ch_['draft_cavity_deg']:.0f}° cavity · "
-                                          f"{ch_['draft_shutoff_deg']:.0f}° shut-off"],
-            ["Undercut", f"{inp['undercut_area_mm2']:.0f} mm² → lifter", "0 → pass-through window 6 × 4.5"],
+                                          f"{ch_['draft_lifter_deg']:.0f}° lifter gap"],
+            ["Hook undercut", f"{inp['undercut_area_mm2']:.0f} mm², no release defined", "closed hook kept; 10° lifter, gap face 1° drafted"],
             ["Internal radii", "R0 (sharp)", f"R{ch_['r_min_mm']} rib / rail / lip / recess / bump roots"],
             ["Thinnest section", f"rib {ch_['rib_w_before']} mm", f"rib {ch_['rib_w_after']} mm root (50 % t)"],
             ["Nominal wall", f"{ch_['wall_mm']} mm", f"{ch_['wall_mm']} mm (uniform)"],
@@ -560,8 +568,8 @@ def build(S, repo: Path, out: Path):
     card(s, 0.45, 5.2, 12.4, 1.7)
     text(s, 0.65, 5.3, 12.0, 0.35, "Open items", size=14, font=HEAD, bold=True, color=AMBER)
     bullets(s, 0.65, 5.68, 5.9, 1.2, [
-        ("Window visibility:", "confirm with the rear-case lip, or revert to the closed hook plus a lifter."),
-        ("Hook-leg side roots:", "4 short edges left sharp (blend cannot close on the shut-off rim). Add R0.3 in native CAD."),
+        ("Lifter:", "confirm ≥ 30 mm ejector stroke and rod clearance in the 4-cavity layout."),
+        ("Rear case:", "check the 1.0 mm hook gap (now opening 1° toward −Z) against the housing edge."),
     ], size=11)
     bullets(s, 6.75, 5.68, 6.0, 1.2, [
         ("Simulation:", "run fill, pack and warp on the chosen ABS grade before tool release."),
