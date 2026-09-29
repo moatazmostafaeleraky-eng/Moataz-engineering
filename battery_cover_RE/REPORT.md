@@ -151,6 +151,8 @@ The analysis flagged **29 mm²** of shadowed surface: the 1.0 mm gap between the
 
 | Path | Content |
 |---|---|
+| `freecad/BatteryCover_Parametric.FCStd` | **Native FreeCAD PartDesign tree**: 10 fully constrained sketches, 12 features, driven by a `Params` spreadsheet (see `freecad/README.md`) |
+| `freecad/BatteryCover_PartDesign.FCMacro` | Macro that rebuilds the full tree from scratch |
 | `STEP/battery_cover.step` | **Design-intent solid**. Open in FreeCAD with *File → Import*, or in SolidWorks, Creo or NX |
 | `STEP/battery_cover_as_measured.step` | Bowed variant, 0.055 mm to the source |
 | `STL/*.stl` | Watertight meshes (0.005 mm chord) |

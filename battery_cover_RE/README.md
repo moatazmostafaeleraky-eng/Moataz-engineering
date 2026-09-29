@@ -7,6 +7,7 @@ Mesh-to-parametric-CAD reverse engineering of a snap-latch battery door, startin
 - **DFM:** one mould undercut (retention hook) and draft and radius recommendations.
 
 Full write-up: **[REPORT.md](REPORT.md)**
+FreeCAD parametric tree (PartDesign plus a spreadsheet of dimensions): **[freecad/](freecad/README.md)**
 
 | Design-intent model | Deviation map |
 |---|---|
