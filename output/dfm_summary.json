@@ -1,0 +1,636 @@
+{
+  "part": {
+    "code": "ANRMTPT0003F",
+    "name": "Battery cover",
+    "assembly": "ANRMTAS0001F Remote control assy",
+    "model": "TE-12XCME",
+    "material": "ABS (general purpose, unfilled)"
+  },
+  "input": {
+    "bbox_min": [
+      -0.0,
+      13.0,
+      5.5
+    ],
+    "bbox_max": [
+      31.0,
+      22.0,
+      77.0
+    ],
+    "size_xyz": [
+      31.0,
+      9.0,
+      71.5
+    ],
+    "volume_mm3": 4607.4,
+    "area_mm2": 5620.7,
+    "faces": 97,
+    "valid": true,
+    "solids": 1,
+    "draft_area_mm2": {
+      "0-0.25": 1372.4,
+      "0.25-1.0": 0.2,
+      "1.0-3.0": 0.7,
+      "3.0-80.0": 294.7,
+      "80.0-90.01": 3952.6
+    },
+    "min_wall_draft_deg": 0.0,
+    "thickness_mm": {
+      "min": 0.8,
+      "p5": 0.93,
+      "median": 2.0,
+      "p95": 2.03,
+      "max": 2.1
+    },
+    "thickness_hist": {
+      "edges": [
+        0,
+        0.6,
+        0.9,
+        1.1,
+        1.4,
+        1.8,
+        2.2,
+        2.6,
+        3.0,
+        7.0
+      ],
+      "pct": [
+        0.0,
+        4.7,
+        13.1,
+        4.1,
+        3.4,
+        74.7,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "reuse_checks_dfm": {
+      "zero_draft_area_mm2": {
+        "side rails": 400.0,
+        "plate perimeter": 322.3,
+        "stiffening ribs": 246.4,
+        "snap latch": 114.5,
+        "top lip": 108.0,
+        "outer bumps": 64.7,
+        "retention hook": 49.0,
+        "bump coring": 45.0,
+        "thumb recess": 22.3
+      },
+      "zero_draft_total_mm2": 1372.4,
+      "undercuts": {
+        "retention hook": {
+          "area_mm2": 29.0,
+          "bbox_min": [
+            12.83,
+            17.0,
+            70.0
+          ],
+          "bbox_max": [
+            18.17,
+            17.67,
+            73.0
+          ]
+        }
+      },
+      "wall_thickness_note": "inward-normal ray cast; p10/median = section thickness, p90 includes rays running along rib/rail height (e.g. rib tip -> plate outer = 4.0)",
+      "wall_thickness_mm": {
+        "side rails": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 4.0
+        },
+        "plate perimeter": {
+          "p10": 2.0,
+          "median": 2.0,
+          "p90": 4.0
+        },
+        "thumb recess": {
+          "p10": 2.0,
+          "median": 2.02,
+          "p90": 2.45
+        },
+        "retention hook": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 4.0
+        },
+        "snap latch": {
+          "p10": 1.0,
+          "median": 2.0,
+          "p90": 6.0
+        },
+        "stiffening ribs": {
+          "p10": 0.8,
+          "median": 0.8,
+          "p90": 4.0
+        },
+        "outer bumps": {
+          "p10": 1.0,
+          "median": 2.0,
+          "p90": 4.0
+        },
+        "top lip": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 4.0
+        },
+        "bump coring": {
+          "p10": 2.0,
+          "median": 5.5,
+          "p90": 18.0
+        }
+      },
+      "volume_cm3": 4.608,
+      "mass_g": {
+        "ABS (1.05)": 4.84,
+        "PC/ABS (1.15)": 5.3,
+        "PC (1.20)": 5.53,
+        "PP (0.905)": 4.17
+      },
+      "projected_area_Y_cm2": 20.94
+    },
+    "undercut_area_mm2": 56.9,
+    "mass_g": 4.84
+  },
+  "dfm": {
+    "bbox_min": [
+      -0.0,
+      13.0,
+      5.5
+    ],
+    "bbox_max": [
+      31.0,
+      22.0,
+      76.991
+    ],
+    "size_xyz": [
+      31.0,
+      9.0,
+      71.49
+    ],
+    "volume_mm3": 4492.05,
+    "area_mm2": 5514.8,
+    "faces": 158,
+    "valid": true,
+    "solids": 1,
+    "draft_area_mm2": {
+      "0-0.25": 0.3,
+      "0.25-1.0": 1206.2,
+      "1.0-3.0": 77.0,
+      "3.0-80.0": 406.2,
+      "80.0-90.01": 3824.2
+    },
+    "min_wall_draft_deg": 0.54,
+    "thickness_mm": {
+      "min": 0.72,
+      "p5": 0.93,
+      "median": 2.0,
+      "p95": 2.13,
+      "max": 2.31
+    },
+    "thickness_hist": {
+      "edges": [
+        0,
+        0.6,
+        0.9,
+        1.1,
+        1.4,
+        1.8,
+        2.2,
+        2.6,
+        3.0,
+        7.0
+      ],
+      "pct": [
+        0.3,
+        1.6,
+        13.9,
+        7.3,
+        4.5,
+        68.9,
+        3.5,
+        0.0,
+        0.0
+      ]
+    },
+    "reuse_checks_dfm": {
+      "zero_draft_area_mm2": {
+        "outer bumps": 0.3,
+        "plate perimeter": 0.0
+      },
+      "zero_draft_total_mm2": 0.3,
+      "undercuts": {
+        "retention hook": {
+          "area_mm2": 0.04,
+          "bbox_min": [
+            12.51,
+            17.0,
+            72.99
+          ],
+          "bbox_max": [
+            18.49,
+            17.33,
+            72.99
+          ]
+        },
+        "outer bumps": {
+          "area_mm2": 0.0,
+          "bbox_min": [
+            5.57,
+            20.7,
+            69.61
+          ],
+          "bbox_max": [
+            25.43,
+            20.7,
+            74.39
+          ]
+        }
+      },
+      "wall_thickness_note": "inward-normal ray cast; p10/median = section thickness, p90 includes rays running along rib/rail height (e.g. rib tip -> plate outer = 4.0)",
+      "wall_thickness_mm": {
+        "plate perimeter": {
+          "p10": 2.0,
+          "median": 2.0,
+          "p90": 4.0
+        },
+        "stiffening ribs": {
+          "p10": 0.93,
+          "median": 0.96,
+          "p90": 4.0
+        },
+        "outer bumps": {
+          "p10": 1.04,
+          "median": 2.0,
+          "p90": 4.0
+        },
+        "retention hook": {
+          "p10": 0.95,
+          "median": 1.0,
+          "p90": 4.5
+        },
+        "snap latch": {
+          "p10": 1.0,
+          "median": 2.0,
+          "p90": 5.91
+        },
+        "bump coring": {
+          "p10": 2.43,
+          "median": 5.48,
+          "p90": 5.99
+        },
+        "side rails": {
+          "p10": 0.9,
+          "median": 0.94,
+          "p90": 4.0
+        },
+        "thumb recess": {
+          "p10": 0.63,
+          "median": 1.99,
+          "p90": 2.16
+        },
+        "top lip": {
+          "p10": 0.95,
+          "median": 0.98,
+          "p90": 4.0
+        }
+      },
+      "volume_cm3": 4.494,
+      "mass_g": {
+        "ABS (1.05)": 4.72,
+        "PC/ABS (1.15)": 5.17,
+        "PC (1.20)": 5.39,
+        "PP (0.905)": 4.07
+      },
+      "projected_area_Y_cm2": 20.65
+    },
+    "undercut_area_mm2": 0.04,
+    "mass_g": 4.72
+  },
+  "parting": {
+    "pl_edges": 422,
+    "main_pl_Y": 20.0,
+    "latch_step_Y": 13.0,
+    "step_mm": 7.0
+  },
+  "undercut": {
+    "before_mm2": 56.9,
+    "after_mm2": 0.04,
+    "lifter_option": {
+      "lateral_travel_mm": 5.0,
+      "angle_deg": 10.0,
+      "ejector_stroke_mm": 28.4
+    },
+    "window_mm": [
+      6.0,
+      4.5
+    ],
+    "shutoff_draft_deg": 3.0
+  },
+  "gates": {
+    "G1": {
+      "label": "Top end, centre - edge gate",
+      "point": [
+        15.5,
+        19.0,
+        77.0
+      ],
+      "max_flow_mm": 81.6,
+      "L_over_t": 40.8,
+      "last_fill": [
+        14.8,
+        13.6,
+        5.5
+      ]
+    },
+    "G2": {
+      "label": "Side wall, mid-length - tunnel gate",
+      "point": [
+        0.0,
+        19.0,
+        44.0
+      ],
+      "max_flow_mm": 58.9,
+      "L_over_t": 29.4,
+      "last_fill": [
+        29.7,
+        18.0,
+        40.0
+      ]
+    },
+    "G3": {
+      "label": "Bottom end, beside recess - tunnel gate",
+      "point": [
+        3.0,
+        19.0,
+        11.5
+      ],
+      "max_flow_mm": 79.3,
+      "L_over_t": 39.7,
+      "last_fill": [
+        26.1,
+        18.6,
+        77.0
+      ]
+    },
+    "G4": {
+      "label": "Inner face centre - pin-point (3-plate)",
+      "point": [
+        15.5,
+        18.0,
+        44.0
+      ],
+      "max_flow_mm": 54.4,
+      "L_over_t": 27.2,
+      "last_fill": [
+        15.4,
+        20.0,
+        40.9
+      ]
+    }
+  },
+  "gate_pick": "G3",
+  "ejection": {
+    "pins": [
+      {
+        "x": 3.6,
+        "z": 22.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 3.6,
+        "z": 44.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 3.6,
+        "z": 64.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 15.5,
+        "z": 22.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 15.5,
+        "z": 44.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 15.5,
+        "z": 64.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 27.4,
+        "z": 22.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 27.4,
+        "z": 44.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 27.4,
+        "z": 64.0,
+        "y": 18.0,
+        "d": 3.0,
+        "on": "plate inner face"
+      },
+      {
+        "x": 15.5,
+        "z": 70.75,
+        "y": 16.0,
+        "d": 2.0,
+        "on": "hook block",
+        "checked": true
+      },
+      {
+        "x": 15.5,
+        "z": 9.0,
+        "y": 13.0,
+        "d": 2.0,
+        "on": "latch arm (inner face)",
+        "checked": true
+      }
+    ],
+    "n_pins": 11,
+    "stroke_mm": 15.0,
+    "core_depth_mm": 7.0
+  },
+  "cooling": {
+    "governing_wall_mm": 2.0,
+    "t_cool_s": 9.0,
+    "t_cool_thickest_s": 12.0,
+    "cycle": {
+      "fill_s": 0.6,
+      "pack_s": 2.5,
+      "cool_s": 9.0,
+      "mould_open_eject_close_s": 5.0,
+      "total_s": 17.1
+    }
+  },
+  "tonnage": [
+    {
+      "cavities": 1,
+      "proj_area_cm2": 21.6,
+      "clamp_calc_t": 10.6,
+      "machine_t": 25,
+      "shot_g": 5.5,
+      "parts_per_h": 210
+    },
+    {
+      "cavities": 2,
+      "proj_area_cm2": 43.3,
+      "clamp_calc_t": 21.2,
+      "machine_t": 25,
+      "shot_g": 11.0,
+      "parts_per_h": 421
+    },
+    {
+      "cavities": 4,
+      "proj_area_cm2": 86.6,
+      "clamp_calc_t": 42.4,
+      "machine_t": 50,
+      "shot_g": 22.1,
+      "parts_per_h": 842
+    },
+    {
+      "cavities": 8,
+      "proj_area_cm2": 173.2,
+      "clamp_calc_t": 84.7,
+      "machine_t": 100,
+      "shot_g": 44.1,
+      "parts_per_h": 1684
+    }
+  ],
+  "cavity_pick": 4,
+  "coolant": {
+    "heat_per_shot_J": 7194,
+    "heat_rate_W": 626,
+    "flow_total_l_min": 4.56,
+    "flow_per_circuit_l_min": 2.28,
+    "velocity_m_s": 1.34,
+    "reynolds": 17163,
+    "dT_water_K": 2.0,
+    "channel_d_mm": 6.0
+  },
+  "fill": {
+    "gate": "G3",
+    "max_flow_mm": 79.3,
+    "last_fill_xyz": [
+      26.1,
+      18.6,
+      77.0
+    ],
+    "weld_line": "downstream of the hook window: X 15.5, Z 73-77 (under the top lip, non-cosmetic zone)",
+    "fill_time_s_est": 0.6
+  },
+  "warpage": {
+    "span_mm": 59.25,
+    "bow_per_K_mm": 0.0241,
+    "bow_at_dT": {
+      "2": 0.048,
+      "5": 0.121,
+      "10": 0.241,
+      "14": 0.338,
+      "20": 0.483
+    },
+    "measured_source_bow_mm": 0.34,
+    "dT_equivalent_K": 14.1,
+    "section_before": {
+      "area_mm2": 69.2,
+      "yc": 18.792,
+      "I_mm4": 48.87,
+      "c_mm": 2.792
+    },
+    "section_after": {
+      "area_mm2": 69.808,
+      "yc": 18.78,
+      "I_mm4": 50.029,
+      "c_mm": 2.78
+    },
+    "thumb_10N_before": {
+      "deflection_mm": 0.386,
+      "stress_MPa": 8.5,
+      "safety_vs_yield": 5.0
+    },
+    "thumb_10N_after": {
+      "deflection_mm": 0.377,
+      "stress_MPa": 8.2,
+      "safety_vs_yield": 5.1
+    },
+    "shrink_mm": [
+      0.29,
+      0.5
+    ]
+  },
+  "figures": {
+    "parting": "output/figures/f02_parting.png",
+    "ps_section": "output/figures/f02_ps_sections.png",
+    "draft": "output/figures/f03_draft.png",
+    "undercut_3d": "output/figures/f04_undercut_3d.png",
+    "undercut_sec": "output/figures/f04_undercut_sections.png",
+    "thickness": "output/figures/f05_thickness.png",
+    "gates": "output/figures/f06_gates.png",
+    "ejection": "output/figures/f07_ejection.png",
+    "layout": "output/figures/f08_layout.png",
+    "cooling": "output/figures/f09_cooling.png",
+    "fill": "output/figures/f10_fill.png",
+    "section": "output/figures/f11_section.png",
+    "r_input_inner": "output/figures/r_input_inner.png",
+    "r_input_outer": "output/figures/r_input_outer.png",
+    "r_dfm_inner": "output/figures/r_dfm_inner.png",
+    "r_dfm_outer": "output/figures/r_dfm_outer.png",
+    "assembly": "output/figures/f01_assembly.png"
+  },
+  "material": {
+    "name": "ABS (general purpose, unfilled)",
+    "density_g_cm3": 1.05,
+    "E_MPa": 2300.0,
+    "yield_MPa": 42.0,
+    "T_melt_C": 240.0,
+    "T_mold_C": 60.0,
+    "T_eject_C": 85.0,
+    "diffusivity_mm2_s": 0.1,
+    "cp_J_kgK": 2100.0,
+    "cte_1_K": 9e-05,
+    "shrinkage_pct": [
+      0.4,
+      0.7
+    ],
+    "cavity_pressure_MPa": 40.0,
+    "max_flow_ratio": 150.0,
+    "ejector_pin_min_mm": 2.0
+  },
+  "dfm_changes": {
+    "draft_core_deg": 1.0,
+    "draft_cavity_deg": 3.0,
+    "draft_shutoff_deg": 3.0,
+    "r_min_mm": 0.5,
+    "rib_w_before": 0.8,
+    "rib_w_after": 1.0,
+    "wall_mm": 2.0
+  }
+}

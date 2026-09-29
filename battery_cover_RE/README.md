@@ -12,3 +12,8 @@ FreeCAD parametric tree (PartDesign plus a spreadsheet of dimensions): **[freeca
 | Design-intent model | Deviation map |
 |---|---|
 | ![](images/rebuilt_inner_iso.png) | ![](images/deviation_map.png) |
+
+## DFM review for injection moulding (ABS)
+- 12-slide deck: `output/DFM.pptx`
+- DFM-corrected part: `output/part_DFM.step`
+- Pipeline and code: [dfm/](dfm/README.md)
