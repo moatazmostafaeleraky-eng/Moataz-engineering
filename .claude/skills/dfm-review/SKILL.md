@@ -1,9 +1,18 @@
 ---
 name: dfm-review
-description: Injection-moulding DFM review of a plastic part in Moataz Mostafa's preferred format, a toolmaker-style DFM report (numbered slides, green part renders, red call-outs, OK/NG sign-off table on every slide). Produces a python-pptx deck plus a DFM-corrected STEP, built on the pipeline in battery_cover_RE/dfm. Use for any request to do DFM or DFM analysis, a moldability or manufacturability review, a "DFM PPT", or a part_DFM.step for a moulded part.
+description: Injection-moulding DFM review of a plastic part in Moataz Mostafa's preferred format. The output is exactly two deliverables, (1) DFM.pptx, a toolmaker-style DFM report (numbered slides, green part renders, red call-outs, OK/NG sign-off table on every slide), and (2) part_DFM.step, the DFM-corrected CAD part, built on the pipelines in base_RE/dfm and battery_cover_RE/dfm. Use for any request to do DFM or DFM analysis, "ملف DFM", a moldability or manufacturability review, a "DFM PPT", or a part_DFM.step for a moulded part.
 ---
 
 # DFM review: house style
+
+## Output contract (what the user gets)
+1. **`DFM.pptx`**: the toolmaker-style DFM report (§4–5), with the RESULT / APPD / DATE sign-off left empty for the customer.
+2. **`part_DFM.step`**: the DFM-corrected part, one valid solid, with function unchanged (§0, §3).
+
+- Supporting files go next to them: `dfm_summary.json` (every number on the slides) and `figures/`.
+- Put them in the part's own folder (`<part>_RE/output/`, or `output/` for a single-part repo) so that one part's DFM never overwrites another's.
+- Commit and push, then send **both** files with `SendUserFile`. Give a short summary in the user's language: key findings, what changed in the STEP, what was deliberately not changed, the assumptions and the exceptions.
+- If the input is a mesh (STL) rather than a STEP, run the `reverse-engineering` skill first to get a solid.
 
 References:
 - **Report format and look:** the four toolmaker DFM reports the user uploaded to the repo root on `main`. Future decks follow this format.
@@ -24,15 +33,18 @@ References:
 - Write down the functional constraints before proposing any change. Examples: a cover must stay closed; cosmetic faces; mating features; snap-fit catches; sealing faces.
 - **A DFM fix must never break function.** Lesson from the battery cover: a pass-through window removed the hook lifter but put a hole in a battery cover. That was rejected. The fix was to keep the closed hook and use an angled lifter.
 - When the only straight-pull fix changes function or appearance, prefer the tool-side action (lifter or slider), then show the geometry option as rejected, with the reason.
+- Lessons from the rear case (`base_RE`):
+  - The snap catch teeth stayed, formed by 10 lifters per cavity. A side-wall window was rejected: cosmetic wall and weaker snap.
+  - The inner-wall draft would have narrowed the 0.8 mm front-case slots, so the walls keep 0° inside the snap stations.
+  - Ribs under an opening are formed by the **cavity** through the opening. A core-side taper there is a reverse draft, so they keep 0°.
+  - Plates next to mating slots and rims at cover rails keep 0°.
+  - A change that depends on an unknown mating part (for example coring the battery-contact walls) goes on a Suggest slide only, "customer to confirm". Don't change it in the STEP.
 - Ask only when a constraint is genuinely unknowable, such as the mating part's geometry. Otherwise state the assumption on the slide.
 
 ## 1. Inputs / outputs
-- Input: `input/part.step` (or the file the user names), material (default ABS if unstated, and say so).
-- Outputs:
-  - `output/DFM.pptx`: toolmaker-style DFM report (§4), python-pptx.
-  - `output/part_DFM.step`: corrected, one valid solid.
-  - `output/dfm_summary.json`: every number on the slides.
-  - `output/figures/`.
+- Input: the part STEP (or the file the user names) and the material. If the material is unstated, default to ABS and write "assumed" on slide 1.
+- Outputs: see the output contract at the top.
+- For a new part, copy `base_RE/dfm/` (`run_dfm.py`, `vtkview.py`, `toolmaker_ppt.py`, `make_deck.py`) plus `tools/wedges.py` and adapt the part data. Rebuild the deck alone with `make_deck.py`.
 - Reuse the repo code; don't rewrite it:
   - `checks/dfm.py` provides `analyze` and `undercut_mask`.
   - `dfm/meshkit.py` provides draft, A/B classes, parting-line edges, sphere thickness, geodesic flow, pin-pad check, section properties and the renderer.
@@ -63,8 +75,16 @@ References:
 - Draft: at least the reference defaults (1.0° cavity, 0.5° core). The battery cover used 1° core and 3° on cosmetic cavity walls. Keep parting-line and functional edges (such as catch faces) sharp.
 - Radius R ≥ 0.5 on internal corners (rib, rail, lip and boss roots). Fillet in connected groups, because one combined OCC call fails.
 - Uniform nominal wall in the 2–3 mm window. Ribs, bosses and snap features at 50–65 % of the wall (the references take 2.0 mm ribs down to 1.2 mm); don't thicken them to 2–3 mm, or the class-A face shows sink. Minimum rib 0.8 mm (short-shot risk below that). Remove sharp or weak steel (under about 1 mm) and tiny steps.
-- Build the corrected part as a new geometry module that imports the original model's constants and profiles, following the pattern in `geometry_dfm.py`.
-- Verify the result: one valid solid, topology as intended (Euler number), zero-draft and undercut areas, and a fresh render. List every exception honestly on the Suggest slides.
+- Build the corrected part as a new geometry module that imports the original model's constants and profiles, following the pattern in `geometry_dfm.py` (battery cover and `base_RE/src/lib/geometry_dfm.py`).
+- Draft side walls with `bd.draft(faces, Plane(neutral = PL), angle)` before filleting, so the PL outline is unchanged. Draft thin up-to-skin ribs with `extrude(taper=-angle)`, which keeps the tip and grows the root.
+- Knife-edge steel (air gap < 0.75 mm against a fillet): fill it with **flat-bottomed** prisms (`tools/wedges.py`). A domed underside leaves small overhangs, which show up as new undercuts.
+- Verify the result against the original with the same metrics, and report both side by side:
+  - one valid solid and topology as intended (Euler number);
+  - 0° area;
+  - straight-pull undercut **outside the tool-action zones** (it must not grow);
+  - steel samples under 0.3 / 0.5 / 0.8 mm;
+  - a fresh render.
+- If a DFM change makes any of these worse, find the cause and fix it before delivering. List every remaining exception honestly on the Suggest slides.
 
 ## 4. Report format: toolmaker DFM report (user's reference style)
 Match the reference decks' structure and look: image-led, minimal text, one topic per slide. Numbering is continuous after slide 2 ("1.Parting Line" … "N.Cycle Time"), and the number of slides follows the part (21–46 in the references).
@@ -129,4 +149,5 @@ Caption each such slide in small grey text: "estimate, geometric proxy, not Mold
 - Inspect every slide for overflow, overlaps and stale images, then fix and re-render.
 - Label proxy simulation slides and hand calculations as such. Label material data as typical datasheet values.
 - Check that the sign-off table and the slide numbering are present on every slide, and that no approval or reply box has been filled in on our own DFM.
+- Check the mould against the machine's tie bars, not only its clamp force. If it doesn't fit, say so in toolmaker phrasing: "Machine size need to change from 80T to 100T".
 - Commit the outputs and code to the working branch, then send `DFM.pptx` and `part_DFM.step` to the user.
