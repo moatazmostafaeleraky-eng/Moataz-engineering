@@ -69,6 +69,8 @@ for key in 'FG':
     L=[]
     for p in D[key]:
         Q=p['poly']; ax=p['axis']; v0,v1=float(p['v0']),float(p['v1']); vm=(v0+v1)/2
+        if key=='G' and ax==2 and v0>=88.4 and v1<=151.5 and Q.bounds[0]>=10.6 and Q.bounds[2]<=41.65:
+            continue   # the battery opening is a parametric feature (geometry.battery_opening)
         e=dict(axis=int(ax),v0=v0,v1=v1)
         secs=[shell_sec(ax,v) for v in (v0+0.01,vm,v1-0.01)]
         touching=Q.distance(secs[1].boundary)<0.05

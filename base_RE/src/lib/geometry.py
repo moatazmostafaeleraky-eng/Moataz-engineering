@@ -32,6 +32,7 @@ RIM_FILLET = 0.45  # both top edges of the rim (measured ~0.5; the rim is only 0
 SLOT_X = (10.62, 41.62)  # battery-cover slot through the top end wall ...
 SLOT_Y0 = 20.34  # ... down to the cover-rail level
 SLOT_Z0 = 151.45
+OPENING_Z = (88.45, SLOT_Z0)  # battery opening through the top wall, same width as the slot
 # bottom end: open, cut by a plane tilted ~14.8 deg about X (normal, offset)
 BOTTOM_N = (0.0, -0.2543, -0.9671)
 BOTTOM_D = -5.330
@@ -226,6 +227,14 @@ def _fuse(parts: list[bd.Part]) -> bd.Part:
     return parts[0].fuse(*parts[1:]).clean() if len(parts) > 1 else parts[0]
 
 
+def _fuse_seq(parts: list[bd.Part]) -> bd.Part:
+    """One-by-one fuse: slower than a single multi-argument boolean but robust with many touching prisms."""
+    acc = parts[0]
+    for p in parts[1:]:
+        acc = acc.fuse(p)
+    return acc
+
+
 def ribs() -> list[bd.Part]:
     parts = []
     for e in _features()["T"]:
@@ -239,12 +248,21 @@ def envelope() -> bd.Part:
     return body.fuse(finger_recess_wall(), bosses())
 
 
+def battery_opening() -> bd.Part:
+    """Cut through the top wall down to the inner skin (removes any rib overlap left in the wall)."""
+    z0, z1 = OPENING_Z
+    box = bd.Pos((SLOT_X[0] + SLOT_X[1]) / 2, 20, (z0 + z1) / 2) * bd.Box(SLOT_X[1] - SLOT_X[0], 20, z1 - z0)
+    return box - _inner_full()
+
+
 def base() -> bd.Part:
     """Rear case = shell + design features + ribs (up to skin) + section-driven detail - cuts."""
     data = _features()
-    body = envelope()
+    body = envelope().fuse(_fuse(ribs()))
+    detail = [p for p in _feature_solids(data["F"]) if p.volume > 1e-4]
+    body = body.fuse(_fuse_seq(detail))
+    body = body - battery_opening()
     for cut in _feature_solids(data["G"], cut=True):
         body = body - cut
-    body = body.fuse(_fuse(ribs() + _feature_solids(data["F"])))
     body = body - boss_holes()
     return bd.split(body, bisect_by=_bottom_plane(), keep=bd.Keep.BOTTOM).clean()
