@@ -183,6 +183,10 @@ def main():
         for c, a in zip(fine.triangles_center[uc], fine.area_faces[uc]):
             ucr[region(c)] = ucr.get(region(c), 0.0) + a
         st["undercut_by_region_mm2"] = {k: round(v, 2) for k, v in sorted(ucr.items(), key=lambda t: -t[1])}
+        cc = fine.triangles_center[uc]
+        zone = np.array([any(a - 1 <= z <= b + 1 for a, b in TEETH_Z) for z in cc[:, 2]]) & ((cc[:, 0] < 6) | (cc[:, 0] > 46))
+        st["undercut_lifter_zones_mm2"] = round(float(fine.area_faces[uc][zone].sum()), 2)
+        st["undercut_outside_lifter_zones_mm2"] = round(float(fine.area_faces[uc][~zone].sum()), 2)
         pts, th = mk.sample_thickness(m, n=30000)
         D["th_pts"], D["th"] = pts, th
         st["thickness_mm"] = {"min_0.5pct": round(float(np.percentile(th, 0.5)), 2),
@@ -211,6 +215,7 @@ def main():
               f"steel<0.8 {st['steel_lt_0.8_samples']}", flush=True)
 
     dm, fm = P["dfm"]["mesh"], P["dfm"]["fine"]
+    dmain = max(dm.split(only_watertight=False), key=lambda c: len(c.faces))  # drop 0-volume slivers for flow
     S["dfm"]["projected_area_cm2"] = round(projected_area(dm) / 100, 2)
 
     # ------------------------------------------------ lifters: every undercut face free within the travel
@@ -242,10 +247,10 @@ def main():
     # ------------------------------------------------ gates: geodesic flow length
     gate_res = {}
     for k, (label, p) in GATES.items():
-        dist, _ = mk.geodesic_from(dm, p)
+        dist, _ = mk.geodesic_from(dmain, p)
         gate_res[k] = {"label": label, "point": p, "max_flow_mm": round(float(dist.max()), 1),
                        "L_over_t": round(float(dist.max()) / WALL, 1),
-                       "last_fill": np.round(dm.vertices[int(np.argmax(dist))], 1).tolist()}
+                       "last_fill": np.round(dmain.vertices[int(np.argmax(dist))], 1).tolist()}
         if k == GATE_PICK:
             fill = dist
     S["gates"], S["gate_pick"] = gate_res, GATE_PICK
@@ -253,8 +258,8 @@ def main():
                       "rule": "d = 0.6 x wall for ABS (1.2 mm on a 2.0 wall)", "runner_d_mm": 5.0}
 
     # ------------------------------------------------ ejection: planar core-side faces
+    from shapely.geometry import Point, Polygon
     from shapely.ops import polylabel
-    from shapely.geometry import Polygon
 
     pins, blades = [], []
     for f in P["dfm"]["shape"].faces():
@@ -267,21 +272,30 @@ def main():
         if poly.area < 1.5:
             continue
         y = float(v[:, 1].mean())
-        pl = polylabel(poly, 0.02)
-        r = poly.exterior.distance(pl)
-        x, z = pl.x, pl.y
-        if any(a - 3 <= z <= b + 3 for a, b in TEETH_Z) and (x < 7 or x > 45):
-            continue  # lifter zone
-        if r >= 1.0:
-            dia = min(4.0, np.floor((2 * r - 0.3) * 2) / 2)
-            pins.append({"x": round(x, 2), "z": round(z, 2), "y": round(y, 2), "d": float(dia),
-                         "face_area_mm2": round(poly.area, 1)})
-        elif r >= 0.38:
+        core = poly.buffer(-0.95)  # where a >= 1.5 mm pin fits
+        cands = []
+        for piece in getattr(core, "geoms", [core]):
+            if piece.is_empty:
+                continue
+            ring = piece.exterior
+            cands += [ring.interpolate(t) for t in np.arange(0, ring.length, 3.0)]
+            cands.append(piece.representative_point())
+        for pt in cands:
+            x, z = pt.x, pt.y
+            if any(a_ - 3 <= z <= b_ + 3 for a_, b_ in TEETH_Z) and (x < 7 or x > 45):
+                continue  # lifter zone
+            r_ = poly.exterior.distance(Point(x, z))
+            if r_ >= 0.94:
+                pins.append({"x": round(x, 2), "z": round(z, 2), "y": round(y, 2),
+                             "d": float(min(4.0, max(1.5, np.floor((2 * r_ - 0.3) * 2) / 2))), "r": r_})
+        pl_ = polylabel(poly, 0.02)
+        r_ = poly.exterior.distance(pl_)
+        if 0.38 <= r_ < 0.95:
             mrr = poly.minimum_rotated_rectangle
             e = np.asarray(mrr.exterior.coords)
             L = max(np.linalg.norm(e[1] - e[0]), np.linalg.norm(e[2] - e[1]))
-            if L >= 4:
-                blades.append({"x": round(x, 2), "z": round(z, 2), "y": round(y, 2), "w": round(2 * r, 2),
+            if L >= 4 and not (any(a_ - 3 <= pl_.y <= b_ + 3 for a_, b_ in TEETH_Z) and (pl_.x < 7 or pl_.x > 45)):
+                blades.append({"x": round(pl_.x, 2), "z": round(pl_.y, 2), "y": round(y, 2), "w": round(2 * r_, 2),
                                "l": round(min(L - 1.0, 8.0), 1), "face_area_mm2": round(poly.area, 1)})
     # spread: keep the largest faces, at least 8 mm apart
     def spread(items, key, gap=8.0, cap=24):
@@ -293,7 +307,9 @@ def main():
                 break
         return out
 
-    pins = spread(pins, "face_area_mm2", 10.0, 22)
+    pins = spread(pins, "r", 12.0, 28)
+    for b in blades:
+        b["w"], b["l"] = round(b["w"], 1), round(b["l"])
     blades = spread(blades, "face_area_mm2", 12.0, 12)
     depth = float(P["dfm"]["mesh"].bounds[1][1] - Y_PL)
     S["ejection"] = {"pins": pins, "blades": blades, "core_depth_mm": round(depth, 1),
@@ -319,8 +335,15 @@ def main():
     ins_w, ins_l = round(CAVITIES * W + 30 + 2 * 30), round(L + 2 * 30)
     S["mold"] = {"layout": f"1 X {CAVITIES}", "insert_W_mm": ins_w, "insert_L_mm": ins_l,
                  "mold_W_mm": round(ins_w + 2 * 60, -1), "mold_L_mm": round(ins_l + 2 * 60, -1),
-                 "machine_t": pick["machine_t"],
-                 "tie_bar_note": "typical 100-120 T machine: 360 x 360 to 410 x 410 mm between tie bars"}
+                 "machine_t_clamp": pick["machine_t"]}
+    TIE = {80: 310, 100: 360, 120: 410, 150: 460, 180: 510, 220: 560}  # typical distance between tie bars (H = V)
+    need = max(S["mold"]["mold_W_mm"], S["mold"]["mold_L_mm"])
+    m_t = next(t for t, d in sorted(TIE.items()) if t >= pick["machine_t"] and d > need)
+    S["mold"]["machine_t"] = m_t
+    S["mold"]["tie_bar_mm"] = TIE[m_t]
+    S["mold"]["tie_bar_clamp_machine_mm"] = TIE.get(pick["machine_t"])
+    S["mold"]["tie_bar_note"] = ("typical tie-bar distances (H x V): 80 T 310 x 310, 100 T 360 x 360, 120 T 410 x 410 "
+                                 "- confirm with the moulder's machine list")
     S["warpage"] = {"bow_per_K_mm": round(mc.thermal_bow(1.0, L, WALL), 3),
                     "bow_5K_mm": round(mc.thermal_bow(5.0, L, WALL), 2),
                     "shrink_mm": [round(p / 100 * L, 2) for p in mc.ABS["shrinkage_pct"]]}
@@ -328,16 +351,21 @@ def main():
     # ------------------------------------------------ fill proxy, air traps, weld lines
     frac = fill / fill.max()
     S["fill"] = {"gate": GATE_PICK, "max_flow_mm": round(float(fill.max()), 1), "fill_time_s_est": fill_s,
-                 "last_fill_xyz": np.round(dm.vertices[int(np.argmax(fill))], 1).tolist()}
-    nb = dm.vertex_neighbors
+                 "last_fill_xyz": np.round(dmain.vertices[int(np.argmax(fill))], 1).tolist()}
+    nb = dmain.vertex_neighbors
     peaks = [i for i in range(len(fill)) if fill[i] > 0.55 * fill.max() and all(fill[i] >= fill[j] for j in nb[i])]
-    pk = dm.vertices[peaks]
+    pk = dmain.vertices[peaks]
     traps = []
     for p in pk[np.argsort(-fill[peaks])]:
         if all(np.linalg.norm(p - q) > 8 for q in traps):
             traps.append(p)
     S["air_traps"] = [np.round(p, 1).tolist() for p in traps[:10]]
-    welds = weld_edges(dm, fill)
+    welds = weld_edges(dmain, fill)
+    keep = np.zeros(len(welds), bool)  # drop isolated edges: keep clusters of >= 6 edges (6 mm cells)
+    kc = np.floor(welds.mean(1) / 6.0).astype(int)
+    _, inv_, cnt_ = np.unique(kc, axis=0, return_inverse=True, return_counts=True)
+    keep = cnt_[inv_.ravel()] >= 6
+    welds = welds[keep]
     S["weld_lines"] = {"n_edges": int(len(welds)),
                        "boxes": [{"min": np.round(a, 1).tolist(), "max": np.round(b, 1).tolist(), "n": n}
                                  for a, b, n in cluster_boxes(welds.mean(1), 6.0, 4)]}
@@ -376,10 +404,10 @@ def main():
     rnd("pl_core_iso.png", fm, g, "core_iso", lines=pl, line_w=2.5)
     rnd("pl_top_end.png", fm, g, "top_end_iso", lines=pl, line_w=3.0, focus=(26, 10, 148), parallel_scale=16)
     rnd("pl_bottom_end.png", fm, g, "bottom_end_iso", lines=pl, line_w=3.0, focus=(26, 12, 6), parallel_scale=18)
-    rnd("pl_opening.png", fm, g, "cav_iso", lines=pl, line_w=3.0, focus=(26, 20, 120), parallel_scale=40)
+    rnd("pl_opening.png", fm, g, "cav_iso", lines=pl, line_w=3.0, focus=(26, 20, 92), parallel_scale=16)
     proj_pts = {
         "teeth": [[3.1, 5.2, (a + b) / 2] for a, b in TEETH_Z] + [[49.1, 5.2, (a + b) / 2] for a, b in TEETH_Z],
-        "tongue": [[26.12, 2.5, 152.4]], "bottom": [[26.12, 12, 2.5]], "opening": [[26.12, 22.5, 120]],
+        "tongue": [[26.12, 2.5, 152.4]], "bottom": [[26.12, 12, 2.5]], "opening": [[26.12, 22.5, 92.0]],
     }
     for k in ("pl_side", "pl_cav_iso", "pl_core_iso", "dfm_core_plan", "pl_top_end", "pl_bottom_end", "pl_opening"):
         S.setdefault("px", {})[k] = {n: proj[k](v).tolist() for n, v in proj_pts.items()}
@@ -387,9 +415,14 @@ def main():
     # lifters: faces formed by the lifter heads in purple on the core plan
     col = np.tile(g, (len(fm.faces), 1))
     col[P["dfm"]["uc"]] = [0.72, 0.35, 0.85]
-    rnd("lifter_plan.png", fm, col, "core_plan", size=(1800, 800))
-    rnd("lifter_iso.png", fm, col, "core_iso")
-    rnd("lifter_zoom.png", fm, col, "core_iso", focus=(3.1, 8, 114.5), parallel_scale=7)
+    heads = []
+    for a_, b_ in TEETH_Z:
+        heads.append(vv.box_actor((2.62, 5.84, a_ - 0.5), (2.62 + 2.6, 13.0, b_ + 0.5)))
+        heads.append(vv.box_actor((49.62 - 2.6, 5.84, a_ - 0.5), (49.62, 13.0, b_ + 0.5)))
+    rnd("lifter_plan.png", fm, col, "core_plan", size=(1800, 800), extra=heads)
+    rnd("lifter_iso.png", fm, col, "core_iso", extra=heads)
+    rnd("lifter_zoom.png", fm, col, ((1.0, -0.55, -0.35), (0, 1, 0)), focus=(3.1, 8.5, 114.5), parallel_scale=6.5,
+        extra=[vv.box_actor((2.62, 5.84, 112.0), (5.22, 13.0, 116.9), opacity=0.45)])
     S["px"]["lifter_plan"] = {"teeth": proj["lifter_plan"](proj_pts["teeth"]).tolist()}
     S["px"]["lifter_zoom"] = {"tooth": proj["lifter_zoom"]([[3.1, 5.2, 114.46]]).tolist()}
 
@@ -422,12 +455,12 @@ def main():
                              "blades": proj["eject_plan"]([[b["x"], b["y"], b["z"]] for b in blades]).tolist()}
 
     # fill / ejection-time / air traps / weld lines (proxies)
-    fv = frac[dm.faces].mean(1)
+    fv = frac[dmain.faces].mean(1)
     rain = plt.get_cmap("jet")
     gp_ = np.array(GATES[GATE_PICK][1])
     gate_act = [vv.sphere_actor(gp_, 1.3, (1, 0, 0))]
-    rnd("fill_core.png", dm, rain(fv)[:, :3], "core_iso", edges=False, extra=gate_act)
-    rnd("fill_cav.png", dm, rain(fv)[:, :3], "cav_iso", edges=False)
+    rnd("fill_core.png", dmain, rain(fv)[:, :3], "core_iso", edges=False, extra=gate_act)
+    rnd("fill_cav.png", dmain, rain(fv)[:, :3], "cav_iso", edges=False)
     tcool = np.array([mc.cooling_time(max(t, 0.3)) for t in tf])
     S["ejection_time_s"] = {"p50": round(float(np.median(tcool)), 1), "p99": round(float(np.percentile(tcool, 99)), 1)}
     tnorm = matplotlib.colors.Normalize(0, 22)
@@ -488,9 +521,18 @@ def main():
     col = np.tile(g, (len(P["input"]["mesh"].faces), 1))
     rnd("steel_core.png", P["input"]["mesh"], col, "core_iso", extra=[vv.sphere_actor(p, 0.35) for p in wpts[::2]])
     # rib draft section
-    fig, axs = plt.subplots(1, 2, figsize=(9, 4.4))
-    sec(axs[0], P["input"]["mesh"], 36.0, (19, 33), (8, 17.5), gi, "D-D  Z 36: ribs before (0 deg)")
-    sec(axs[1], dm, 36.0, (19, 33), (8, 17.5), gi, "D-D  Z 36: ribs after (0.5 deg/side)")
+    fig, axs = plt.subplots(1, 2, figsize=(9, 4.6))
+    for ax, mesh_, t_ in ((axs[0], P["input"]["mesh"], "D-D  X 26.12: rib wall before (0 deg)"),
+                          (axs[1], dm, "D-D  X 26.12: after (0.5 deg/side)")):
+        s_ = mesh_.section(plane_origin=[26.12, 0, 0], plane_normal=[1, 0, 0])
+        for poly in s_.discrete:
+            ax.fill(poly[:, 2], poly[:, 1], color=gi, lw=0.8, ec="#1a5c1a")
+        ax.set_xlim(141.5, 148.5)
+        ax.set_ylim(8, 23.5)
+        ax.set_aspect("equal")
+        ax.grid(alpha=0.25)
+        ax.set_title(t_, fontsize=11)
+        ax.tick_params(labelsize=8)
     savefig(fig, "sec_rib.png")
     # thick spot section
     fig, ax = plt.subplots(figsize=(6, 4.4))
@@ -506,7 +548,9 @@ def main():
 
     # rib / rib-root numbers
     S["ribs"] = {"thickness_before_mm": 0.8, "ratio_to_wall": 0.4, "draft_after_deg": 0.5,
-                 "tip_mm": 0.8, "root_mm_at_12mm_height": round(0.8 + 2 * 12 * np.tan(np.radians(0.5)), 2)}
+                 "tip_mm": 0.8, "root_mm_at_12mm_height": round(0.8 + 2 * 12 * np.tan(np.radians(0.5)), 2),
+                 "wall_example": {"x": 26.12, "z": (144.44, 145.45), "tip_mm": 1.0, "height_mm": 13.4,
+                                  "root_mm": round(1.0 + 2 * 13.4 * np.tan(np.radians(0.5)), 2)}}
     wed = json.loads((PROJ / "src" / "lib" / "dfm_features.json").read_text())
     S["wedges"] = {"count": len(wed["wedges"]), "gap_mm": wed["wedge_gap_mm"],
                    "added_volume_mm3_est": round(sum(w["area_mm2"] * (w["v1"] - w["v0"]) for w in wed["wedges"]), 1)}

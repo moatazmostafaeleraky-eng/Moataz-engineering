@@ -94,7 +94,13 @@ def ribs_dfm() -> list[bd.Part]:
         for rings in e["rings"]:
             face = g._sketch([rings], 1, e["y0"])[0]
             xs = [p[0] for p in rings[0]]
+            zs = [p[1] for p in rings[0]]
             inside = RIB_X_RANGE[0] <= min(xs) and max(xs) <= RIB_X_RANGE[1]
+            # ribs under the battery opening are formed through the opening by the cavity: a core-side taper
+            # would be a reverse draft there
+            under_opening = (g.SLOT_X[0] - 0.5 <= min(xs) and max(xs) <= g.SLOT_X[1] + 0.5
+                             and max(zs) > g.OPENING_Z[0] - 3.0)
+            inside = inside and not under_opening
             taper = -DRAFT_RIB if (_rib_width(rings) <= RIB_MAX_W and inside) else 0.0
             try:
                 p = bd.extrude(face, amount=30.0 - e["y0"], dir=(0, 1, 0), taper=taper)

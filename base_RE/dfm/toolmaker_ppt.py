@@ -44,7 +44,7 @@ def txt(s, x, y, w, h, text, size=12, color=BLACK, bold=False, align=PP_ALIGN.LE
     for i, ln in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.alignment = align
-        segs = ln if isinstance(ln, list) else [(ln, {})]
+        segs = ln if isinstance(ln, list) else ([ln] if isinstance(ln, tuple) else [(ln, {})])
         for seg, o in segs:
             r = p.add_run()
             r.text = seg
@@ -102,7 +102,7 @@ def comment(s, x, y, w, h, lines, size=11):
     for i, ln in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.alignment = PP_ALIGN.CENTER
-        segs = ln if isinstance(ln, list) else [(ln, {})]
+        segs = ln if isinstance(ln, list) else ([ln] if isinstance(ln, tuple) else [(ln, {})])
         for seg, o in segs:
             r = p.add_run()
             r.text = seg
@@ -338,7 +338,7 @@ def build(S, repo: Path, out: Path):
             f"No. of cavities :- 1 X {S['cavity_pick']}", "No. of slider :- NONE",
             f"No. of lifters :- {lift['count_per_cavity']}X / CAV", "Main insert material :- NAK-80",
             "Mold base material :- S50C", "Mold base Standard :- LKM",
-            f"Injection machine capacity :-  {pick['machine_t']}T"]
+            f"Injection machine capacity :-  {S['mold']['machine_t']}T"]
     for i, t in enumerate(tool):
         txt(s, 4.8, 1.3 + 0.48 * i, 5.0, 0.35, t, size=12)
     note(s, "Material not given on the TE-12XCME drawing: ABS assumed (same as the battery cover). Weight = DFM "
@@ -363,9 +363,8 @@ def build(S, repo: Path, out: Path):
 
     # ---------------------------------------------------------------- parting line slides
     s = new(prs, title("Parting Line"))
-    cavcor(s, 0.35, 0.55, pl=False)
-    label(s, 0.2, 1.0, "PL", w=0.45)
-    pic(s, crop_to_content(F["pl_side"])[0], 1.05, 0.62, 8.7, 1.2)
+    cavcor(s, 0.72, 0.5, pl=True)
+    pic(s, crop_to_content(F["pl_side"])[0], 1.45, 0.62, 8.3, 1.2)
     pic(s, crop_to_content(F["pl_cav_iso"])[0], 0.3, 2.05, 4.6, 4.45)
     pic(s, crop_to_content(F["pl_core_iso"])[0], 5.0, 2.05, 4.8, 4.45)
     comment(s, 2.45, 6.62, 7.35, 0.62, ["Main PL flat at Y 4.34 (bottom of the side walls). PL steps down around the "
@@ -512,7 +511,7 @@ def build(S, repo: Path, out: Path):
     c, (cx0, cy0) = crop_to_content(F["undercut_core_iso"])
     mp, _ = pic(s, c, 0.25, 0.55, 4.3, 5.4)
     label(s, 1.5, 0.58, "Undercut", w=1.0)
-    pic(s, F["sec_tooth"], 4.7, 0.8, 5.1, 3.0)
+    pic(s, F["sec_tooth"], 4.7, 1.05, 5.1, 2.8)
     comment(s, 4.75, 3.95, 5.05, 1.9,
             ["Have undercut: 10 PL catch teeth (1.0 x 1.5 x 4.0) for the front-case snap.",
              "Function part, keep shape. Suggest to make undercut with lifter (10X / CAV).",
@@ -524,21 +523,23 @@ def build(S, repo: Path, out: Path):
     label(s, 1.2, 0.58, "Weak steel", w=1.1)
     pic(s, F["sec_steel"], 3.95, 0.55, 5.85, 2.75)
     pic(s, F["sec_steel2"], 3.95, 3.3, 5.85, 2.55)
-    label(s, 4.4, 1.0, "Before", w=0.8)
-    label(s, 7.4, 1.0, "After", w=0.7)
+    label(s, 3.95, 3.0, "Before", w=0.8)
+    label(s, 9.0, 3.0, "After", w=0.7)
     comment(s, 2.45, 5.95, 7.35, 0.62,
             [f"Weak steel 0-0.75 mm between side plates/ribs and R8 fillet, easy broken. Suggest to add plastic "
              f"(fill gap), {S['wedges']['count']} places, slot below kept."], size=10)
 
     s = new(prs, title("Suggest"))
     pic(s, F["sec_rib"], 0.3, 0.7, 9.4, 4.3)
-    label(s, 1.4, 0.75, "Before", w=0.8)
-    label(s, 6.1, 0.75, "After", w=0.7)
+    label(s, 0.5, 1.25, "Before", w=0.8)
+    label(s, 5.2, 1.25, "After", w=0.7)
     rb = S["ribs"]
+    we = rb["wall_example"]
     comment(s, 2.45, 5.2, 7.35, 1.2,
-            [f"Ribs 0.8 mm (0.4 x wall): no thickness mark, but 0º draft and tall -> sticking + short shot risk.",
-             f"Suggest 0.5º draft each side, tip keep 0.8 mm, root {rb['root_mm_at_12mm_height']:.2f} mm at 12 mm "
-             f"height. Rims at cover rails keep 0º (cover fit)."], size=10)
+            ["Ribs 0.8-1.0 mm (0.4-0.5 x wall): no thickness mark, but 0º draft -> sticking on core, ejection marks.",
+             f"Suggest 0.5º draft each side, tip keep (0.8 / 1.0 mm), root grows: this wall {we['tip_mm']:.1f} -> "
+             f"{we['root_mm']:.2f} mm over {we['height_mm']:.1f} mm. Plates at side-wall slots and rims at cover "
+             "rails keep 0º (function)."], size=10)
 
     s = new(prs, title("Suggest"))
     pic(s, F["sec_thick"], 0.3, 0.6, 4.6, 4.8)
@@ -571,10 +572,15 @@ def build(S, repo: Path, out: Path):
     label(s, 5.9, 0.9, f"Mold {M['mold_W_mm']:.0f} X {M['mold_L_mm']:.0f}", w=2.2)
     label(s, 5.9, 1.4, f"Insert {M['insert_W_mm']} X {M['insert_L_mm']}", w=2.2)
     label(s, 5.9, 1.9, f"{M['machine_t']} TON", w=1.2, bold=True)
+    if M["machine_t"] != M["machine_t_clamp"]:
+        comment(s, 5.9, 5.0, 3.9, 0.9, [[(f"Machine size need to change from {M['machine_t_clamp']}T to "
+                                          f"{M['machine_t']}T", {"bold": True, "color": RED})],
+                                        f"(mold {max(M['mold_W_mm'], M['mold_L_mm']):.0f} mm > "
+                                        f"{M['tie_bar_clamp_machine_mm']} mm tie bars)"], size=10)
     rows = [f"{r['cavities']} cav: clamp {r['clamp_calc_t']:.0f} t -> {r['machine_t']} T, shot {r['shot_g']:.0f} g, "
             f"{r['parts_per_h']} pcs/h" for r in tons]
     txt(s, 5.9, 2.5, 3.9, 1.6, rows, size=9)
-    txt(s, 5.9, 3.9, 3.9, 1.3, [f"Projected area {dfm['projected_area_cm2']:.1f} cm2/cav, cavity pressure "
+    txt(s, 5.9, 3.7, 3.9, 1.3, [f"Projected area {dfm['projected_area_cm2']:.1f} cm2/cav, cavity pressure "
                                  f"{S['material']['cavity_pressure_MPa']:.0f} MPa, SF 1.2 (hand calc).",
                                  M["tie_bar_note"]], size=9)
 
@@ -621,8 +627,9 @@ def build(S, repo: Path, out: Path):
     cd = CategoryChartData()
     cd.categories = ["Fill time", "Pack time", "Cooling time", "Mold open time"]
     cd.add_series("s", (cy["fill_s"], cy["pack_s"], cy["cool_s"], cy["mold_open_s"]))
-    gf = s.shapes.add_chart(XL_CHART_TYPE.THREE_D_PIE, Inches(0.3), Inches(0.7), Inches(4.6), Inches(3.8), cd)
+    gf = s.shapes.add_chart(XL_CHART_TYPE.PIE, Inches(0.3), Inches(0.7), Inches(4.6), Inches(3.8), cd)
     ch = gf.chart
+    ch.has_title = False
     ch.has_legend = True
     ch.legend.position = XL_LEGEND_POSITION.BOTTOM
     ch.legend.include_in_layout = False
@@ -633,6 +640,7 @@ def build(S, repo: Path, out: Path):
     pl_.data_labels.number_format_is_linked = False
     pl_.data_labels.font.size = Pt(9)
     pl_.data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
+    to_3d_pie(ch)  # last: python-pptx cannot read the chart back once it is 3-D
     pic(s, crop_to_content(F["dfm_cav_iso"])[0], 5.2, 0.6, 4.6, 2.6)
     lines_ = [f"1.Fill time = {cy['fill_s']:.3f}sec", f"2.Pack time = {cy['pack_s']:.1f} sec",
               f"3.Cooling time = {cy['cool_s']:.1f} sec", f"4.Mold open time = {cy['mold_open_s']:.1f} sec"]
@@ -645,6 +653,21 @@ def build(S, repo: Path, out: Path):
 
     prs.save(out)
     return out
+
+
+def to_3d_pie(chart):
+    """python-pptx has no 3-D pie writer: convert the pie chart XML to c:pie3DChart with a tilted view."""
+    cs = chart._chartSpace
+    c = cs.find(qn("c:chart"))
+    pie = c.find(qn("c:plotArea")).find(qn("c:pieChart"))
+    pie.tag = qn("c:pie3DChart")
+    fsa = pie.find(qn("c:firstSliceAng"))
+    if fsa is not None:
+        pie.remove(fsa)
+    v3 = c.makeelement(qn("c:view3D"), {})
+    for tag, val in (("c:rotX", "30"), ("c:rotY", "20"), ("c:rAngAx", "0")):
+        v3.append(v3.makeelement(qn(tag), {"val": val}))
+    c.insert(list(c).index(c.find(qn("c:plotArea"))), v3)
 
 
 def TOOTH_TXT(lift):

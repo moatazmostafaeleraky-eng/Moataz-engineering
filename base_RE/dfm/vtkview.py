@@ -140,16 +140,14 @@ def render(mesh, face_rgb, out, camera="core_iso", size=(1400, 1000), lines=None
     wr.SetInputConnection(w2i.GetOutputPort())
     wr.Write()
     W, H = size
+    M = cam.GetCompositeProjectionTransformMatrix(W / H, -1, 1)
+    Mn = np.array([[M.GetElement(i, j) for j in range(4)] for i in range(4)])
 
     def project(points):
-        co = vtk.vtkCoordinate()
-        co.SetCoordinateSystemToWorld()
-        res = []
-        for p in np.atleast_2d(points):
-            co.SetValue(*map(float, p))
-            x, y = co.GetComputedDoubleDisplayValue(ren)
-            res.append((x, H - y))
-        return np.array(res)
+        """World -> image pixels (x right, y down), from the camera used for this render."""
+        P = np.c_[np.atleast_2d(np.asarray(points, float)), np.ones(len(np.atleast_2d(points)))] @ Mn.T
+        ndc = P[:, :3] / P[:, 3:4]
+        return np.c_[(ndc[:, 0] + 1) / 2 * W, (1 - (ndc[:, 1] + 1) / 2) * H]
 
     return str(out), project
 
@@ -165,6 +163,18 @@ def sphere_actor(center, r, rgb=(1, 0, 0)):
     a = vtk.vtkActor()
     a.SetMapper(m)
     a.GetProperty().SetColor(*rgb)
+    return a
+
+
+def box_actor(lo, hi, rgb=(0.72, 0.35, 0.85), opacity=0.55):
+    c = vtk.vtkCubeSource()
+    c.SetBounds(lo[0], hi[0], lo[1], hi[1], lo[2], hi[2])
+    m = vtk.vtkPolyDataMapper()
+    m.SetInputConnection(c.GetOutputPort())
+    a = vtk.vtkActor()
+    a.SetMapper(m)
+    a.GetProperty().SetColor(*rgb)
+    a.GetProperty().SetOpacity(opacity)
     return a
 
 
