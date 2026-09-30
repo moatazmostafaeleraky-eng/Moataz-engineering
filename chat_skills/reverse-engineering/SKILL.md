@@ -21,10 +21,36 @@ The user is a mechanical / product-design engineer.
 
 Save every deliverable to the outputs folder and present the files to the user.
 
+## Step -1: check the environment, then pick a path (never stop dead)
+Run `python scripts/offline/meshlite.py`, which prints the libraries that import. Try `pip install` once only: a network error means the sandbox is offline, and retrying won't help.
+
+**Full path:** build123d and trimesh are available. Follow Steps 0–5 as written.
+
+**Offline path:** no CAD kernel, so this sandbox can't write a STEP. Use the offline kit in `scripts/offline/` (numpy + Pillow; scipy recommended). Don't ask the user to change settings before delivering something.
+
+| File | Role |
+|---|---|
+| `meshlite.py` | STL reader, stats (watertight, Euler, bbox, volume, area), `plane_clusters` (datums), `section` (exact polylines), `fit_circle` (with RMS residual), ray caster, `render` (Pillow) |
+| `deviation_offline.py` | Two-way deviation between the source STL and a model STL. Validated against the full pipeline: mean 0.0027 vs 0.0024 mm, p95 0.011 vs 0.011 mm |
+| `mesh_vs_model_offline.py` | The comparison image: source mesh vs model |
+| `step_info.py` | Reads a STEP as text (product name, units, face count, vertex bounding box) |
+
+The offline flow:
+1. **Intake and measurement:** as in Steps 1–3, with `meshlite`. Every value is measured on the STL.
+2. **Ask for the CAD program now,** not after the STEP. Offline, the STEP is built by the user's CAD from a script you write. Add **NX** to the options: an NX Open Python journal, run with Tools → Journal → Play.
+3. **Deliver three things:**
+   - the feature table (measured values, residuals);
+   - one script for their program that builds the as-measured part **and** the design-intent part from one parameter table;
+   - the instructions to run it.
+
+   Label it "script provided, not executed here".
+4. **Ask the user to export both parts** as fine STL (chord 0.005–0.01 mm, binary, mm) and as STEP, then send the STLs back. Run `deviation_offline.py` and `mesh_vs_model_offline.py` on them, and report the deviation. Only then call the STEP verified.
+5. Offer the other route once: enable network access for code execution (claude.ai → Settings → Capabilities → code execution, allow network egress or package managers; on Team / Enterprise plans an owner controls this). With network access, the STEP is built and verified here.
+
 ## Step 0: ask for the CAD program before building the tree
 - Build and verify the STEP first. Then, **before any feature tree**, ask one short question:
   - "Which CAD program will you edit the part in, and which version?"
-  - Options: FreeCAD / SolidWorks / Fusion 360 / Onshape / Other.
+  - Options: FreeCAD / SolidWorks / Fusion 360 / Onshape / NX / Other.
 - Don't guess. Build the tree only for the program the user picks.
 
 | Program | Deliver | Verification |
@@ -33,6 +59,7 @@ Save every deliverable to the outputs folder and present the files to the user.
 | **SolidWorks** | A VBA macro (`.bas` / `.swp` source) using the SolidWorks API: named sketches and features, and dimensions linked to global variables (Equations), plus a parameter table (`.xlsx`). | It can't be run here. Mirror-build the same feature list with build123d and compare with the STEP; say "macro not executed here". |
 | **Fusion 360** | A Python script (Fusion API) that creates User Parameters, then named sketches and features. | Same: mirror-build and compare, and label it unverified. |
 | **Onshape** | A FeatureScript Part Studio with `#variables`. | Same. |
+| **NX** | An NX Open Python journal (`.py`, Tools → Journal → Play) that creates expressions for every parameter, then named sketches and features. | Same as SolidWorks: mirror-build (or, offline, check the user's STL export with `deviation_offline.py`), and label it unverified until then. |
 | **Other** | The STEP plus a numbered feature table (plane, sketch, operation, parameters). Offer a script if the program has an API (Inventor iLogic, CATIA VBA, NX Open). | State exactly what was verified. |
 
 - A STEP never contains a feature tree. If the user asks for "the tree in STEP", explain that and deliver the tree in their program.
@@ -43,8 +70,7 @@ Save every deliverable to the outputs folder and present the files to the user.
 - Write this down: it decides what is design intent and what must not move.
 
 ## Step 2: environment and mesh intake
-- `pip install build123d trimesh manifold3d shapely scipy rtree matplotlib` (add `vtk` for renders).
-- If an install is blocked, say which one and use what is available.
+- Full path: `pip install build123d trimesh manifold3d shapely scipy rtree matplotlib` (add `vtk` for renders). If the install is blocked, switch to the offline path (Step -1).
 - Load the STL and report: watertight, Euler number, bounds, volume, area.
 - **Keep the source frame** (no re-centring).
 

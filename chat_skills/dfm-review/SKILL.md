@@ -21,9 +21,43 @@ The user is a mechanical / product-design engineer.
 | `examples/run_dfm_example.py` | A complete run on a real housing: lifter release check, ejector placement on flat faces, tie-bar check, weld-line and air-trap proxies, cache. Adapt the part data; don't rewrite. |
 | `examples/geometry_dfm_example.py` | How the corrected part was built: side-wall draft with a neutral plane at the PL, tapered ribs, fills, and exclusions for function |
 
-Install what is missing: `pip install build123d trimesh manifold3d shapely scipy rtree python-pptx matplotlib vtk`.
+Offline kit in `scripts/offline/` (numpy + Pillow + python-pptx; scipy recommended). No internet or CAD kernel needed:
+
+| File | Role |
+|---|---|
+| `meshlite.py` | Environment check (`python scripts/offline/meshlite.py`), STL reader, ray caster, undercut, exact inscribed-sphere thickness, steel gap, sections, geodesic flow, weld / air-trap proxies, Pillow renderer |
+| `run_dfm_offline.py` | Complete analysis from an STL → `dfm_summary.json`, `figures/`, `DFM_changes.md` |
+| `deck_offline.py` | Toolmaker-format `DFM.pptx` from that summary (uses `toolmaker_ppt.py`) |
+| `step_info.py` | Reads a STEP as text: product name, units, face / surface counts, vertex bounding box |
+| `deviation_offline.py` | Two-way deviation between two STLs (for checking a corrected model the user exported) |
+
+## Step 0: check the environment first, then pick a path (never stop dead)
+1. Run `python scripts/offline/meshlite.py`. It prints which libraries import. Don't try `pip install` more than once: if the first install fails with a network error, the sandbox is offline and retries won't help.
+2. **Full path:** build123d (or OCP / cadquery) and trimesh import, or install in one try. Use everything below, including `part_DFM.step`.
+3. **Offline path:** no CAD kernel. Keep going with the offline kit; don't ask the user to change settings before delivering anything.
+   - **Input is an STL:** run it all.
+     - `python scripts/offline/run_dfm_offline.py part.stl --pull +y --out <outputs>/dfm --name "<name>" --code "<code>" [--material ABS] [--cavities 2]`
+     - then `python scripts/offline/deck_offline.py <outputs>/dfm`.
+     - `--pull` is the direction the cavity opens, in the STL frame. If unsure, look at the part (renders from `meshlite.render`) and state the choice.
+     - The PL is detected automatically at the maximum silhouette (`--pl` overrides it). Say which one was used.
+   - **Input is only a STEP:** a STEP can't be tessellated without a CAD kernel, and a mesh can't be invented. Do two things:
+     - run `step_info.py` and report the product name, units, face count and **vertex** bounding box (label them "approximate, from STEP text"; the all-point box includes construction points and overstates the size);
+     - ask for an STL export in one short message. **NX:** File → Export → STL, triangle tolerance 0.01 mm, angle tolerance 5°. **SolidWorks:** Save As → STL → Options → Custom, deviation 0.01 mm, angle 5°. **Creo / CATIA / Fusion:** export STL at fine resolution, binary, mm.
+
+       Offer the other route in the same message: enable network access for code execution (claude.ai → Settings → Capabilities → code execution, allow network egress or package managers; on Team / Enterprise plans an owner controls this). With network access the skill also writes `part_DFM.step`.
+4. **`part_DFM.step` on the offline path:** it can't be written without a CAD kernel. Deliver `DFM_changes.md` in its place: every change with its location in the CAD frame, the CAD operation, the value and the function check. Say plainly: "part_DFM.step needs a CAD kernel, which isn't available in this sandbox. Apply the change list in CAD, or enable network and I'll build it". Never fake a STEP.
+5. Offline numbers are measured on the STL exactly as on the full path. Label them the same way (`S["basis"]` in the summary says how each one was made). They were validated against the full pipeline on a real housing:
+
+   | Metric | Offline | Full pipeline |
+   |---|---|---|
+   | 0° area | 16,417 mm² | 16,416 mm² |
+   | Undercut | 437.1 mm² | 437.0 mm² |
+   | Thickness median / p95 | 2.00 / 2.01 mm | 2.00 / 2.03 mm |
+
+Full path only: `pip install build123d trimesh manifold3d shapely scipy rtree python-pptx matplotlib vtk`.
 
 ## Output contract (what the user gets)
+(Offline path: `DFM_changes.md` replaces `part_DFM.step`, as in Step 0.)
 1. **`DFM.pptx`**: the toolmaker-style DFM report (§3–4), with RESULT / APPD / DATE left **empty** for the customer.
 2. **`part_DFM.step`**: the DFM-corrected part, one valid solid, with **function unchanged**.
 3. Save both to the outputs folder, present them to the user, and add a short chat summary:
@@ -32,7 +66,7 @@ Install what is missing: `pip install build123d trimesh manifold3d shapely scipy
    - what was deliberately **not** changed and why;
    - assumptions (material and so on);
    - exceptions.
-- If the input is a mesh (STL), reverse engineer it to a solid first (the `reverse-engineering` skill).
+- Full path with an STL input: reverse engineer it to a solid first (the `reverse-engineering` skill) so `part_DFM.step` can be built. On the offline path, analyse the STL directly.
 
 ## 0. Before touching geometry: understand the part's function
 - What does the part do in its assembly? Read the assembly drawing and BOM if given.
