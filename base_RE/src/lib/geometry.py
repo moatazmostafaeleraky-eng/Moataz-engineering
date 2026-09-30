@@ -17,6 +17,7 @@ from pathlib import Path
 
 import numpy as np
 from cadgen import build123d as bd
+from cadgen.inputs import declare_input
 
 HERE = Path(__file__).resolve().parent
 
@@ -31,7 +32,7 @@ Z_RIM_FLOOR = 153.45  # end face of the top wall; a 2.0 rim stands 0.49 proud of
 RIM_FILLET = 0.45  # both top edges of the rim (measured ~0.5; the rim is only 0.49 tall)
 SLOT_X = (10.62, 41.62)  # battery-cover slot through the top end wall ...
 SLOT_Y0 = 20.34  # ... down to the cover-rail level
-SLOT_Z0 = 151.45
+SLOT_Z0 = Z_END_WALL[0]
 OPENING_Z = (88.45, SLOT_Z0)  # battery opening through the top wall, same width as the slot
 # bottom end: open, cut by a plane tilted ~14.8 deg about X (normal, offset)
 BOTTOM_N = (0.0, -0.2543, -0.9671)
@@ -40,7 +41,7 @@ BOTTOM_D = -5.330
 
 def _profile(kind: str) -> np.ndarray:
     """(z, y) control points of the top skin: 'outer' surface or 'inner' (normal offset WALL)."""
-    return np.load(HERE / "profile_ctrl.npz")[kind]
+    return np.load(declare_input(HERE / "profile_ctrl.npz"))[kind]
 
 
 def _yz_spline_face(ctrl: np.ndarray, x0: float, y_floor: float) -> bd.Face:
@@ -220,7 +221,7 @@ def _feature_solids(entries, cut: bool = False) -> list[bd.Part]:
 
 @functools.cache
 def _features() -> dict:
-    return json.loads((HERE / "features.json").read_text())
+    return json.loads(declare_input(HERE / "features.json").read_text())
 
 
 def _fuse(parts: list[bd.Part]) -> bd.Part:
@@ -249,10 +250,13 @@ def envelope() -> bd.Part:
 
 
 def battery_opening() -> bd.Part:
-    """Cut through the top wall down to the inner skin (removes any rib overlap left in the wall)."""
+    """Opening through the top wall down to the inner skin, continued as the slot through the end wall
+    (applied after the detail fuse so no rib overlap is left inside either)."""
     z0, z1 = OPENING_Z
-    box = bd.Pos((SLOT_X[0] + SLOT_X[1]) / 2, 20, (z0 + z1) / 2) * bd.Box(SLOT_X[1] - SLOT_X[0], 20, z1 - z0)
-    return box - _inner_full()
+    w, xc = SLOT_X[1] - SLOT_X[0], (SLOT_X[0] + SLOT_X[1]) / 2
+    opening = bd.Pos(xc, 20, (z0 + z1) / 2) * bd.Box(w, 20, z1 - z0) - _inner_full()
+    slot = bd.Pos(xc, SLOT_Y0 + 10, (SLOT_Z0 + Z_TOP + 1) / 2) * bd.Box(w, 20, Z_TOP + 1 - SLOT_Z0)
+    return opening.fuse(slot)
 
 
 def base() -> bd.Part:
@@ -261,7 +265,7 @@ def base() -> bd.Part:
     body = envelope().fuse(_fuse(ribs()))
     detail = [p for p in _feature_solids(data["F"]) if p.volume > 1e-4]
     body = body.fuse(_fuse_seq(detail))
-    body = body - battery_opening()
+    body = body - finger_recess_cut() - battery_opening()  # also trims rib overlaps under the recess/opening
     for cut in _feature_solids(data["G"], cut=True):
         body = body - cut
     body = body - boss_holes()

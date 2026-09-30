@@ -29,7 +29,8 @@ def decompose(mesh,axis,lo,hi,dz=0.05):
     cuts=[0]
     for i in range(1,len(vs)):
         excl=sect(sh,axis,vs[i],0).boundary.buffer(0.12)
-        if changed(S[i],S[i-1],excl): cuts.append(i)
+        # against the previous section (steps) and against the slab start (gradual slopes)
+        if changed(S[i],S[i-1],excl) or changed(S[i],S[cuts[-1]],excl,e=0.04): cuts.append(i)
     cuts.append(len(vs)); out=[]
     for a,b in zip(cuts[:-1],cuts[1:]):
         m=(a+b-1)//2

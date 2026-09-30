@@ -15,7 +15,7 @@ ctrl=np.load('src/lib/profile_ctrl.npz')
 yin=CubicSpline(*ctrl['inner'].T); yout=CubicSpline(*ctrl['outer'].T)
 COLS={0:[1,2],1:[0,2],2:[0,1]}
 def geoms(p): return [q for q in getattr(p,'geoms',[p]) if not q.is_empty]
-PLANES_X=(0.62,2.62,49.62,51.62)
+PLANES_X=(0.62,2.62,10.62,41.62,49.62,51.62)  # shell walls and the slot/opening walls
 def _snap(coords, axis):
     c=np.round(np.asarray(coords,float),3)
     # snap to the exact planar walls of the shell so coincident faces are exact, not 0.001 apart
@@ -64,6 +64,18 @@ def shell_sec(axis,v):
     for q in polys: solid = solid.difference(q) if solid.contains(q) else solid.union(q)
     return solid
 GROW=0.5
+# planes the slab ends should land on exactly (rib sketch edges, shell/slot planes): a 0.02 mm gap left
+# between a slab end and a rib face would survive the fuse as a zero-thickness slit inside the part
+SNAP={0:set(PLANES_X),1:set(),2:{0.0,86.45,88.45,151.44,153.45,153.94}}
+for t in T:
+    for poly in t['rings']:
+        for r in poly:
+            c=np.asarray(r); SNAP[0].update(np.round(c[:,0],3)); SNAP[2].update(np.round(c[:,1],3))
+SNAPA={k:np.array(sorted(v)) for k,v in SNAP.items()}
+def snapv(ax,v,tol=0.03):
+    a=SNAPA[ax]
+    if not len(a): return v
+    i=np.argmin(np.abs(a-v)); return float(a[i]) if abs(a[i]-v)<=tol else v
 out={'T':T}
 for key in 'FG':
     L=[]
@@ -71,13 +83,15 @@ for key in 'FG':
         Q=p['poly']; ax=p['axis']; v0,v1=float(p['v0']),float(p['v1']); vm=(v0+v1)/2
         if key=='G' and ax==2 and v0>=88.4 and v1<=151.5 and Q.bounds[0]>=10.6 and Q.bounds[2]<=41.65:
             continue   # the battery opening is a parametric feature (geometry.battery_opening)
+        v0,v1=snapv(ax,v0),snapv(ax,v1)
+        if v1-v0<0.01: continue
         e=dict(axis=int(ax),v0=v0,v1=v1)
         secs=[shell_sec(ax,v) for v in (v0+0.01,vm,v1-0.01)]
         touching=Q.distance(secs[1].boundary)<0.05
         if key=='F' and touching:
             wall=secs[0].intersection(secs[1]).intersection(secs[2]).buffer(-0.03,join_style=2)
             Q=Q.union(Q.buffer(GROW,join_style=2).intersection(wall)).buffer(0)
-        if key=='F' and ax==2 and v1<=2.9: continue   # bottom-end inner lip: see REPORT exceptions
+        if key=='F' and ax==2 and (v1<=2.9 or (v1<=4.5 and p['poly'].area<1.0)): continue   # bottom-end inner lip: see REPORT exceptions
         e['rings']=rings(Q,axis=ax)
         if not e['rings']: continue
         if ax==2 and touching:
