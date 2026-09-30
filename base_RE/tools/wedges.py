@@ -2,7 +2,7 @@
 to src/lib/dfm_features.json. Run from base_RE/ after STL/base.stl exists:  python tools/wedges.py"""
 import json, sys
 import numpy as np, trimesh
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, box
 from shapely.ops import unary_union
 sys.path.insert(0, "src")
 GAP = 0.75
@@ -29,7 +29,10 @@ def narrow(z):
             continue
         c = q.centroid
         if (c.x < 8 or c.x > 44.2) and c.y > 6:
-            out.append(q.buffer(0.02, join_style=2))  # slight overlap into the walls
+            # flat-bottomed fill (rectangle over the wedge): a domed underside would leave small overhangs
+            # against the fillet; the rectangle's sides and top lie inside the plate / wall material
+            x0, y0, x1, y1 = q.bounds
+            out.append(box(x0 - 0.02, y0, x1 + 0.02, y1 + 0.02))
     return out
 
 zs = np.arange(4.5, 151.4, 0.25)
