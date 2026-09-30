@@ -4,13 +4,14 @@ Built from the reverse-engineered model in geometry.py; the changes are:
 
 1. Draft on the side walls, neutral plane at the parting line (Y_PL) so the PL outline is unchanged:
    outer walls DRAFT_CAVITY (cavity side), inner walls DRAFT_CORE (core side).
-2. Thin up-to-skin ribs (<= RIB_MAX_W thick) get DRAFT_RIB per side: the tip keeps its 0.8 mm and the
+2. Thin up-to-skin ribs (<= RIB_MAX_W thick, away from the side walls) get DRAFT_RIB per side: the tip keeps its 0.8 mm and the
    root thickens towards the skin. Blocks, rims and rails keep their faces: the rims at X 10.62 / 41.62
    locate the battery cover rails and must not grow into them.
 3. Weak / knife-edge steel: the wedge-shaped air gaps (< WEDGE_GAP) left where the thin side plates and
    ribs meet the R8 inner fillet are filled with plastic (features in dfm_features.json).
 
-Unchanged on purpose (function first): the ten PL catch teeth (moulded with lifters), the cover opening,
+Unchanged on purpose (function first): the inner side walls inside the four front-case snap stations
+(0.8 mm slots), the ten PL catch teeth (moulded with lifters), the cover opening,
 slot, rails and rims, the finger recess and bosses, the cosmetic skin.
 
 This module rebinds geometry.outer_block / geometry._inner_full, so import it in its own process.
@@ -29,8 +30,14 @@ from . import geometry as g
 DRAFT_CAVITY = 1.0  # deg, outer side walls (cavity half)
 DRAFT_CORE = 0.5  # deg, inner side walls (core half)
 DRAFT_RIB = 0.5  # deg per side, thin ribs (core half)
-RIB_MAX_W = 1.35  # ribs up to this thickness get the rib draft
+RIB_MAX_W = 1.35  # ribs up to this thickness get the rib draft ...
+RIB_X_RANGE = (5.5, 46.74)  # ... unless they sit next to a side wall: those plates form the 0.8 mm front-case
+#                             slots with the wall, and a tapered plate would close the slot (function first)
 WEDGE_GAP = 0.75  # air gaps narrower than this, against the side fillets, are filled
+# front-case snap stations: plates + 0.8 mm slots against the inner side walls. The inner walls keep 0 deg here so
+# the slot width (mating interface) is unchanged; elsewhere they get DRAFT_CORE.
+SNAP_STATIONS_Z = [(14.663, 18.653), (63.853, 69.443), (102.861, 108.451), (138.642, 142.632)]
+STATION_MARGIN = 0.5
 
 
 def _drafted_block(ctrl, x0, x1, y_floor, radius, angle) -> bd.Part:
@@ -53,10 +60,15 @@ def outer_block_dfm(y_floor: float = g.Y_PL) -> bd.Part:
     return _drafted_block(g._profile("outer"), g.X0, g.X1, y_floor, g.CORNER_R, DRAFT_CAVITY)
 
 
+_inner_full_orig = g._inner_full
+
+
 @functools.cache
 def inner_full_dfm() -> bd.Part:
-    return _drafted_block(g._profile("inner"), g.X0 + g.WALL, g.X1 - g.WALL, g.Y_PL - 10, g.CORNER_R - g.WALL,
-                          DRAFT_CORE)
+    drafted = _drafted_block(g._profile("inner"), g.X0 + g.WALL, g.X1 - g.WALL, g.Y_PL - 10, g.CORNER_R - g.WALL,
+                             DRAFT_CORE)
+    keep = [g._zbox(a - STATION_MARGIN, b + STATION_MARGIN) for a, b in SNAP_STATIONS_Z]
+    return drafted.fuse(_inner_full_orig() & g._fuse(keep))  # 0 deg walls inside the snap stations
 
 
 # rebind: every envelope operation in geometry.py now uses the drafted blocks
@@ -81,7 +93,9 @@ def ribs_dfm() -> list[bd.Part]:
     for e in g._features()["T"]:
         for rings in e["rings"]:
             face = g._sketch([rings], 1, e["y0"])[0]
-            taper = -DRAFT_RIB if _rib_width(rings) <= RIB_MAX_W else 0.0
+            xs = [p[0] for p in rings[0]]
+            inside = RIB_X_RANGE[0] <= min(xs) and max(xs) <= RIB_X_RANGE[1]
+            taper = -DRAFT_RIB if (_rib_width(rings) <= RIB_MAX_W and inside) else 0.0
             try:
                 p = bd.extrude(face, amount=30.0 - e["y0"], dir=(0, 1, 0), taper=taper)
             except Exception:  # a sketch OCC cannot taper keeps its straight walls (listed in the report)

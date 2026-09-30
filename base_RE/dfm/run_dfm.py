@@ -186,7 +186,8 @@ def main():
         D["gap"] = (gp, gn, gg)
         weak = (gg < 0.8) & (gp[:, 1] > 5.0)
         st["steel_lt_0.8_samples"] = int(weak.sum())
-        st["steel_lt_0.5_samples"] = int(((gg < 0.5) & (gp[:, 1] > 5.0)).sum())
+        st["steel_samples_below"] = {str(t): int(((gg < t) & (gp[:, 1] > 5.0)).sum()) for t in (0.3, 0.5, 0.7, 0.8)}
+        st["steel_lt_0.5_samples"] = st["steel_samples_below"]["0.5"]
         st["weak_steel_spots"] = [{"min": np.round(a, 1).tolist(), "max": np.round(b, 1).tolist(), "n": n}
                                   for a, b, n in cluster_boxes(gp[weak], 5.0, 4)]
         st["volume_cm3"] = round(D["shape"].volume / 1000, 3)
@@ -238,7 +239,7 @@ def main():
                       "rule": "d = 0.6 x wall for ABS (1.2 mm on a 2.0 wall)", "runner_d_mm": 5.0}
 
     # ------------------------------------------------ ejection: planar core-side faces
-    from shapely import polylabel
+    from shapely.ops import polylabel
     from shapely.geometry import Polygon
 
     pins, blades = [], []
