@@ -1,0 +1,700 @@
+{
+ "part": "cover_example",
+ "params": {
+  "WIDTH": 31.0,
+  "Z_BOTTOM": 11.5,
+  "Z_TOP": 77.0,
+  "Y_OUTER": 20.0,
+  "WALL": 2.0,
+  "TOP_EDGE_R": 0.5,
+  "Y_RIB_TIP": 16.0,
+  "OVERLAP": 0.5,
+  "RAIL_W": 1.0,
+  "RAIL_Z0": 26.5,
+  "RAIL_Z1": 75.5,
+  "RIB_W": 0.8,
+  "RIB_X1": 7.0,
+  "RIB_X2": 24.0,
+  "RIB_Z1": 56.5,
+  "LIP_Z1": 76.5,
+  "HOOK_X0": 12.5,
+  "HOOK_X1": 18.5,
+  "HOOK_Y1": 17.0,
+  "HOOK_Z0": 68.5,
+  "HOOK_Z1": 73.0,
+  "HOOK_LEG_W": 1.0,
+  "BUMP_W": 3.0,
+  "BUMP_X1": 6.0,
+  "BUMP_X2": 25.0,
+  "CORE_W": 1.0,
+  "LATCH_X0": 12.5,
+  "LATCH_X1": 18.5
+ },
+ "features": [
+  {
+   "type": "pad",
+   "name": "Plate",
+   "normal": "X",
+   "from": 0,
+   "to": "WIDTH",
+   "profile": {
+    "path": {
+     "start": [
+      18.0,
+      11.5
+     ],
+     "segs": [
+      {
+       "line": [
+        20.0,
+        11.5
+       ]
+      },
+      {
+       "line": [
+        20.0,
+        76.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         19.853553390593273,
+         76.85355339059328
+        ],
+        "end": [
+         19.5,
+         77.0
+        ]
+       }
+      },
+      {
+       "line": [
+        18.5,
+        77.0
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         18.146446609406727,
+         76.85355339059328
+        ],
+        "end": [
+         18.0,
+         76.5
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Rail_L",
+   "normal": "X",
+   "from": 0,
+   "to": "RAIL_W",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "RAIL_Z0",
+     "Y_OUTER - WALL + OVERLAP",
+     "RAIL_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Rail_R",
+   "normal": "X",
+   "from": "WIDTH - RAIL_W",
+   "to": "WIDTH",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "RAIL_Z0",
+     "Y_OUTER - WALL + OVERLAP",
+     "RAIL_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Top_lip",
+   "normal": "X",
+   "from": 0,
+   "to": "WIDTH",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "RAIL_Z1",
+     "Y_OUTER - WALL + OVERLAP",
+     "LIP_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Hook_block",
+   "normal": "X",
+   "from": "HOOK_X0",
+   "to": "HOOK_X1",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "HOOK_Z0",
+     "HOOK_Y1",
+     "HOOK_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Hook_leg_L",
+   "normal": "X",
+   "from": "HOOK_X0",
+   "to": "HOOK_X0 + HOOK_LEG_W",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "HOOK_Z1",
+     "Y_OUTER - WALL + OVERLAP",
+     "RAIL_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Hook_leg_R",
+   "normal": "X",
+   "from": "HOOK_X1 - HOOK_LEG_W",
+   "to": "HOOK_X1",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "HOOK_Z1",
+     "Y_OUTER - WALL + OVERLAP",
+     "RAIL_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Rib_1",
+   "normal": "X",
+   "from": "RIB_X1 - RIB_W/2",
+   "to": "RIB_X1 + RIB_W/2",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "RAIL_Z0",
+     "Y_OUTER - WALL + OVERLAP",
+     "RIB_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Rib_2",
+   "normal": "X",
+   "from": "RIB_X2 - RIB_W/2",
+   "to": "RIB_X2 + RIB_W/2",
+   "profile": {
+    "rect": [
+     "Y_RIB_TIP",
+     "RAIL_Z0",
+     "Y_OUTER - WALL + OVERLAP",
+     "RIB_Z1"
+    ]
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Bump_1",
+   "normal": "X",
+   "from": "BUMP_X1 - BUMP_W/2",
+   "to": "BUMP_X1 + BUMP_W/2",
+   "profile": {
+    "path": {
+     "start": [
+      19.5,
+      68.5
+     ],
+     "segs": [
+      {
+       "line": [
+        20.0,
+        68.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         21.414213562373096,
+         69.08578643762691
+        ],
+        "end": [
+         22.0,
+         70.5
+        ]
+       }
+      },
+      {
+       "line": [
+        22.0,
+        73.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         21.414213562373096,
+         74.91421356237309
+        ],
+        "end": [
+         20.0,
+         75.5
+        ]
+       }
+      },
+      {
+       "line": [
+        19.5,
+        75.5
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Bump_2",
+   "normal": "X",
+   "from": "BUMP_X2 - BUMP_W/2",
+   "to": "BUMP_X2 + BUMP_W/2",
+   "profile": {
+    "path": {
+     "start": [
+      19.5,
+      68.5
+     ],
+     "segs": [
+      {
+       "line": [
+        20.0,
+        68.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         21.414213562373096,
+         69.08578643762691
+        ],
+        "end": [
+         22.0,
+         70.5
+        ]
+       }
+      },
+      {
+       "line": [
+        22.0,
+        73.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         21.414213562373096,
+         74.91421356237309
+        ],
+        "end": [
+         20.0,
+         75.5
+        ]
+       }
+      },
+      {
+       "line": [
+        19.5,
+        75.5
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "pocket",
+   "name": "Bump_core_1",
+   "normal": "X",
+   "from": "BUMP_X1 - CORE_W/2",
+   "to": "BUMP_X1 + CORE_W/2",
+   "profile": {
+    "path": {
+     "start": [
+      17.5,
+      69.5
+     ],
+     "segs": [
+      {
+       "line": [
+        20.5,
+        69.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         20.853553390593273,
+         69.64644660940672
+        ],
+        "end": [
+         21.0,
+         70.0
+        ]
+       }
+      },
+      {
+       "line": [
+        21.0,
+        74.0
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         20.853553390593273,
+         74.35355339059328
+        ],
+        "end": [
+         20.5,
+         74.5
+        ]
+       }
+      },
+      {
+       "line": [
+        17.5,
+        74.5
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "pocket",
+   "name": "Bump_core_2",
+   "normal": "X",
+   "from": "BUMP_X2 - CORE_W/2",
+   "to": "BUMP_X2 + CORE_W/2",
+   "profile": {
+    "path": {
+     "start": [
+      17.5,
+      69.5
+     ],
+     "segs": [
+      {
+       "line": [
+        20.5,
+        69.5
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         20.853553390593273,
+         69.64644660940672
+        ],
+        "end": [
+         21.0,
+         70.0
+        ]
+       }
+      },
+      {
+       "line": [
+        21.0,
+        74.0
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         20.853553390593273,
+         74.35355339059328
+        ],
+        "end": [
+         20.5,
+         74.5
+        ]
+       }
+      },
+      {
+       "line": [
+        17.5,
+        74.5
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "pad",
+   "name": "Latch",
+   "normal": "X",
+   "from": "LATCH_X0",
+   "to": "LATCH_X1",
+   "profile": {
+    "poly": [
+     [
+      13.0,
+      5.5
+     ],
+     [
+      14.0,
+      5.5
+     ],
+     [
+      15.0,
+      9.0
+     ],
+     [
+      15.0,
+      9.5
+     ],
+     [
+      14.3,
+      9.5
+     ],
+     [
+      14.3,
+      11.5
+     ],
+     [
+      19.0,
+      11.5
+     ],
+     [
+      19.0,
+      20.299999999999997
+     ],
+     [
+      13.0,
+      13.1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "groove",
+   "name": "Thumb_recess",
+   "normal": "X",
+   "offset": 15.5,
+   "axis": [
+    [
+     0,
+     11.5
+    ],
+    [
+     30,
+     11.5
+    ]
+   ],
+   "angles": [
+    360,
+    0
+   ],
+   "profile": {
+    "path": {
+     "start": [
+      18.0,
+      11.5
+     ],
+     "segs": [
+      {
+       "line": [
+        18.0,
+        14.05
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         18.438703,
+         16.507056
+        ],
+        "end": [
+         19.700599,
+         18.660474
+        ]
+       }
+      },
+      {
+       "arc": {
+        "mid": [
+         19.922764,
+         19.039596
+        ],
+        "end": [
+         20.0,
+         19.472177
+        ]
+       }
+      },
+      {
+       "line": [
+        20.0,
+        23.5
+       ]
+      },
+      {
+       "line": [
+        24,
+        23.5
+       ]
+      },
+      {
+       "line": [
+        24,
+        11.5
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "pocket",
+   "name": "Latch_slot_1",
+   "normal": "X",
+   "from": 13.5,
+   "to": 15.0,
+   "profile": {
+    "rect": [
+     12.0,
+     12.5,
+     "Y_OUTER - WALL",
+     21.5
+    ]
+   }
+  },
+  {
+   "type": "pocket",
+   "name": "Latch_slot_2",
+   "normal": "X",
+   "from": 16.0,
+   "to": 17.5,
+   "profile": {
+    "rect": [
+     12.0,
+     12.5,
+     "Y_OUTER - WALL",
+     21.5
+    ]
+   }
+  },
+  {
+   "type": "shaft",
+   "name": "Recess_shell",
+   "normal": "X",
+   "offset": 15.5,
+   "axis": [
+    [
+     0,
+     11.5
+    ],
+    [
+     30,
+     11.5
+    ]
+   ],
+   "angles": [
+    90,
+    90
+   ],
+   "profile": {
+    "path": {
+     "start": [
+      16.0,
+      11.5
+     ],
+     "segs": [
+      {
+       "line": [
+        16.0,
+        14.05
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         16.514547,
+         17.066621
+        ],
+        "end": [
+         18.0,
+         19.7421
+        ]
+       }
+      },
+      {
+       "line": [
+        20.0,
+        19.7421
+       ]
+      },
+      {
+       "line": [
+        20.0,
+        19.472177
+       ]
+      },
+      {
+       "arc": {
+        "mid": [
+         19.922764,
+         19.039596
+        ],
+        "end": [
+         19.700599,
+         18.660474
+        ]
+       }
+      },
+      {
+       "arc": {
+        "mid": [
+         18.438703,
+         16.507056
+        ],
+        "end": [
+         18.0,
+         14.05
+        ]
+       }
+      },
+      {
+       "line": [
+        18.0,
+        11.5
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "manual",
+   "name": "Bump_edge_fillets",
+   "note": "Edge fillet R0.25 on the 4 proud side edges of each bump (X faces, above the plate)"
+  }
+ ]
+}

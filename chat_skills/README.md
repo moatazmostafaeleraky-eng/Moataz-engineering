@@ -4,7 +4,7 @@ Each folder is one Skill: `SKILL.md` plus `scripts/`, the bundled code Claude ru
 
 | Skill | Input | Output |
 |---|---|---|
-| `reverse-engineering` | STL (scan or mesh) | STEP + deviation report + comparison image, then a modified part with its feature tree in the user's CAD program (asked first) |
+| `reverse-engineering` | STL (scan or mesh) | STEP + deviation report + comparison image, then a modified part with its feature tree in the user's CAD program (asked first; CATIA V5 = a `.CATScript` that builds and saves the `.CATPart`) |
 | `dfm-review` | STEP (or an STL, which goes through reverse engineering first) | `DFM.pptx` (toolmaker-style report) + `part_DFM.step` (corrected, function unchanged) |
 
 ## Install
@@ -18,4 +18,4 @@ Both skills first run `scripts/offline/meshlite.py` to see which libraries are a
 - **Offline RE:** Claude measures the STL and writes a build script for the user's CAD (FreeCAD / SolidWorks / Fusion / Onshape / NX). It then checks the user's STL export of that model with `deviation_offline.py`.
 - **Full path:** enable network access for code execution in claude.ai settings (on Team / Enterprise plans, the org owner does this).
 
-Version: V1.1 (V1 + offline mode).
+Version: V1.2 (V1 + offline mode + CATIA output).

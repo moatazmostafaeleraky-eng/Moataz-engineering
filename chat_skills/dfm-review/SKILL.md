@@ -79,7 +79,7 @@ Full path only: `pip install build123d trimesh manifold3d shapely scipy rtree py
   - a cover that must stay closed.
 - **A DFM fix must never break function.**
 - If the only straight-pull fix changes function or appearance, use a tool action (lifter or slider) and show the geometry option as **rejected, with the reason**. Examples:
-  - a window through a battery cover to remove a lifter was rejected because the cover would have a hole;
+  - a window through a cover plate to remove a lifter was rejected because the cover would have a hole;
   - a window through a cosmetic side wall for a snap catch was rejected.
 - Functional faces keep 0° if drafting them would change a mating fit:
   - slots that receive the mating part;

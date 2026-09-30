@@ -1,6 +1,6 @@
 ---
 name: reverse-engineering
-description: Mesh-to-CAD reverse engineering for plastic and mechanical parts. Takes an STL (scan or mesh) and delivers (1) a STEP solid that reproduces the mesh, with a deviation report, and (2) a modified, design-intent part with a full editable feature tree in the user's own CAD program, which it asks for before building the tree. Use for any request to reverse engineer a part, "هندسة عكسية", "ريفيرس", scan/mesh/STL to STEP, rebuild a part as parametric CAD, or give a part a feature tree.
+description: Mesh-to-CAD reverse engineering for plastic and mechanical parts. Takes an STL (scan or mesh) and delivers (1) a STEP solid that reproduces the mesh, with a deviation report, and (2) a modified, design-intent part with a full editable feature tree in the user's own CAD program (FreeCAD, SolidWorks, Fusion, Onshape, NX or CATIA V5 via a .CATScript macro that builds and saves the .CATPart), which it asks for before building the tree. Use for any request to reverse engineer a part, "هندسة عكسية", "ريفيرس", scan/mesh/STL to STEP, rebuild a part as parametric CAD, give a part a feature tree, or deliver it as a CATIA part (CATPart / كاتيا).
 ---
 
 # Reverse engineering: STL → STEP → part with a feature tree
@@ -37,7 +37,7 @@ Run `python scripts/offline/meshlite.py`, which prints the libraries that import
 
 The offline flow:
 1. **Intake and measurement:** as in Steps 1–3, with `meshlite`. Every value is measured on the STL.
-2. **Ask for the CAD program now,** not after the STEP. Offline, the STEP is built by the user's CAD from a script you write. Add **NX** to the options: an NX Open Python journal, run with Tools → Journal → Play.
+2. **Ask for the CAD program now,** not after the STEP. Offline, the STEP is built by the user's CAD from a script you write. Add **NX** (an NX Open Python journal, run with Tools → Journal → Play) and **CATIA** (`scripts/catia/catia_macro.py` runs offline) to the options.
 3. **Deliver three things:**
    - the feature table (measured values, residuals);
    - one script for their program that builds the as-measured part **and** the design-intent part from one parameter table;
@@ -50,7 +50,7 @@ The offline flow:
 ## Step 0: ask for the CAD program before building the tree
 - Build and verify the STEP first. Then, **before any feature tree**, ask one short question:
   - "Which CAD program will you edit the part in, and which version?"
-  - Options: FreeCAD / SolidWorks / Fusion 360 / Onshape / NX / Other.
+  - Options: FreeCAD / SolidWorks / Fusion 360 / Onshape / NX / CATIA / Other.
 - Don't guess. Build the tree only for the program the user picks.
 
 | Program | Deliver | Verification |
@@ -60,9 +60,37 @@ The offline flow:
 | **Fusion 360** | A Python script (Fusion API) that creates User Parameters, then named sketches and features. | Same: mirror-build and compare, and label it unverified. |
 | **Onshape** | A FeatureScript Part Studio with `#variables`. | Same. |
 | **NX** | An NX Open Python journal (`.py`, Tools → Journal → Play) that creates expressions for every parameter, then named sketches and features. | Same as SolidWorks: mirror-build (or, offline, check the user's STL export with `deviation_offline.py`), and label it unverified until then. |
-| **Other** | The STEP plus a numbered feature table (plane, sketch, operation, parameters). Offer a script if the program has an API (Inventor iLogic, CATIA VBA, NX Open). | State exactly what was verified. |
+| **CATIA V5** | `<part>.CATScript`: a macro that builds the native tree (parameters, formulas, named sketches and features) and saves `<part>.CATPart`. Generate it with `scripts/catia/` from a feature spec (see the CATIA section below). Also give the STEP: CATIA opens it directly as a dead solid for reference. | Mirror-build the same spec (`spec_build.py`) and compare it with the STEP; offline, check the user's STL export from CATIA. Label it "macro not executed here" until the user confirms the log says no failed steps. |
+| **Other** | The STEP plus a numbered feature table (plane, sketch, operation, parameters). Offer a script if the program has an API (Inventor iLogic, Creo J-Link, NX Open). | State exactly what was verified. |
 
 - A STEP never contains a feature tree. If the user asks for "the tree in STEP", explain that and deliver the tree in their program.
+
+### CATIA output (`scripts/catia/`, pure Python, works offline)
+A `.CATPart` is CATIA's closed binary format. Only CATIA writes it: never claim to have produced one, and never rename another file to `.CATPart`. Deliver a macro that builds and saves it:
+1. **Write the part as a feature spec** (`feature_spec.py` documents the format). It holds:
+   - `params`: the measured or design values;
+   - `pad` / `pocket` along X, Y or Z between two levels;
+   - `shaft` / `groove` about an axis in the sketch plane;
+   - `mirror`;
+   - `manual` steps for edge fillets and drafts (these need edge picks in CATIA).
+
+   Profiles are rectangles, circles, polygons or paths of lines and three-point arcs. Use parameter expressions (`"Y_OUTER - WALL"`) wherever a dimension should stay editable. Example: `scripts/catia/examples/make_cover_spec_example.py`, with 19 features on a moulded cover.
+2. **Full path:** `python scripts/catia/spec_build.py part_spec.json --step out/mirror.step --stl out/mirror.stl` builds the same features with build123d. Compare `mirror.stl` with the RE model (`scripts/offline/deviation_offline.py`). The deviation left over must be explained by the `manual` steps only. The example scored 99.95 % within ±0.05 mm; the difference was at the bump fillets left as manual steps.
+3. `python scripts/catia/catia_macro.py part_spec.json --out <part>.CATScript` writes the macro. What it builds:
+   - CATIA Length parameters and formulas;
+   - a `RE_Planes` set with one offset plane per sketch;
+   - pads and pockets with **mirrored extent** (the sketch sits mid-extent, so CATIA's default direction can't flip them);
+   - sketches with shared end points; rectangles get H/V and parameter-driven lengths, circles a driven radius (positions are fixed at the measured coordinates, so the sketches are not fully constrained);
+   - shafts and grooves on the sketch axis.
+
+   Every step is error-trapped. At the end the macro shows a log (failed steps plus the manual steps) and asks where to save the `.CATPart`.
+4. **Tell the user how to run it:** CATIA V5 → Tools → Macro → Macros (Alt+F8) → Macro libraries → add the folder → select the `.CATScript` → Run. Then apply the manual steps and save.
+
+   To verify: File → Save As → `.stl`, send it back, and run `deviation_offline.py` against the source mesh.
+5. **Be honest:**
+   - "macro generated and its geometry verified by a mirror build; not executed in CATIA here";
+   - list the manual steps;
+   - complex housings (up-to-skin ribs, section-driven prisms) don't fit the spec well. For those, deliver the STEP (opened in CATIA as the reference body) plus a macro for the editable main features, and say which features are only in the STEP.
 
 ## Step 1: understand the part first
 - What does the part do in its assembly? Use the assembly drawing or BOM if given.

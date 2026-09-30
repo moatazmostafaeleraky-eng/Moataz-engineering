@@ -1,6 +1,6 @@
 ---
 name: reverse-engineering
-description: Mesh-to-CAD reverse engineering in Moataz Mostafa's house workflow. Takes an STL (or any mesh or FreeCAD mesh) and delivers (1) a STEP solid that reproduces the mesh, with a deviation report, and (2) a modified, design-intent part with a full editable feature tree in the user's own CAD program, which it asks for before building the tree. Use for any request to reverse engineer a part, "هندسة عكسية", scan/mesh/STL to STEP, rebuild a part as parametric CAD, or give a part a feature tree.
+description: Mesh-to-CAD reverse engineering in Moataz Mostafa's house workflow. Takes an STL (or any mesh or FreeCAD mesh) and delivers (1) a STEP solid that reproduces the mesh, with a deviation report, and (2) a modified, design-intent part with a full editable feature tree in the user's own CAD program, which it asks for before building the tree. Use for any request to reverse engineer a part, "هندسة عكسية", scan/mesh/STL to STEP, rebuild a part as parametric CAD, give a part a feature tree, or deliver it for CATIA (CATPart / كاتيا).
 ---
 
 # Reverse engineering: STL → STEP → part with a feature tree
@@ -23,7 +23,7 @@ References in this repo:
 ## Step 0: ask for the CAD program before building the tree
 - Build and verify the STEP first. Then, **before building any feature tree**, ask with `AskUserQuestion`:
   - "Which CAD program will you edit the part in, and which version?"
-  - Options: FreeCAD, SolidWorks, Fusion 360, Onshape, plus "Other" (CATIA, Creo, Inventor, NX…).
+  - Options: FreeCAD, SolidWorks, Fusion 360, Onshape, CATIA V5, plus "Other" (NX, Creo, Inventor…).
 - Don't guess the program, and don't build a tree for a program the user didn't pick.
 - Deliver according to the answer. Be honest about what can be produced and verified in this environment:
 
@@ -33,6 +33,7 @@ References in this repo:
 | **SolidWorks** | A VBA macro (`.swp` source, `.bas`) using the SolidWorks API. It creates each sketch and feature with names, drives dimensions from global variables or equations, and ships with a parameter table (`.xlsx` / design table). Also the STEP. | The macro can't be run here. Build the same feature list in FreeCAD or build123d and compare with the STEP, then state that the SolidWorks run is unverified. |
 | **Fusion 360** | A Python script (Fusion API, `adsk.core` / `adsk.fusion`) that creates User Parameters, then sketches and features by name. | Same as SolidWorks: mirror-build and compare, and label the Fusion run unverified. |
 | **Onshape** | A FeatureScript Part Studio (or a custom feature) with `#variables`. | Same: mirror-build and compare, and label it unverified. |
+| **CATIA V5** | `<part>.CATScript`: a macro that builds the native tree and saves `<part>.CATPart`. It creates Length parameters and formulas, offset planes, named sketches, pads and pockets with mirrored extent, shafts and grooves, and mirrors. Generate it with `chat_skills/reverse-engineering/scripts/catia/catia_macro.py` from a feature spec (format in `feature_spec.py`; example `examples/make_cover_spec_example.py`). Also give the STEP (CATIA opens it as the reference body). | The macro can't run here. Mirror-build the same spec with `spec_build.py` and compare it with the STEP: the battery-cover example scored 99.95 % within ±0.05 mm, with the gap only at the manual fillets. Edge fillets and drafts are `manual` steps (they need edge picks). Label it "macro not executed here". A `.CATPart` is written only by CATIA: never claim one was produced. |
 | **Other** | The STEP, a numbered feature table (sketch plane, profile, operation, parameters) and a FreeCAD tree as a reference. Offer a script if the program has an API (Inventor iLogic, CATIA VBA, NX Open). | Say exactly what was and wasn't verified. |
 
 - A STEP never carries a feature tree. If the user asks for "the tree in STEP", explain that and deliver the tree in their program.
