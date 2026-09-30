@@ -13,6 +13,8 @@ Mesh-to-CAD reverse engineering of the TE-12XCME rear case (`source/base.STL`). 
   - 0° draft on the ribs.
 - **Exceptions (listed honestly):** a thin inner lip at the bottom end, about 10 mm³, is not modelled, and a few short tab and rib-end faces are off by up to 0.4 mm.
 
+![Source mesh vs reverse-engineered CAD](images/mesh_vs_model.png)
+
 Full write-up: **[REPORT.md](REPORT.md)**
 
 ## DFM review for injection moulding (ABS, assumed)
