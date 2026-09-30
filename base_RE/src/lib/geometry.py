@@ -192,8 +192,15 @@ SKIN_OVERLAP = 0.6  # features that run up to the skin end this far inside the w
 
 
 @functools.cache
+def _recess_keepout() -> bd.Part:
+    """Finger-recess cut lowered 0.05: rib/detail overlaps are trimmed just inside the recessed wall so
+    they never share (coincident) faces with the recess surface of the envelope."""
+    return bd.Pos(0, -0.05, 0) * finger_recess_cut()
+
+
+@functools.cache
 def _skin_clip() -> bd.Part:
-    return bd.Pos(0, SKIN_OVERLAP, 0) * inner_block()
+    return (bd.Pos(0, SKIN_OVERLAP, 0) * inner_block()) - _recess_keepout()
 
 
 def _up_to_skin(polys, y0: float) -> list[bd.Part]:
@@ -263,9 +270,16 @@ def base() -> bd.Part:
     """Rear case = shell + design features + ribs (up to skin) + section-driven detail - cuts."""
     data = _features()
     body = envelope().fuse(_fuse(ribs()))
-    detail = [p for p in _feature_solids(data["F"]) if p.volume > 1e-4]
+    detail = []
+    fr = _recess_keepout().bounding_box()
+    for p in _feature_solids(data["F"]):
+        bb = p.bounding_box()
+        if bb.max.Z > fr.min.Z and bb.min.Z < fr.max.Z and bb.max.X > fr.min.X and bb.min.X < fr.max.X:
+            p = p - _recess_keepout()
+        if p.volume > 1e-4:
+            detail.append(p)
     body = body.fuse(_fuse_seq(detail))
-    body = body - finger_recess_cut() - battery_opening()  # also trims rib overlaps under the recess/opening
+    body = body - battery_opening()  # also trims rib/detail overlaps left in the removed wall
     for cut in _feature_solids(data["G"], cut=True):
         body = body - cut
     body = body - boss_holes()

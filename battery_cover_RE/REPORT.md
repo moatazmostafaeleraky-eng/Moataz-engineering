@@ -16,9 +16,9 @@
 | Envelope | 31.0 × 9.0 × 71.5 mm (X × Y × Z) |
 | Nominal wall | 2.0 mm (plate and thumb recess) |
 | Volume / mass | 4.607 cm³ → 4.8 g ABS, 5.3 g PC/ABS, 5.5 g PC |
-| Rebuilt model | 1 valid solid, 97 B-rep faces (design intent) / 123 (as measured) |
+| Rebuilt model | 1 valid solid, 97 B-rep faces (flat plate) / 123 (as measured = design intent, see §4.1) |
 | **Accuracy, as-measured model** | **Hausdorff 0.055 mm; 99.99 % of surface within ±0.05 mm; volume −0.05 %** |
-| Accuracy, design-intent model | Max 0.34 mm. The whole difference is the measured plate bow (see §4.1). |
+| Accuracy, flat-plate model | Max 0.34 mm. The whole difference is the plate curvature, which the rear case shows is design intent (see §4.1). |
 | Topology | Genus 1 (one through-opening, at the retention hook), same as the source |
 
 ---
@@ -68,18 +68,20 @@
 
 ## 4. Findings in the source data
 
-### 4.1 Plate bow: 0.34 mm, not design intent
+### 4.1 Plate curvature: 0.34 mm, design intent (corrected after the rear-case RE)
 The plate is not flat. Both faces shift together in −Y, with the wall held at a constant 2.00 mm. The shift follows a piecewise-linear profile:
 
 | Z | 11.5 | 19.3 | 29.84 | 42.70 | 67.25 | 76.5 |
 |---|---|---|---|---|---|---|
 | Outer-face Y | 19.968 | 19.782 | **19.661** | 19.704 | 19.966 | 20.000 |
 
-The rails, ribs, lip and hook are **not** bowed: their free edges sit exactly on Y = 16.000. The break points also fall at non-round mesh-vertex coordinates. Together, that points to a deformed or scan-fitted plate skin rather than a modelled curvature.
+The rails, ribs, lip and hook are **not** bowed: their free edges sit exactly on Y = 16.000. On the cover alone this looked like a deformed or scan-fitted skin, and the first issue of this report called it "not design intent".
+
+**Correction (from `../base_RE/`).** The rear case the cover fits into has the same dip in its cosmetic skin. In the assembly frame (cover = case − (10.62, 4.34, 76.94)) the case skin reaches its lowest point, Y 24.010, at case Z 107.2, which is 0.31 mm below the straight chord over the cover span. The cover's lowest point is outer Y 19.661 at cover Z 29.84, which is case Y 24.001 at case Z 106.8. The two agree within 0.01 mm and 0.4 mm along Z. The cover is curved so that it stays flush with the curved case skin. The curvature is design intent.
 
 Two models are delivered:
-- **`battery_cover`: design intent**, flat plate. Use this one for tooling and drawings.
-- **`battery_cover_as_measured`**: reproduces the bow for 1:1 fit checks. If the bow is intentional warpage pre-compensation, this is the tooling model instead.
+- **`battery_cover_as_measured`: design intent**, curved plate that follows the case skin. Use this one for tooling, drawings and fit checks.
+- **`battery_cover`**: flat-plate simplification. It is kept for reference and as the base of the DFM study (`output/part_DFM.step`); for tooling, carry the 0.34 mm curvature over from the as-measured model.
 
 ### 4.2 Unfused right hook leg (source CAD defect)
 The source mesh contains an **internal coincident face** (1.0 × 2.5 mm, at Y 18, X 17.5–18.5, Z 73–75.5). The right hook leg touches the plate but was never Boolean-fused to it. Slicers and mold-flow meshers can read this as a crack at the root of a load-bearing feature. The rebuilt model fuses it. Deviation statistics exclude those internal samples (32 of 60,000).
