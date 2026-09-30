@@ -143,14 +143,27 @@ def main():
     S = {"part": {"code": "ANRMTPT0002F", "name": "REAR CASE", "assembly": "ANRMTAS0001F Remote control assy",
                   "model": "TE-12XCME", "material": "ABS (assumed: not specified on the drawing)",
                   "shrinkage": 1.005, "pull": "Y", "parting_line_Y": Y_PL}}
+    import pickle
+
     P = {}
     for key, path in (("input", IN_STEP), ("dfm", OUT_STEP)):
         shape, m = load(path)
         P[key] = {"shape": shape, "mesh": m}
         print(f"[{key}] mesh {len(m.faces)} faces, watertight {m.is_watertight}", flush=True)
 
-    # ------------------------------------------------ geometry, draft, undercut, thickness
+    # ------------------------------------------------ geometry, draft, undercut, thickness (cached per STEP file)
     for key, D in P.items():
+        path = IN_STEP if key == "input" else OUT_STEP
+        cache = OUT / f"_cache_{key}.pkl"
+        stamp = (path.stat().st_mtime, path.stat().st_size)
+        if cache.exists():
+            c = pickle.loads(cache.read_bytes())
+            if c["stamp"] == stamp:
+                for k in ("fine", "uc", "th_pts", "th", "gap"):
+                    D[k] = c[k]
+                S[key] = c["st"]
+                print(f"[{key}] analysis from cache", flush=True)
+                continue
         m = D["mesh"]
         st = mk.brep_stats(D["shape"])
         d = mk.draft_deg(m)
@@ -193,6 +206,7 @@ def main():
         st["volume_cm3"] = round(D["shape"].volume / 1000, 3)
         st["mass_g"] = round(D["shape"].volume / 1000 * mc.ABS["density_g_cm3"], 2)
         S[key] = st
+        cache.write_bytes(pickle.dumps({"stamp": stamp, "st": st, **{k: D[k] for k in ("fine", "uc", "th_pts", "th", "gap")}}))
         print(f"[{key}] zero-draft {st['draft_area_mm2']['0-0.25']} mm2, undercut {st['undercut_area_mm2']} mm2, "
               f"steel<0.8 {st['steel_lt_0.8_samples']}", flush=True)
 

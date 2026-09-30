@@ -21,7 +21,7 @@ ABS = {
     "ejector_pin_min_mm": 2.0,
 }
 WATER = {"rho": 983.0, "cp": 4185.0, "nu_m2_s": 0.47e-6}  # 60 C
-MACHINES_T = [25, 35, 50, 60, 80, 100, 120, 150]
+MACHINES_T = [25, 35, 50, 60, 80, 100, 120, 150, 180, 220, 280, 350, 450]
 
 
 def cooling_time(s_mm, mat=ABS):
