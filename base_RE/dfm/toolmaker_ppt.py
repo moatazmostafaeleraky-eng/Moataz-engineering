@@ -537,9 +537,9 @@ def build(S, repo: Path, out: Path):
     we = rb["wall_example"]
     comment(s, 2.45, 5.2, 7.35, 1.2,
             ["Ribs 0.8-1.0 mm (0.4-0.5 x wall): no thickness mark, but 0º draft -> sticking on core, ejection marks.",
-             f"Suggest 0.5º draft each side, tip keep (0.8 / 1.0 mm), root grows: this wall {we['tip_mm']:.1f} -> "
-             f"{we['root_mm']:.2f} mm over {we['height_mm']:.1f} mm. Plates at side-wall slots and rims at cover "
-             "rails keep 0º (function)."], size=10)
+             f"Suggest 0.5º draft each side, tip keep {we['tip_mm']:.1f} mm, root grows: this rib {we['tip_mm']:.1f} -> "
+             f"{we['root_mm']:.2f} mm over {we['height_mm']:.1f} mm. Keep 0º: side-wall slot plates, cover-rail rims, "
+             "ribs under the opening (cavity-formed)."], size=10)
 
     s = new(prs, title("Suggest"))
     pic(s, F["sec_thick"], 0.3, 0.6, 4.6, 4.8)

@@ -12,6 +12,11 @@ References:
   - `LSP221496_ AUX Cover_DFM_RB_20220430 .ppt`: HIPS, 1 × 4, side gate, 22 PL slides, 11 Suggest slides.
   - `LSP221497_AIR_FILTER_DFM_RB_20220430.ppt`: PP, 3-plate, pin-point gate, 8 lifters per cavity.
   - Read them with `soffice --convert-to pptx/pdf` plus `markitdown`, and render slide images, when checking a detail.
+- **Toolmaker-format builder (use this for new parts):** `base_RE/dfm/` from the rear case ANRMTPT0002F.
+  - `toolmaker_ppt.py` builds the deck in the §4–5 format.
+  - `vtkview.py` renders green parts and colour maps with a world-to-pixel projector for call-outs. It needs `libosmesa6` and `libegl1`.
+  - `run_dfm.py` holds the lifter release check, ejector placement on flat faces, tie-bar machine check, weld-line and air-trap proxies, and caches the heavy mesh analysis.
+  - `tools/wedges.py` finds knife-edge steel and writes flat-bottomed fills.
 - **Analysis engine:** the battery cover ANRMTPT0003F. `battery_cover_RE/dfm/` holds the pipeline and `battery_cover_RE/src/lib/geometry_dfm.py` builds the corrected part. Its 12-slide `output/DFM.pptx` was the earlier format; reuse its analyses and figures, not its layout.
 
 ## 0. Before touching geometry: understand the part's function

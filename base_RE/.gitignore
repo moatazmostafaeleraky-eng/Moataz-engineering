@@ -1,7 +1,6 @@
 tmp/
 __pycache__/
 checks/_dev_*.npy
-output/figures/
 dfm/_*.npy
 dfm/_*.npz
 output/_cache_*.pkl

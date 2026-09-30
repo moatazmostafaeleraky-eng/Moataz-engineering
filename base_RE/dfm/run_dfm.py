@@ -522,17 +522,8 @@ def main():
     rnd("steel_core.png", P["input"]["mesh"], col, "core_iso", extra=[vv.sphere_actor(p, 0.35) for p in wpts[::2]])
     # rib draft section
     fig, axs = plt.subplots(1, 2, figsize=(9, 4.6))
-    for ax, mesh_, t_ in ((axs[0], P["input"]["mesh"], "D-D  X 26.12: rib wall before (0 deg)"),
-                          (axs[1], dm, "D-D  X 26.12: after (0.5 deg/side)")):
-        s_ = mesh_.section(plane_origin=[26.12, 0, 0], plane_normal=[1, 0, 0])
-        for poly in s_.discrete:
-            ax.fill(poly[:, 2], poly[:, 1], color=gi, lw=0.8, ec="#1a5c1a")
-        ax.set_xlim(141.5, 148.5)
-        ax.set_ylim(8, 23.5)
-        ax.set_aspect("equal")
-        ax.grid(alpha=0.25)
-        ax.set_title(t_, fontsize=11)
-        ax.tick_params(labelsize=8)
+    sec(axs[0], P["input"]["mesh"], 36.0, (24.6, 27.6), (8.3, 16.0), gi, "D-D  Z 36: rib before (0 deg)")
+    sec(axs[1], dm, 36.0, (24.6, 27.6), (8.3, 16.0), gi, "D-D  Z 36: rib after (0.5 deg/side)")
     savefig(fig, "sec_rib.png")
     # thick spot section
     fig, ax = plt.subplots(figsize=(6, 4.4))
@@ -549,8 +540,8 @@ def main():
     # rib / rib-root numbers
     S["ribs"] = {"thickness_before_mm": 0.8, "ratio_to_wall": 0.4, "draft_after_deg": 0.5,
                  "tip_mm": 0.8, "root_mm_at_12mm_height": round(0.8 + 2 * 12 * np.tan(np.radians(0.5)), 2),
-                 "wall_example": {"x": 26.12, "z": (144.44, 145.45), "tip_mm": 1.0, "height_mm": 13.4,
-                                  "root_mm": round(1.0 + 2 * 13.4 * np.tan(np.radians(0.5)), 2)}}
+                 "wall_example": {"x": (25.72, 26.52), "z": 36.0, "tip_mm": 0.8, "height_mm": 6.5,
+                                  "root_mm": round(0.8 + 2 * 6.5 * np.tan(np.radians(0.5)), 2)}}
     wed = json.loads((PROJ / "src" / "lib" / "dfm_features.json").read_text())
     S["wedges"] = {"count": len(wed["wedges"]), "gap_mm": wed["wedge_gap_mm"],
                    "added_volume_mm3_est": round(sum(w["area_mm2"] * (w["v1"] - w["v0"]) for w in wed["wedges"]), 1)}

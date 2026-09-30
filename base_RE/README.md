@@ -15,6 +15,11 @@ Mesh-to-CAD reverse engineering of the TE-12XCME rear case (`source/base.STL`). 
 
 Full write-up: **[REPORT.md](REPORT.md)**
 
+## DFM review for injection moulding (ABS, assumed)
+- 24-slide toolmaker DFM report: `output/DFM.pptx`
+- DFM-corrected part: `output/part_DFM.step`
+- Pipeline and code: [dfm/](dfm/README.md)
+
 | Rebuilt (inside) | Rebuilt (outside) |
 |---|---|
 | ![](images/rebuilt_inner_iso.png) | ![](images/rebuilt_outer_iso.png) |

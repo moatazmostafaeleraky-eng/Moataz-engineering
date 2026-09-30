@@ -121,11 +121,27 @@ Other notes:
 
 - **Editability.** The envelope, opening, slot, recess, bosses and rim are parametric. The ribs and detail are measured sketches: accurate, but you edit them as coordinates. For a production drawing or a FreeCAD PartDesign tree like the battery cover's, the recurring ribs, tabs and the battery bay should be re-expressed as named features. This model is the reference to check them against.
 - **Face count.** 1,585 faces, including the fine slabs and polygon facets in §5. A hand-remodelled version would bring this down to a few hundred.
-- **Not done yet:** DFM (draft, thickness, gate) for this part, and the Face/Button parts that are also in `source/`.
+- **Not done yet:** the Face/Button parts that are also in `source/`.
 
 ---
 
-## 7. Reproduce
+## 7. DFM review (injection moulding)
+
+The toolmaker-format DFM report is `output/DFM.pptx` (24 slides), and the corrected part is `output/part_DFM.step` (1 valid solid). Method and scripts are described in [dfm/README.md](dfm/README.md). ABS is assumed, because the drawing does not state the material.
+
+| Item | As received | DFM part |
+|---|---|---|
+| 0° faces (< 0.25°) | 16,416 mm² | 11,049 mm². Side walls and interior ribs are drafted; the rest is listed for tool design. |
+| Straight-pull undercut outside the lifter zones | 10.4 mm² | 8.5 mm² (small local spots: rim end, bosses, rib ends) |
+| PL catch teeth | 10 undercuts | Kept (snap function). 10 lifters / cavity, travel 1.5 mm; every lifter-zone face releases within the travel (ray check). |
+| Steel < 0.5 mm (samples of 40k) | 178 | 129. 19 knife-edge wedges against the R8 fillets are filled; the 0.8 mm front-case slots are kept. |
+| Mass (ABS) | 32.16 g | 31.88 g |
+
+**Tooling concept** (hand calculations): 2-plate mould, 1 × 2 cavities, cold runner with a Ø1.2 sub gate on the inner side wall at mid-length. The maximum flow length is 130 mm (L/t 65). The clamp force works out at 78 t, but the 310 × 330 mould does not fit between the tie bars of an 80 T machine, so a **100 T** machine is needed. Estimated cycle 28.1 s: cooling 13.4 s calculated, fill 1.67 s estimated, pack and mould-open 8 + 5 s as supplier defaults. The simulation slides are geometric proxies, not Moldflow.
+
+**Function first:** nothing that mates was changed. The snap teeth, the 0.8 mm front-case slots (inner walls stay at 0° inside the four snap stations), the cover rails and rims, and the opening all keep their shape. The ribs under the opening keep 0°, because the cavity forms them.
+
+## 8. Reproduce
 
 ```bash
 cd base_RE
@@ -146,7 +162,7 @@ python tools/decomp.py           # residual -> slabs/prisms
 python tools/export_features.py  # -> src/lib/features.json
 ```
 
-## 8. Files
+## 9. Files
 
 | File | Content |
 |---|---|
@@ -157,4 +173,6 @@ python tools/export_features.py  # -> src/lib/features.json
 | `checks/deviation.py`, `checks/deviation_report.json` | Accuracy check and its result |
 | `checks/figures.py`, `images/` | Report figures |
 | `tools/` | Extraction pipeline, mesh → sketches |
+| `output/DFM.pptx`, `output/part_DFM.step`, `output/dfm_summary.json` | DFM report, corrected part, numbers |
+| `src/lib/geometry_dfm.py`, `src/base_dfm.py`, `dfm/` | DFM geometry and pipeline |
 | `source/` | Source meshes (base, and the Face/Button parts not yet processed) |
