@@ -1,0 +1,438 @@
+# -*- coding: utf-8 -*-
+"""Battery cover - full PartDesign feature tree (FreeCAD 1.0+).
+
+Run:  Macro -> Macros... -> select this file -> Execute
+      (or headless:  freecadcmd BatteryCover_PartDesign.FCMacro)
+
+Creates a new document "BatteryCover" with
+  * Params      - spreadsheet holding every dimension (edit a cell, press Recompute)
+  * Body        - PartDesign body; every sketch is fully constrained and its
+                  dimensions are driven by expressions into Params
+
+Frame matches the reverse-engineered source mesh:
+  X = width (0..31), Y = thickness (+Y = cosmetic outer face at Y 20),
+  Z = length (latch tip Z 5.5, plate Z 11.5..77).  Units: mm.
+"""
+
+import math
+import re
+
+import FreeCAD as App
+import Part
+import Sketcher
+
+DOC_NAME = "BatteryCover"
+
+# name, value, description  (all lengths mm)
+PARAMS = [
+    ("Width", 31.0, "Plate width (X)"),
+    ("Z_Bottom", 11.5, "Plate bottom edge (latch end)"),
+    ("Z_Top", 77.0, "Plate top edge (tongue end)"),
+    ("Y_Outer", 20.0, "Outer (cosmetic) face position"),
+    ("Wall", 2.0, "Nominal wall: plate and thumb recess"),
+    ("TopEdgeR", 0.5, "Top edge fillets"),
+    ("Y_RibTip", 16.0, "Free edge of rails / ribs / lip / hook"),
+    ("RailW", 1.0, "Side rail width"),
+    ("RailZ0", 26.5, "Side rail start"),
+    ("LipZ0", 75.5, "Top lip start"),
+    ("LipT", 1.0, "Top lip thickness"),
+    ("RibW", 0.8, "Stiffening rib width"),
+    ("Rib1X", 7.0, "Rib 1 centre X (rib 2 = Width - Rib1X)"),
+    ("RibZ0", 26.5, "Rib start"),
+    ("RibZ1", 56.5, "Rib end"),
+    ("HookW", 6.0, "Retention hook width (centred)"),
+    ("HookZ0", 68.5, "Hook block bottom"),
+    ("HookZ1", 73.0, "Hook block top"),
+    ("HookT", 1.0, "Hook block thickness"),
+    ("HookGap", 1.0, "Gap hook block <-> plate"),
+    ("LegW", 1.0, "Hook leg width"),
+    ("BumpX", 6.0, "Outer bump centre X (mirrored)"),
+    ("BumpW", 3.0, "Outer bump width"),
+    ("BumpZ0", 68.5, "Outer bump start"),
+    ("BumpZ1", 75.5, "Outer bump end"),
+    ("BumpH", 2.0, "Outer bump height = end radius"),
+    ("BumpEdgeR", 0.25, "Outer bump side-edge fillets"),
+    ("CoreW", 1.0, "Bump coring width"),
+    ("CoreZ0", 69.5, "Bump coring start"),
+    ("CoreZ1", 74.5, "Bump coring end"),
+    ("CoreTopY", 21.0, "Bump coring depth (Y)"),
+    ("CoreR", 0.5, "Bump coring corner radius"),
+    ("RecessFlatR", 2.55, "Thumb recess flat floor radius"),
+    ("RecessArcR", 7.1, "Thumb recess concave arc radius"),
+    ("RecessRimR", 1.25, "Thumb recess rim blend radius"),
+    ("RecessOuterR", 12.0, "Thumb recess cutter radius (> rim)"),
+    ("LatchW", 6.0, "Snap latch width (centred)"),
+    ("ArmY0", 13.0, "Latch arm inner face"),
+    ("ArmT", 1.3, "Latch arm thickness"),
+    ("TipZ", 5.5, "Latch tip"),
+    ("TipW", 1.0, "Latch tip land"),
+    ("ToothY", 15.0, "Catch tooth outer face"),
+    ("CatchZ", 9.5, "Catch face"),
+    ("CatchLand", 0.5, "Vertical land under catch face"),
+    ("LatchFloorT", 1.0, "Floor under latch coring slots"),
+    ("RampZ0", 13.1, "Ramp start (at ArmY0)"),
+    ("RampSlope", 1.2, "Ramp dZ/dY"),
+    ("SlotW", 1.5, "Latch coring slot width"),
+    ("CenterRibW", 1.0, "Latch centre rib width"),
+]
+P = {n: v for n, v, _ in PARAMS}
+_ID = re.compile(r"\b([A-Za-z_]\w*)\b")
+
+
+def val(expr):
+    return float(eval(expr, {"__builtins__": {}, "sqrt": math.sqrt}, P))
+
+
+def fexpr(expr):
+    """Python-style parameter expression -> FreeCAD expression on the Params sheet."""
+    return _ID.sub(lambda m: "Params." + m.group(1) if m.group(1) in P else m.group(1), expr)
+
+
+# ============================================================ document, params
+doc = App.newDocument(DOC_NAME)
+sheet = doc.addObject("Spreadsheet::Sheet", "Params")
+sheet.set("A1", "Parameter")
+sheet.set("B1", "Value [mm]")
+sheet.set("C1", "Description")
+for i, (n, v, d) in enumerate(PARAMS, start=2):
+    sheet.set(f"A{i}", n)
+    sheet.set(f"B{i}", repr(v))
+    sheet.setAlias(f"B{i}", n)
+    sheet.set(f"C{i}", d)
+doc.recompute()
+
+body = doc.addObject("PartDesign::Body", "Body")
+PLANES = {o.Role: o for o in body.Origin.OriginFeatures}
+
+
+# ============================================================ sketch helpers
+class Sk:
+    """Sketch on a base plane with an expression-driven normal offset.
+
+    XY: (u,v)=(X,Y), n=+Z   XZ: (u,v)=(X,Z), n=-Y   YZ: (u,v)=(Y,Z), n=+X
+    """
+
+    def __init__(self, name, plane, offset_expr="0"):
+        self.o = body.newObject("Sketcher::SketchObject", name)
+        self.o.AttachmentSupport = [(PLANES[plane], "")]
+        self.o.MapMode = "FlatFace"
+        self.o.AttachmentOffset = App.Placement(App.Vector(0, 0, val(offset_expr)), App.Rotation())
+        if offset_expr != "0":
+            self.o.setExpression(".AttachmentOffset.Base.z", fexpr(offset_expr))
+
+    def con(self, c, expr=None, name=None):
+        i = self.o.addConstraint(c)
+        if name:
+            self.o.renameConstraint(i, name)
+        if expr is not None:
+            self.o.setExpression(f"Constraints[{i}]", fexpr(expr))
+        return i
+
+    def fix_point(self, g, pos, ue, ve):
+        """Lock a vertex to (ue, ve); zero coordinates go on the sketch axes."""
+        for axis, e, ref in (("DistanceX", ue, -2), ("DistanceY", ve, -1)):
+            if abs(val(e)) < 1e-9:
+                self.con(Sketcher.Constraint("PointOnObject", g, pos, ref))
+            else:
+                self.con(Sketcher.Constraint(axis, g, pos, val(e)), e)
+
+    def line(self, p, q, construction=False):
+        V = App.Vector
+        return self.o.addGeometry(Part.LineSegment(V(val(p[0]), val(p[1]), 0), V(val(q[0]), val(q[1]), 0)), construction)
+
+    def arc(self, c, r, a0, a1):
+        if a1 < a0:
+            a1 += 2 * math.pi
+        circ = Part.Circle(App.Vector(c[0], c[1], 0), App.Vector(0, 0, 1), r)
+        return self.o.addGeometry(Part.ArcOfCircle(circ, a0, a1), False)
+
+    def polygon(self, pts):
+        """Closed polyline; every vertex locked by expression, fully constrained."""
+        n = len(pts)
+        gs = [self.line(pts[i], pts[(i + 1) % n]) for i in range(n)]
+        for i in range(n):
+            self.con(Sketcher.Constraint("Coincident", gs[i], 2, gs[(i + 1) % n], 1))
+            self.fix_point(gs[i], 1, *pts[i])
+        return gs
+
+    def path(self, verts, arcs=None):
+        """Closed path through expression vertices; arcs = {i: (cu, cv, r)} makes segment
+        i (vertex i -> i+1) an arc about (cu, cv). Every vertex is locked; each arc gets one
+        centre coordinate plus a reference radius."""
+        arcs = arcs or {}
+        n = len(verts)
+        segs = []  # (geo, pos at vertex i, pos at vertex i+1)
+        for i in range(n):
+            p, q = verts[i], verts[(i + 1) % n]
+            if i in arcs:
+                cu, cv, r = arcs[i]
+                c = (val(cu), val(cv))
+                a0 = math.atan2(val(p[1]) - c[1], val(p[0]) - c[0])
+                a1 = math.atan2(val(q[1]) - c[1], val(q[0]) - c[0])
+                ccw = (a1 - a0) % (2 * math.pi) < math.pi
+                g = self.arc(c, val(r), a0, a1) if ccw else self.arc(c, val(r), a1, a0)
+                # Endpoints are locked, so one centre coordinate fixes the arc uniquely
+                # (a driving radius would leave a flip-prone two-solution case).
+                dx, dy = val(q[0]) - val(p[0]), val(q[1]) - val(p[1])
+                if abs(dy) >= abs(dx):
+                    self.con(Sketcher.Constraint("DistanceX", g, 3, c[0]), cu)
+                else:
+                    self.con(Sketcher.Constraint("DistanceY", g, 3, c[1]), cv)
+                ref = self.con(Sketcher.Constraint("Radius", g, val(r)))
+                self.o.setDriving(ref, False)  # radius shown as a reference dimension
+                segs.append((g, 1, 2) if ccw else (g, 2, 1))
+            else:
+                segs.append((self.line(p, q), 1, 2))
+        for i in range(n):
+            g, _, end = segs[i]
+            gn, start_n, _ = segs[(i + 1) % n]
+            self.con(Sketcher.Constraint("Coincident", g, end, gn, start_n))
+            self.fix_point(segs[i][0], segs[i][1], *verts[i])
+        return [g for g, _, _ in segs]
+
+    def rect(self, u0, v0, u1, v1):
+        return self.polygon([(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
+
+    def done(self):
+        self.o.recompute()
+        return self.o
+
+
+def pad(name, sk, length_expr, midplane=False):
+    f = body.newObject("PartDesign::Pad", name)
+    f.Profile = sk
+    f.Length = val(length_expr)
+    f.setExpression("Length", fexpr(length_expr))
+    f.Midplane = midplane
+    sk.Visibility = False
+    return f
+
+
+def pocket(name, sk, length_expr, midplane=False):
+    f = body.newObject("PartDesign::Pocket", name)
+    f.Profile = sk
+    f.Type = "Length"
+    f.Length = val(length_expr)
+    f.setExpression("Length", fexpr(length_expr))
+    f.Midplane = midplane
+    sk.Visibility = False
+    return f
+
+
+def fillet(name, base, pick, radius_expr):
+    doc.recompute()
+    edges = [f"Edge{i + 1}" for i, e in enumerate(base.Shape.Edges) if pick(e)]
+    f = body.newObject("PartDesign::Fillet", name)
+    f.Base = (base, edges)
+    f.Radius = val(radius_expr)
+    f.setExpression("Radius", fexpr(radius_expr))
+    base.Visibility = False
+    return f, len(edges)
+
+
+def near(a, b, tol=1e-4):
+    return abs(a - b) < tol
+
+
+# ============================================================ 1. plate
+# top-edge rounds are drawn in the sketch (a Fillet feature would reference fragile edge names)
+s = Sk("Sketch_Plate", "YZ_Plane")
+yi, yo, zt, rt = "Y_Outer - Wall", "Y_Outer", "Z_Top", "TopEdgeR"
+s.path(
+    [(yi, "Z_Bottom"), (yo, "Z_Bottom"), (yo, f"{zt} - {rt}"), (f"{yo} - {rt}", zt),
+     (f"{yi} + {rt}", zt), (yi, f"{zt} - {rt}")],
+    {2: (f"{yo} - {rt}", f"{zt} - {rt}", rt), 4: (f"{yi} + {rt}", f"{zt} - {rt}", rt)})
+plate = pad("Plate", s.done(), "Width")
+
+# ============================================================ 2. inner frame: rails + lip + hook legs, ribs
+s = Sk("Sketch_InnerFrame", "XZ_Plane", "-(Y_Outer - Wall)")
+hl, hr = "Width/2 - HookW/2", "Width/2 + HookW/2"
+s.polygon([
+    ("0", "RailZ0"), ("RailW", "RailZ0"), ("RailW", "LipZ0"),
+    (hl, "LipZ0"), (hl, "HookZ1"), (f"{hl} + LegW", "HookZ1"), (f"{hl} + LegW", "LipZ0"),
+    (f"{hr} - LegW", "LipZ0"), (f"{hr} - LegW", "HookZ1"), (hr, "HookZ1"), (hr, "LipZ0"),
+    ("Width - RailW", "LipZ0"), ("Width - RailW", "RailZ0"), ("Width", "RailZ0"),
+    ("Width", "LipZ0 + LipT"), ("0", "LipZ0 + LipT"),
+])
+s.rect("Rib1X - RibW/2", "RibZ0", "Rib1X + RibW/2", "RibZ1")
+s.rect("Width - Rib1X - RibW/2", "RibZ0", "Width - Rib1X + RibW/2", "RibZ1")
+inner = pad("InnerFrame", s.done(), "Y_Outer - Wall - Y_RibTip")
+
+# ============================================================ 3. retention hook block
+s = Sk("Sketch_HookBlock", "XZ_Plane", "-(Y_Outer - Wall - HookGap)")
+s.rect(hl, "HookZ0", hr, "HookZ1")
+hook = pad("HookBlock", s.done(), "HookT")
+
+# ============================================================ 4. outer bump + coring, mirrored
+s = Sk("Sketch_Bump", "YZ_Plane", "BumpX")
+yb = "Y_Outer - 0.5"  # base sunk 0.5 into the plate so the pad always fuses
+s.path(
+    [(yb, "BumpZ0"), ("Y_Outer", "BumpZ0"), ("Y_Outer + BumpH", "BumpZ0 + BumpH"),
+     ("Y_Outer + BumpH", "BumpZ1 - BumpH"), ("Y_Outer", "BumpZ1"), (yb, "BumpZ1")],
+    {1: ("Y_Outer", "BumpZ0 + BumpH", "BumpH"), 3: ("Y_Outer", "BumpZ1 - BumpH", "BumpH")})
+bump = pad("Bump", s.done(), "BumpW", midplane=True)
+
+s = Sk("Sketch_BumpCore", "YZ_Plane", "BumpX")
+yc0 = "Y_Outer - Wall - 0.5"
+s.path(
+    [(yc0, "CoreZ0"), ("CoreTopY - CoreR", "CoreZ0"), ("CoreTopY", "CoreZ0 + CoreR"),
+     ("CoreTopY", "CoreZ1 - CoreR"), ("CoreTopY - CoreR", "CoreZ1"), (yc0, "CoreZ1")],
+    {1: ("CoreTopY - CoreR", "CoreZ0 + CoreR", "CoreR"), 3: ("CoreTopY - CoreR", "CoreZ1 - CoreR", "CoreR")})
+core = pocket("BumpCore", s.done(), "CoreW", midplane=True)
+
+mid = body.newObject("PartDesign::Plane", "MidPlane")
+mid.AttachmentSupport = [(PLANES["YZ_Plane"], "")]
+mid.MapMode = "FlatFace"
+mid.AttachmentOffset = App.Placement(App.Vector(0, 0, val("Width/2")), App.Rotation())
+mid.setExpression(".AttachmentOffset.Base.z", fexpr("Width/2"))
+mid.Visibility = False
+
+mirror = body.newObject("PartDesign::Mirrored", "MirrorBumps")
+mirror.Originals = [bump, core]
+mirror.MirrorPlane = (mid, [""])
+body.Tip = mirror  # scripted Transformed features do not advance the Tip on their own
+bump.Visibility = core.Visibility = False
+
+bump_x = {val("BumpX - BumpW/2"), val("BumpX + BumpW/2"),
+          val("Width - BumpX - BumpW/2"), val("Width - BumpX + BumpW/2")}
+bump_fillet, n_bump = fillet(
+    "Fillet_BumpEdges", mirror,
+    lambda e: e.BoundBox.XLength < 1e-6 and any(near(e.BoundBox.XMin, x) for x in bump_x)
+    and e.BoundBox.YMax > P["Y_Outer"] + 0.01 and e.BoundBox.YMin > P["Y_Outer"] - 1e-4,
+    "BumpEdgeR")
+
+# ============================================================ 5. snap latch
+s = Sk("Sketch_Latch", "YZ_Plane", "Width/2")
+ytop = "Y_Outer - 1"
+s.polygon([
+    ("ArmY0", "TipZ"), ("ArmY0 + TipW", "TipZ"), ("ToothY", "CatchZ - CatchLand"),
+    ("ToothY", "CatchZ"), ("ArmY0 + ArmT", "CatchZ"), ("ArmY0 + ArmT", "Z_Bottom"),
+    (ytop, "Z_Bottom"), (ytop, f"RampZ0 + ({ytop} - ArmY0) * RampSlope"), ("ArmY0", "RampZ0"),
+])
+latch = pad("Latch", s.done(), "LatchW", midplane=True)
+
+s = Sk("Sketch_LatchSlots", "XZ_Plane", "-(ArmY0 - 1)")
+for sign in ("-", "+"):
+    a, b = f"Width/2 {sign} CenterRibW/2", f"Width/2 {sign} (CenterRibW/2 + SlotW)"
+    u0, u1 = (b, a) if sign == "-" else (a, b)
+    s.rect(u0, "Z_Bottom + LatchFloorT", u1, "Z_Bottom + 10")
+slots = pocket("LatchSlots", s.done(), "Y_Outer - Wall - ArmY0 + 1")
+
+
+# ============================================================ 6. thumb recess (revolved)
+def recess_numbers():
+    a, ro, rf = P["RecessFlatR"], P["RecessArcR"], P["RecessRimR"]
+    yf = P["Y_Outer"] - P["Wall"]
+    c1 = (a, yf + ro)
+    dy = c1[1] - (P["Y_Outer"] - rf)
+    c2 = (a + math.sqrt((ro + rf) ** 2 - dy * dy), P["Y_Outer"] - rf)
+    ang_t2 = math.atan2(c1[1] - c2[1], c1[0] - c2[0])  # T seen from rim centre
+    ang_t1 = ang_t2 + math.pi  # T seen from arc-1 centre
+    ri = ro + P["Wall"]
+    ang_ei = math.asin((yf - c1[1]) / ri)  # inner arc end, where it meets Y = yf
+    return a, ro, rf, yf, c1, c2, ang_t1, ang_t2, ri, ang_ei
+
+
+def recess_axis(s):
+    g = s.line(("Width/2", "Y_Outer - Wall - 3"), ("Width/2", "Y_Outer + 4"), construction=True)
+    s.con(Sketcher.Constraint("Vertical", g))
+    s.con(Sketcher.Constraint("DistanceX", g, 1, val("Width/2")), "Width/2")
+    s.con(Sketcher.Constraint("DistanceY", g, 1, val("Y_Outer - Wall - 3")), "Y_Outer - Wall - 3")
+    s.con(Sketcher.Constraint("DistanceY", g, 2, val("Y_Outer + 4")), "Y_Outer + 4")
+
+
+def outer_arcs(s, cx):
+    """Concave arc from the floor edge A plus the convex rim blend; returns (arc1, rim)."""
+    a, ro, rf, yf, c1, c2, at1, at2, _, _ = recess_numbers()
+    arc1 = s.arc((cx + c1[0], c1[1]), ro, -math.pi / 2, at1)
+    rim = s.arc((cx + c2[0], c2[1]), rf, math.pi / 2, at2)
+    s.con(Sketcher.Constraint("Radius", arc1, ro), "RecessArcR")
+    s.con(Sketcher.Constraint("Radius", rim, rf), "RecessRimR")
+    s.con(Sketcher.Constraint("Tangent", arc1, 2, rim, 2))
+    return arc1, rim
+
+
+cx = P["Width"] / 2
+
+# 6a. additive shell (half revolution, Z >= Z_Bottom)
+s = Sk("Sketch_RecessShell", "XY_Plane", "Z_Bottom")
+recess_axis(s)
+a, ro, rf, yf, c1, c2, at1, at2, ri, aei = recess_numbers()
+lf = s.line(("Width/2", "Y_Outer - 2*Wall"), ("Width/2 + RecessFlatR", "Y_Outer - 2*Wall"))
+s.fix_point(lf, 1, "Width/2", "Y_Outer - 2*Wall")
+s.fix_point(lf, 2, "Width/2 + RecessFlatR", "Y_Outer - 2*Wall")
+arc_i = s.arc((cx + c1[0], c1[1]), ri, -math.pi / 2, aei)
+s.con(Sketcher.Constraint("Tangent", lf, 2, arc_i, 1))
+s.con(Sketcher.Constraint("Radius", arc_i, ri), "RecessArcR + Wall")
+s.con(Sketcher.Constraint("DistanceY", arc_i, 2, yf), "Y_Outer - Wall")
+ei = (cx + c1[0] + ri * math.cos(aei), yf)
+lv = s.o.addGeometry(Part.LineSegment(App.Vector(ei[0], yf, 0), App.Vector(ei[0], P["Y_Outer"], 0)), False)
+s.con(Sketcher.Constraint("Coincident", arc_i, 2, lv, 1))
+s.con(Sketcher.Constraint("Vertical", lv))
+s.con(Sketcher.Constraint("DistanceY", lv, 2, P["Y_Outer"]), "Y_Outer")
+lh = s.o.addGeometry(Part.LineSegment(App.Vector(ei[0], P["Y_Outer"], 0), App.Vector(cx + c2[0], P["Y_Outer"], 0)), False)
+s.con(Sketcher.Constraint("Coincident", lv, 2, lh, 1))
+s.con(Sketcher.Constraint("Horizontal", lh))
+arc1, rim = outer_arcs(s, cx)
+s.con(Sketcher.Constraint("Tangent", lh, 2, rim, 1))
+lt = s.line(("Width/2 + RecessFlatR", "Y_Outer - Wall"), ("Width/2", "Y_Outer - Wall"))
+s.con(Sketcher.Constraint("Tangent", arc1, 1, lt, 1))
+s.fix_point(lt, 1, "Width/2 + RecessFlatR", "Y_Outer - Wall")
+s.fix_point(lt, 2, "Width/2", "Y_Outer - Wall")
+lc = s.line(("Width/2", "Y_Outer - Wall"), ("Width/2", "Y_Outer - 2*Wall"))
+s.con(Sketcher.Constraint("Coincident", lt, 2, lc, 1))
+s.con(Sketcher.Constraint("Coincident", lc, 2, lf, 1))
+shell_sk = s.done()
+shell = body.newObject("PartDesign::Revolution", "RecessShell")
+shell.Profile = shell_sk
+shell.ReferenceAxis = (shell_sk, ["Axis0"])
+shell.Angle = 180
+shell.Reversed = True
+shell_sk.Visibility = False
+
+# 6b. subtractive groove (full revolution) - removes material above the recess surface
+s = Sk("Sketch_RecessCut", "XY_Plane", "Z_Bottom")
+recess_axis(s)
+l1 = s.line(("Width/2", "Y_Outer - Wall"), ("Width/2 + RecessFlatR", "Y_Outer - Wall"))
+s.fix_point(l1, 1, "Width/2", "Y_Outer - Wall")
+s.fix_point(l1, 2, "Width/2 + RecessFlatR", "Y_Outer - Wall")
+arc1, rim = outer_arcs(s, cx)
+s.con(Sketcher.Constraint("Tangent", l1, 2, arc1, 1))
+l2 = s.line((f"Width/2 + {c2[0]}", "Y_Outer"), ("Width/2 + RecessOuterR", "Y_Outer"))
+s.con(Sketcher.Constraint("Tangent", rim, 1, l2, 1))
+s.con(Sketcher.Constraint("Horizontal", l2))
+s.fix_point(l2, 2, "Width/2 + RecessOuterR", "Y_Outer")
+l3 = s.line(("Width/2 + RecessOuterR", "Y_Outer"), ("Width/2 + RecessOuterR", "Y_Outer + 4"))
+s.con(Sketcher.Constraint("Coincident", l2, 2, l3, 1))
+s.fix_point(l3, 2, "Width/2 + RecessOuterR", "Y_Outer + 4")
+l4 = s.line(("Width/2 + RecessOuterR", "Y_Outer + 4"), ("Width/2", "Y_Outer + 4"))
+s.con(Sketcher.Constraint("Coincident", l3, 2, l4, 1))
+s.fix_point(l4, 2, "Width/2", "Y_Outer + 4")
+l5 = s.line(("Width/2", "Y_Outer + 4"), ("Width/2", "Y_Outer - Wall"))
+s.con(Sketcher.Constraint("Coincident", l4, 2, l5, 1))
+s.con(Sketcher.Constraint("Coincident", l5, 2, l1, 1))
+cut_sk = s.done()
+groove = body.newObject("PartDesign::Groove", "RecessCut")
+groove.Profile = cut_sk
+groove.ReferenceAxis = (cut_sk, ["Axis0"])
+groove.Angle = 360
+cut_sk.Visibility = False
+
+doc.recompute()
+
+# ============================================================ report + view
+bad = [o.Label for o in body.Group if hasattr(o, "isValid") and not o.isValid()]
+loose = [o.Label for o in body.Group if o.TypeId == "Sketcher::SketchObject" and not o.FullyConstrained]
+App.Console.PrintMessage(
+    f"BatteryCover: volume {body.Shape.Volume:.2f} mm3, {len(body.Shape.Solids)} solid(s), "
+    f"bump fillet edges {n_bump}\n")
+if bad:
+    App.Console.PrintError(f"BatteryCover: features with errors: {bad}\n")
+if loose:
+    App.Console.PrintWarning(f"BatteryCover: sketches not fully constrained: {loose}\n")
+
+if App.GuiUp:
+    import FreeCADGui as Gui
+
+    Gui.activeDocument().activeView().viewIsometric()
+    Gui.SendMsgToActiveView("ViewFit")

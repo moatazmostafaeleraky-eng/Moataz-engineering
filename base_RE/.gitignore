@@ -1,0 +1,6 @@
+tmp/
+__pycache__/
+checks/_dev_*.npy
+dfm/_*.npy
+dfm/_*.npz
+output/_cache_*.pkl

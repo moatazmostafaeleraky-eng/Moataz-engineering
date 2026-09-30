@@ -1,0 +1,3 @@
+tmp/
+checks/_dev_*.npy
+__pycache__/

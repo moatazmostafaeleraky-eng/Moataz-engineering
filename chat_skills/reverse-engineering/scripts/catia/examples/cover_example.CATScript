@@ -1,0 +1,1077 @@
+Language="VBSCRIPT"
+' cover_example: generated from a feature spec by catia_macro.py (reverse-engineering skill).
+' Builds the part as a native CATIA V5 feature tree and saves it as .CATPart.
+' Not executed where it was generated: run it in CATIA and check the log at the end.
+
+Sub CATMain()
+  Dim log, stepName, nFail, ax(8)
+  log = "": nFail = 0: stepName = "start"
+  On Error Resume Next
+  Set doc = CATIA.Documents.Add("Part")
+  Set part1 = doc.Part
+  doc.Product.PartNumber = "cover_example"
+  Set body1 = part1.MainBody
+  Set params = part1.Parameters
+  Set rels = part1.Relations
+  Set hsf = part1.HybridShapeFactory
+  Set sf = part1.ShapeFactory
+  Set org = part1.OriginElements
+  Set hb = part1.HybridBodies.Add()
+  hb.Name = "RE_Planes"
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "parameters"
+  Set prm = params.CreateDimension("WIDTH", "LENGTH", 31)
+  Set prm = params.CreateDimension("Z_BOTTOM", "LENGTH", 11.5)
+  Set prm = params.CreateDimension("Z_TOP", "LENGTH", 77)
+  Set prm = params.CreateDimension("Y_OUTER", "LENGTH", 20)
+  Set prm = params.CreateDimension("WALL", "LENGTH", 2)
+  Set prm = params.CreateDimension("TOP_EDGE_R", "LENGTH", 0.5)
+  Set prm = params.CreateDimension("Y_RIB_TIP", "LENGTH", 16)
+  Set prm = params.CreateDimension("OVERLAP", "LENGTH", 0.5)
+  Set prm = params.CreateDimension("RAIL_W", "LENGTH", 1)
+  Set prm = params.CreateDimension("RAIL_Z0", "LENGTH", 26.5)
+  Set prm = params.CreateDimension("RAIL_Z1", "LENGTH", 75.5)
+  Set prm = params.CreateDimension("RIB_W", "LENGTH", 0.8)
+  Set prm = params.CreateDimension("RIB_X1", "LENGTH", 7)
+  Set prm = params.CreateDimension("RIB_X2", "LENGTH", 24)
+  Set prm = params.CreateDimension("RIB_Z1", "LENGTH", 56.5)
+  Set prm = params.CreateDimension("LIP_Z1", "LENGTH", 76.5)
+  Set prm = params.CreateDimension("HOOK_X0", "LENGTH", 12.5)
+  Set prm = params.CreateDimension("HOOK_X1", "LENGTH", 18.5)
+  Set prm = params.CreateDimension("HOOK_Y1", "LENGTH", 17)
+  Set prm = params.CreateDimension("HOOK_Z0", "LENGTH", 68.5)
+  Set prm = params.CreateDimension("HOOK_Z1", "LENGTH", 73)
+  Set prm = params.CreateDimension("HOOK_LEG_W", "LENGTH", 1)
+  Set prm = params.CreateDimension("BUMP_W", "LENGTH", 3)
+  Set prm = params.CreateDimension("BUMP_X1", "LENGTH", 6)
+  Set prm = params.CreateDimension("BUMP_X2", "LENGTH", 25)
+  Set prm = params.CreateDimension("CORE_W", "LENGTH", 1)
+  Set prm = params.CreateDimension("LATCH_X0", "LENGTH", 12.5)
+  Set prm = params.CreateDimension("LATCH_X1", "LENGTH", 18.5)
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Plate"
+  Set pl1 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 15.5, False)
+  hb.AppendHybridShape pl1
+  pl1.Name = "Plane_Plate"
+  rels.CreateFormula "F_Plane_Plate", "", pl1.Offset, "( ( 0mm ) + ( WIDTH ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk2 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl1))
+  sk2.Name = "Sketch_Plate"
+  ax(0) = 15.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk2.SetAbsoluteAxisData ax
+  Set f2d = sk2.OpenEdition()
+  Set cst = sk2.Constraints
+  Set p3 = f2d.CreatePoint(18, 11.5)
+  Set p4 = f2d.CreatePoint(20, 11.5)
+  Set p5 = f2d.CreatePoint(20, 76.5)
+  Set p6 = f2d.CreatePoint(19.5, 77)
+  Set p7 = f2d.CreatePoint(18.5, 77)
+  Set p8 = f2d.CreatePoint(18, 76.5)
+  Set e9 = f2d.CreateLine(18, 11.5, 20, 11.5)
+  e9.StartPoint = p3
+  e9.EndPoint = p4
+  Set e10 = f2d.CreateLine(20, 11.5, 20, 76.5)
+  e10.StartPoint = p4
+  e10.EndPoint = p5
+  Set e11 = f2d.CreateCircle(19.5, 76.5, 0.5, 0, 1.570796)
+  e11.StartPoint = p5
+  e11.EndPoint = p6
+  Set e12 = f2d.CreateLine(19.5, 77, 18.5, 77)
+  e12.StartPoint = p6
+  e12.EndPoint = p7
+  Set e13 = f2d.CreateCircle(18.5, 76.5, 0.5, 1.570796, 3.141593)
+  e13.StartPoint = p7
+  e13.EndPoint = p8
+  Set e14 = f2d.CreateLine(18, 76.5, 18, 11.5)
+  e14.StartPoint = p8
+  e14.EndPoint = p3
+  sk2.CloseEdition
+  part1.InWorkObject = sk2
+  part1.Update
+  Set ft15 = sf.AddNewPad(sk2, 15.5)
+  ft15.IsSymmetric = True
+  ft15.Name = "Plate"
+  rels.CreateFormula "F_Plate_half", "", ft15.FirstLimit.Dimension, "abs( ( WIDTH ) - ( 0mm ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Rail_L"
+  Set pl16 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 0.5, False)
+  hb.AppendHybridShape pl16
+  pl16.Name = "Plane_Rail_L"
+  rels.CreateFormula "F_Plane_Rail_L", "", pl16.Offset, "( ( 0mm ) + ( RAIL_W ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk17 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl16))
+  sk17.Name = "Sketch_Rail_L"
+  ax(0) = 0.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk17.SetAbsoluteAxisData ax
+  Set f2d = sk17.OpenEdition()
+  Set cst = sk17.Constraints
+  Set p18 = f2d.CreatePoint(16, 26.5)
+  Set p19 = f2d.CreatePoint(18.5, 26.5)
+  Set p20 = f2d.CreatePoint(18.5, 75.5)
+  Set p21 = f2d.CreatePoint(16, 75.5)
+  Set e22 = f2d.CreateLine(16, 26.5, 18.5, 26.5)
+  e22.StartPoint = p18
+  e22.EndPoint = p19
+  Set e23 = f2d.CreateLine(18.5, 26.5, 18.5, 75.5)
+  e23.StartPoint = p19
+  e23.EndPoint = p20
+  Set e24 = f2d.CreateLine(18.5, 75.5, 16, 75.5)
+  e24.StartPoint = p20
+  e24.EndPoint = p21
+  Set e25 = f2d.CreateLine(16, 75.5, 16, 26.5)
+  e25.StartPoint = p21
+  e25.EndPoint = p18
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e22)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e23)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e24)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e25)  ' catCstTypeHorizontality / Verticality
+  Set k26 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e22))  ' catCstTypeLength
+  rels.CreateFormula "F_Rail_L_L26", "", k26.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k27 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e23))  ' catCstTypeLength
+  rels.CreateFormula "F_Rail_L_L27", "", k27.Dimension, "abs( ( RAIL_Z1 ) - ( RAIL_Z0 ) )"
+  sk17.CloseEdition
+  part1.InWorkObject = sk17
+  part1.Update
+  Set ft28 = sf.AddNewPad(sk17, 0.5)
+  ft28.IsSymmetric = True
+  ft28.Name = "Rail_L"
+  rels.CreateFormula "F_Rail_L_half", "", ft28.FirstLimit.Dimension, "abs( ( RAIL_W ) - ( 0mm ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Rail_R"
+  Set pl29 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 30.5, False)
+  hb.AppendHybridShape pl29
+  pl29.Name = "Plane_Rail_R"
+  rels.CreateFormula "F_Plane_Rail_R", "", pl29.Offset, "( ( WIDTH - RAIL_W ) + ( WIDTH ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk30 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl29))
+  sk30.Name = "Sketch_Rail_R"
+  ax(0) = 30.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk30.SetAbsoluteAxisData ax
+  Set f2d = sk30.OpenEdition()
+  Set cst = sk30.Constraints
+  Set p31 = f2d.CreatePoint(16, 26.5)
+  Set p32 = f2d.CreatePoint(18.5, 26.5)
+  Set p33 = f2d.CreatePoint(18.5, 75.5)
+  Set p34 = f2d.CreatePoint(16, 75.5)
+  Set e35 = f2d.CreateLine(16, 26.5, 18.5, 26.5)
+  e35.StartPoint = p31
+  e35.EndPoint = p32
+  Set e36 = f2d.CreateLine(18.5, 26.5, 18.5, 75.5)
+  e36.StartPoint = p32
+  e36.EndPoint = p33
+  Set e37 = f2d.CreateLine(18.5, 75.5, 16, 75.5)
+  e37.StartPoint = p33
+  e37.EndPoint = p34
+  Set e38 = f2d.CreateLine(16, 75.5, 16, 26.5)
+  e38.StartPoint = p34
+  e38.EndPoint = p31
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e35)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e36)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e37)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e38)  ' catCstTypeHorizontality / Verticality
+  Set k39 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e35))  ' catCstTypeLength
+  rels.CreateFormula "F_Rail_R_L39", "", k39.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k40 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e36))  ' catCstTypeLength
+  rels.CreateFormula "F_Rail_R_L40", "", k40.Dimension, "abs( ( RAIL_Z1 ) - ( RAIL_Z0 ) )"
+  sk30.CloseEdition
+  part1.InWorkObject = sk30
+  part1.Update
+  Set ft41 = sf.AddNewPad(sk30, 0.5)
+  ft41.IsSymmetric = True
+  ft41.Name = "Rail_R"
+  rels.CreateFormula "F_Rail_R_half", "", ft41.FirstLimit.Dimension, "abs( ( WIDTH ) - ( WIDTH - RAIL_W ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Top_lip"
+  Set pl42 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 15.5, False)
+  hb.AppendHybridShape pl42
+  pl42.Name = "Plane_Top_lip"
+  rels.CreateFormula "F_Plane_Top_lip", "", pl42.Offset, "( ( 0mm ) + ( WIDTH ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk43 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl42))
+  sk43.Name = "Sketch_Top_lip"
+  ax(0) = 15.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk43.SetAbsoluteAxisData ax
+  Set f2d = sk43.OpenEdition()
+  Set cst = sk43.Constraints
+  Set p44 = f2d.CreatePoint(16, 75.5)
+  Set p45 = f2d.CreatePoint(18.5, 75.5)
+  Set p46 = f2d.CreatePoint(18.5, 76.5)
+  Set p47 = f2d.CreatePoint(16, 76.5)
+  Set e48 = f2d.CreateLine(16, 75.5, 18.5, 75.5)
+  e48.StartPoint = p44
+  e48.EndPoint = p45
+  Set e49 = f2d.CreateLine(18.5, 75.5, 18.5, 76.5)
+  e49.StartPoint = p45
+  e49.EndPoint = p46
+  Set e50 = f2d.CreateLine(18.5, 76.5, 16, 76.5)
+  e50.StartPoint = p46
+  e50.EndPoint = p47
+  Set e51 = f2d.CreateLine(16, 76.5, 16, 75.5)
+  e51.StartPoint = p47
+  e51.EndPoint = p44
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e48)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e49)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e50)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e51)  ' catCstTypeHorizontality / Verticality
+  Set k52 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e48))  ' catCstTypeLength
+  rels.CreateFormula "F_Top_lip_L52", "", k52.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k53 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e49))  ' catCstTypeLength
+  rels.CreateFormula "F_Top_lip_L53", "", k53.Dimension, "abs( ( LIP_Z1 ) - ( RAIL_Z1 ) )"
+  sk43.CloseEdition
+  part1.InWorkObject = sk43
+  part1.Update
+  Set ft54 = sf.AddNewPad(sk43, 15.5)
+  ft54.IsSymmetric = True
+  ft54.Name = "Top_lip"
+  rels.CreateFormula "F_Top_lip_half", "", ft54.FirstLimit.Dimension, "abs( ( WIDTH ) - ( 0mm ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Hook_block"
+  Set pl55 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 15.5, False)
+  hb.AppendHybridShape pl55
+  pl55.Name = "Plane_Hook_block"
+  rels.CreateFormula "F_Plane_Hook_block", "", pl55.Offset, "( ( HOOK_X0 ) + ( HOOK_X1 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk56 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl55))
+  sk56.Name = "Sketch_Hook_block"
+  ax(0) = 15.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk56.SetAbsoluteAxisData ax
+  Set f2d = sk56.OpenEdition()
+  Set cst = sk56.Constraints
+  Set p57 = f2d.CreatePoint(16, 68.5)
+  Set p58 = f2d.CreatePoint(17, 68.5)
+  Set p59 = f2d.CreatePoint(17, 73)
+  Set p60 = f2d.CreatePoint(16, 73)
+  Set e61 = f2d.CreateLine(16, 68.5, 17, 68.5)
+  e61.StartPoint = p57
+  e61.EndPoint = p58
+  Set e62 = f2d.CreateLine(17, 68.5, 17, 73)
+  e62.StartPoint = p58
+  e62.EndPoint = p59
+  Set e63 = f2d.CreateLine(17, 73, 16, 73)
+  e63.StartPoint = p59
+  e63.EndPoint = p60
+  Set e64 = f2d.CreateLine(16, 73, 16, 68.5)
+  e64.StartPoint = p60
+  e64.EndPoint = p57
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e61)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e62)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e63)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e64)  ' catCstTypeHorizontality / Verticality
+  Set k65 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e61))  ' catCstTypeLength
+  rels.CreateFormula "F_Hook_block_L65", "", k65.Dimension, "abs( ( HOOK_Y1 ) - ( Y_RIB_TIP ) )"
+  Set k66 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e62))  ' catCstTypeLength
+  rels.CreateFormula "F_Hook_block_L66", "", k66.Dimension, "abs( ( HOOK_Z1 ) - ( HOOK_Z0 ) )"
+  sk56.CloseEdition
+  part1.InWorkObject = sk56
+  part1.Update
+  Set ft67 = sf.AddNewPad(sk56, 3)
+  ft67.IsSymmetric = True
+  ft67.Name = "Hook_block"
+  rels.CreateFormula "F_Hook_block_half", "", ft67.FirstLimit.Dimension, "abs( ( HOOK_X1 ) - ( HOOK_X0 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Hook_leg_L"
+  Set pl68 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 13, False)
+  hb.AppendHybridShape pl68
+  pl68.Name = "Plane_Hook_leg_L"
+  rels.CreateFormula "F_Plane_Hook_leg_L", "", pl68.Offset, "( ( HOOK_X0 ) + ( HOOK_X0 + HOOK_LEG_W ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk69 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl68))
+  sk69.Name = "Sketch_Hook_leg_L"
+  ax(0) = 13
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk69.SetAbsoluteAxisData ax
+  Set f2d = sk69.OpenEdition()
+  Set cst = sk69.Constraints
+  Set p70 = f2d.CreatePoint(16, 73)
+  Set p71 = f2d.CreatePoint(18.5, 73)
+  Set p72 = f2d.CreatePoint(18.5, 75.5)
+  Set p73 = f2d.CreatePoint(16, 75.5)
+  Set e74 = f2d.CreateLine(16, 73, 18.5, 73)
+  e74.StartPoint = p70
+  e74.EndPoint = p71
+  Set e75 = f2d.CreateLine(18.5, 73, 18.5, 75.5)
+  e75.StartPoint = p71
+  e75.EndPoint = p72
+  Set e76 = f2d.CreateLine(18.5, 75.5, 16, 75.5)
+  e76.StartPoint = p72
+  e76.EndPoint = p73
+  Set e77 = f2d.CreateLine(16, 75.5, 16, 73)
+  e77.StartPoint = p73
+  e77.EndPoint = p70
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e74)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e75)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e76)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e77)  ' catCstTypeHorizontality / Verticality
+  Set k78 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e74))  ' catCstTypeLength
+  rels.CreateFormula "F_Hook_leg_L_L78", "", k78.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k79 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e75))  ' catCstTypeLength
+  rels.CreateFormula "F_Hook_leg_L_L79", "", k79.Dimension, "abs( ( RAIL_Z1 ) - ( HOOK_Z1 ) )"
+  sk69.CloseEdition
+  part1.InWorkObject = sk69
+  part1.Update
+  Set ft80 = sf.AddNewPad(sk69, 0.5)
+  ft80.IsSymmetric = True
+  ft80.Name = "Hook_leg_L"
+  rels.CreateFormula "F_Hook_leg_L_half", "", ft80.FirstLimit.Dimension, "abs( ( HOOK_X0 + HOOK_LEG_W ) - ( HOOK_X0 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Hook_leg_R"
+  Set pl81 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 18, False)
+  hb.AppendHybridShape pl81
+  pl81.Name = "Plane_Hook_leg_R"
+  rels.CreateFormula "F_Plane_Hook_leg_R", "", pl81.Offset, "( ( HOOK_X1 - HOOK_LEG_W ) + ( HOOK_X1 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk82 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl81))
+  sk82.Name = "Sketch_Hook_leg_R"
+  ax(0) = 18
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk82.SetAbsoluteAxisData ax
+  Set f2d = sk82.OpenEdition()
+  Set cst = sk82.Constraints
+  Set p83 = f2d.CreatePoint(16, 73)
+  Set p84 = f2d.CreatePoint(18.5, 73)
+  Set p85 = f2d.CreatePoint(18.5, 75.5)
+  Set p86 = f2d.CreatePoint(16, 75.5)
+  Set e87 = f2d.CreateLine(16, 73, 18.5, 73)
+  e87.StartPoint = p83
+  e87.EndPoint = p84
+  Set e88 = f2d.CreateLine(18.5, 73, 18.5, 75.5)
+  e88.StartPoint = p84
+  e88.EndPoint = p85
+  Set e89 = f2d.CreateLine(18.5, 75.5, 16, 75.5)
+  e89.StartPoint = p85
+  e89.EndPoint = p86
+  Set e90 = f2d.CreateLine(16, 75.5, 16, 73)
+  e90.StartPoint = p86
+  e90.EndPoint = p83
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e87)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e88)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e89)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e90)  ' catCstTypeHorizontality / Verticality
+  Set k91 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e87))  ' catCstTypeLength
+  rels.CreateFormula "F_Hook_leg_R_L91", "", k91.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k92 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e88))  ' catCstTypeLength
+  rels.CreateFormula "F_Hook_leg_R_L92", "", k92.Dimension, "abs( ( RAIL_Z1 ) - ( HOOK_Z1 ) )"
+  sk82.CloseEdition
+  part1.InWorkObject = sk82
+  part1.Update
+  Set ft93 = sf.AddNewPad(sk82, 0.5)
+  ft93.IsSymmetric = True
+  ft93.Name = "Hook_leg_R"
+  rels.CreateFormula "F_Hook_leg_R_half", "", ft93.FirstLimit.Dimension, "abs( ( HOOK_X1 ) - ( HOOK_X1 - HOOK_LEG_W ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Rib_1"
+  Set pl94 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 7, False)
+  hb.AppendHybridShape pl94
+  pl94.Name = "Plane_Rib_1"
+  rels.CreateFormula "F_Plane_Rib_1", "", pl94.Offset, "( ( RIB_X1 - RIB_W / 2 ) + ( RIB_X1 + RIB_W / 2 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk95 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl94))
+  sk95.Name = "Sketch_Rib_1"
+  ax(0) = 7
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk95.SetAbsoluteAxisData ax
+  Set f2d = sk95.OpenEdition()
+  Set cst = sk95.Constraints
+  Set p96 = f2d.CreatePoint(16, 26.5)
+  Set p97 = f2d.CreatePoint(18.5, 26.5)
+  Set p98 = f2d.CreatePoint(18.5, 56.5)
+  Set p99 = f2d.CreatePoint(16, 56.5)
+  Set e100 = f2d.CreateLine(16, 26.5, 18.5, 26.5)
+  e100.StartPoint = p96
+  e100.EndPoint = p97
+  Set e101 = f2d.CreateLine(18.5, 26.5, 18.5, 56.5)
+  e101.StartPoint = p97
+  e101.EndPoint = p98
+  Set e102 = f2d.CreateLine(18.5, 56.5, 16, 56.5)
+  e102.StartPoint = p98
+  e102.EndPoint = p99
+  Set e103 = f2d.CreateLine(16, 56.5, 16, 26.5)
+  e103.StartPoint = p99
+  e103.EndPoint = p96
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e100)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e101)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e102)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e103)  ' catCstTypeHorizontality / Verticality
+  Set k104 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e100))  ' catCstTypeLength
+  rels.CreateFormula "F_Rib_1_L104", "", k104.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k105 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e101))  ' catCstTypeLength
+  rels.CreateFormula "F_Rib_1_L105", "", k105.Dimension, "abs( ( RIB_Z1 ) - ( RAIL_Z0 ) )"
+  sk95.CloseEdition
+  part1.InWorkObject = sk95
+  part1.Update
+  Set ft106 = sf.AddNewPad(sk95, 0.4)
+  ft106.IsSymmetric = True
+  ft106.Name = "Rib_1"
+  rels.CreateFormula "F_Rib_1_half", "", ft106.FirstLimit.Dimension, "abs( ( RIB_X1 + RIB_W / 2 ) - ( RIB_X1 - RIB_W / 2 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Rib_2"
+  Set pl107 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 24, False)
+  hb.AppendHybridShape pl107
+  pl107.Name = "Plane_Rib_2"
+  rels.CreateFormula "F_Plane_Rib_2", "", pl107.Offset, "( ( RIB_X2 - RIB_W / 2 ) + ( RIB_X2 + RIB_W / 2 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk108 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl107))
+  sk108.Name = "Sketch_Rib_2"
+  ax(0) = 24
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk108.SetAbsoluteAxisData ax
+  Set f2d = sk108.OpenEdition()
+  Set cst = sk108.Constraints
+  Set p109 = f2d.CreatePoint(16, 26.5)
+  Set p110 = f2d.CreatePoint(18.5, 26.5)
+  Set p111 = f2d.CreatePoint(18.5, 56.5)
+  Set p112 = f2d.CreatePoint(16, 56.5)
+  Set e113 = f2d.CreateLine(16, 26.5, 18.5, 26.5)
+  e113.StartPoint = p109
+  e113.EndPoint = p110
+  Set e114 = f2d.CreateLine(18.5, 26.5, 18.5, 56.5)
+  e114.StartPoint = p110
+  e114.EndPoint = p111
+  Set e115 = f2d.CreateLine(18.5, 56.5, 16, 56.5)
+  e115.StartPoint = p111
+  e115.EndPoint = p112
+  Set e116 = f2d.CreateLine(16, 56.5, 16, 26.5)
+  e116.StartPoint = p112
+  e116.EndPoint = p109
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e113)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e114)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e115)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e116)  ' catCstTypeHorizontality / Verticality
+  Set k117 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e113))  ' catCstTypeLength
+  rels.CreateFormula "F_Rib_2_L117", "", k117.Dimension, "abs( ( Y_OUTER - WALL + OVERLAP ) - ( Y_RIB_TIP ) )"
+  Set k118 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e114))  ' catCstTypeLength
+  rels.CreateFormula "F_Rib_2_L118", "", k118.Dimension, "abs( ( RIB_Z1 ) - ( RAIL_Z0 ) )"
+  sk108.CloseEdition
+  part1.InWorkObject = sk108
+  part1.Update
+  Set ft119 = sf.AddNewPad(sk108, 0.4)
+  ft119.IsSymmetric = True
+  ft119.Name = "Rib_2"
+  rels.CreateFormula "F_Rib_2_half", "", ft119.FirstLimit.Dimension, "abs( ( RIB_X2 + RIB_W / 2 ) - ( RIB_X2 - RIB_W / 2 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Bump_1"
+  Set pl120 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 6, False)
+  hb.AppendHybridShape pl120
+  pl120.Name = "Plane_Bump_1"
+  rels.CreateFormula "F_Plane_Bump_1", "", pl120.Offset, "( ( BUMP_X1 - BUMP_W / 2 ) + ( BUMP_X1 + BUMP_W / 2 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk121 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl120))
+  sk121.Name = "Sketch_Bump_1"
+  ax(0) = 6
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk121.SetAbsoluteAxisData ax
+  Set f2d = sk121.OpenEdition()
+  Set cst = sk121.Constraints
+  Set p122 = f2d.CreatePoint(19.5, 68.5)
+  Set p123 = f2d.CreatePoint(20, 68.5)
+  Set p124 = f2d.CreatePoint(22, 70.5)
+  Set p125 = f2d.CreatePoint(22, 73.5)
+  Set p126 = f2d.CreatePoint(20, 75.5)
+  Set p127 = f2d.CreatePoint(19.5, 75.5)
+  Set e128 = f2d.CreateLine(19.5, 68.5, 20, 68.5)
+  e128.StartPoint = p122
+  e128.EndPoint = p123
+  Set e129 = f2d.CreateCircle(20, 70.5, 2, 4.712389, 6.283185)
+  e129.StartPoint = p123
+  e129.EndPoint = p124
+  Set e130 = f2d.CreateLine(22, 70.5, 22, 73.5)
+  e130.StartPoint = p124
+  e130.EndPoint = p125
+  Set e131 = f2d.CreateCircle(20, 73.5, 2, 6.283185, 7.853982)
+  e131.StartPoint = p125
+  e131.EndPoint = p126
+  Set e132 = f2d.CreateLine(20, 75.5, 19.5, 75.5)
+  e132.StartPoint = p126
+  e132.EndPoint = p127
+  Set e133 = f2d.CreateLine(19.5, 75.5, 19.5, 68.5)
+  e133.StartPoint = p127
+  e133.EndPoint = p122
+  sk121.CloseEdition
+  part1.InWorkObject = sk121
+  part1.Update
+  Set ft134 = sf.AddNewPad(sk121, 1.5)
+  ft134.IsSymmetric = True
+  ft134.Name = "Bump_1"
+  rels.CreateFormula "F_Bump_1_half", "", ft134.FirstLimit.Dimension, "abs( ( BUMP_X1 + BUMP_W / 2 ) - ( BUMP_X1 - BUMP_W / 2 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Bump_2"
+  Set pl135 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 25, False)
+  hb.AppendHybridShape pl135
+  pl135.Name = "Plane_Bump_2"
+  rels.CreateFormula "F_Plane_Bump_2", "", pl135.Offset, "( ( BUMP_X2 - BUMP_W / 2 ) + ( BUMP_X2 + BUMP_W / 2 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk136 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl135))
+  sk136.Name = "Sketch_Bump_2"
+  ax(0) = 25
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk136.SetAbsoluteAxisData ax
+  Set f2d = sk136.OpenEdition()
+  Set cst = sk136.Constraints
+  Set p137 = f2d.CreatePoint(19.5, 68.5)
+  Set p138 = f2d.CreatePoint(20, 68.5)
+  Set p139 = f2d.CreatePoint(22, 70.5)
+  Set p140 = f2d.CreatePoint(22, 73.5)
+  Set p141 = f2d.CreatePoint(20, 75.5)
+  Set p142 = f2d.CreatePoint(19.5, 75.5)
+  Set e143 = f2d.CreateLine(19.5, 68.5, 20, 68.5)
+  e143.StartPoint = p137
+  e143.EndPoint = p138
+  Set e144 = f2d.CreateCircle(20, 70.5, 2, 4.712389, 6.283185)
+  e144.StartPoint = p138
+  e144.EndPoint = p139
+  Set e145 = f2d.CreateLine(22, 70.5, 22, 73.5)
+  e145.StartPoint = p139
+  e145.EndPoint = p140
+  Set e146 = f2d.CreateCircle(20, 73.5, 2, 6.283185, 7.853982)
+  e146.StartPoint = p140
+  e146.EndPoint = p141
+  Set e147 = f2d.CreateLine(20, 75.5, 19.5, 75.5)
+  e147.StartPoint = p141
+  e147.EndPoint = p142
+  Set e148 = f2d.CreateLine(19.5, 75.5, 19.5, 68.5)
+  e148.StartPoint = p142
+  e148.EndPoint = p137
+  sk136.CloseEdition
+  part1.InWorkObject = sk136
+  part1.Update
+  Set ft149 = sf.AddNewPad(sk136, 1.5)
+  ft149.IsSymmetric = True
+  ft149.Name = "Bump_2"
+  rels.CreateFormula "F_Bump_2_half", "", ft149.FirstLimit.Dimension, "abs( ( BUMP_X2 + BUMP_W / 2 ) - ( BUMP_X2 - BUMP_W / 2 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pocket Bump_core_1"
+  Set pl150 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 6, False)
+  hb.AppendHybridShape pl150
+  pl150.Name = "Plane_Bump_core_1"
+  rels.CreateFormula "F_Plane_Bump_core_1", "", pl150.Offset, "( ( BUMP_X1 - CORE_W / 2 ) + ( BUMP_X1 + CORE_W / 2 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk151 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl150))
+  sk151.Name = "Sketch_Bump_core_1"
+  ax(0) = 6
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk151.SetAbsoluteAxisData ax
+  Set f2d = sk151.OpenEdition()
+  Set cst = sk151.Constraints
+  Set p152 = f2d.CreatePoint(17.5, 69.5)
+  Set p153 = f2d.CreatePoint(20.5, 69.5)
+  Set p154 = f2d.CreatePoint(21, 70)
+  Set p155 = f2d.CreatePoint(21, 74)
+  Set p156 = f2d.CreatePoint(20.5, 74.5)
+  Set p157 = f2d.CreatePoint(17.5, 74.5)
+  Set e158 = f2d.CreateLine(17.5, 69.5, 20.5, 69.5)
+  e158.StartPoint = p152
+  e158.EndPoint = p153
+  Set e159 = f2d.CreateCircle(20.5, 70, 0.5, 4.712389, 6.283185)
+  e159.StartPoint = p153
+  e159.EndPoint = p154
+  Set e160 = f2d.CreateLine(21, 70, 21, 74)
+  e160.StartPoint = p154
+  e160.EndPoint = p155
+  Set e161 = f2d.CreateCircle(20.5, 74, 0.5, 6.283185, 7.853982)
+  e161.StartPoint = p155
+  e161.EndPoint = p156
+  Set e162 = f2d.CreateLine(20.5, 74.5, 17.5, 74.5)
+  e162.StartPoint = p156
+  e162.EndPoint = p157
+  Set e163 = f2d.CreateLine(17.5, 74.5, 17.5, 69.5)
+  e163.StartPoint = p157
+  e163.EndPoint = p152
+  sk151.CloseEdition
+  part1.InWorkObject = sk151
+  part1.Update
+  Set ft164 = sf.AddNewPocket(sk151, 0.5)
+  ft164.IsSymmetric = True
+  ft164.Name = "Bump_core_1"
+  rels.CreateFormula "F_Bump_core_1_half", "", ft164.FirstLimit.Dimension, "abs( ( BUMP_X1 + CORE_W / 2 ) - ( BUMP_X1 - CORE_W / 2 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pocket Bump_core_2"
+  Set pl165 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 25, False)
+  hb.AppendHybridShape pl165
+  pl165.Name = "Plane_Bump_core_2"
+  rels.CreateFormula "F_Plane_Bump_core_2", "", pl165.Offset, "( ( BUMP_X2 - CORE_W / 2 ) + ( BUMP_X2 + CORE_W / 2 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk166 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl165))
+  sk166.Name = "Sketch_Bump_core_2"
+  ax(0) = 25
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk166.SetAbsoluteAxisData ax
+  Set f2d = sk166.OpenEdition()
+  Set cst = sk166.Constraints
+  Set p167 = f2d.CreatePoint(17.5, 69.5)
+  Set p168 = f2d.CreatePoint(20.5, 69.5)
+  Set p169 = f2d.CreatePoint(21, 70)
+  Set p170 = f2d.CreatePoint(21, 74)
+  Set p171 = f2d.CreatePoint(20.5, 74.5)
+  Set p172 = f2d.CreatePoint(17.5, 74.5)
+  Set e173 = f2d.CreateLine(17.5, 69.5, 20.5, 69.5)
+  e173.StartPoint = p167
+  e173.EndPoint = p168
+  Set e174 = f2d.CreateCircle(20.5, 70, 0.5, 4.712389, 6.283185)
+  e174.StartPoint = p168
+  e174.EndPoint = p169
+  Set e175 = f2d.CreateLine(21, 70, 21, 74)
+  e175.StartPoint = p169
+  e175.EndPoint = p170
+  Set e176 = f2d.CreateCircle(20.5, 74, 0.5, 6.283185, 7.853982)
+  e176.StartPoint = p170
+  e176.EndPoint = p171
+  Set e177 = f2d.CreateLine(20.5, 74.5, 17.5, 74.5)
+  e177.StartPoint = p171
+  e177.EndPoint = p172
+  Set e178 = f2d.CreateLine(17.5, 74.5, 17.5, 69.5)
+  e178.StartPoint = p172
+  e178.EndPoint = p167
+  sk166.CloseEdition
+  part1.InWorkObject = sk166
+  part1.Update
+  Set ft179 = sf.AddNewPocket(sk166, 0.5)
+  ft179.IsSymmetric = True
+  ft179.Name = "Bump_core_2"
+  rels.CreateFormula "F_Bump_core_2_half", "", ft179.FirstLimit.Dimension, "abs( ( BUMP_X2 + CORE_W / 2 ) - ( BUMP_X2 - CORE_W / 2 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pad Latch"
+  Set pl180 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 15.5, False)
+  hb.AppendHybridShape pl180
+  pl180.Name = "Plane_Latch"
+  rels.CreateFormula "F_Plane_Latch", "", pl180.Offset, "( ( LATCH_X0 ) + ( LATCH_X1 ) ) / 2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk181 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl180))
+  sk181.Name = "Sketch_Latch"
+  ax(0) = 15.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk181.SetAbsoluteAxisData ax
+  Set f2d = sk181.OpenEdition()
+  Set cst = sk181.Constraints
+  Set p182 = f2d.CreatePoint(13, 5.5)
+  Set p183 = f2d.CreatePoint(14, 5.5)
+  Set p184 = f2d.CreatePoint(15, 9)
+  Set p185 = f2d.CreatePoint(15, 9.5)
+  Set p186 = f2d.CreatePoint(14.3, 9.5)
+  Set p187 = f2d.CreatePoint(14.3, 11.5)
+  Set p188 = f2d.CreatePoint(19, 11.5)
+  Set p189 = f2d.CreatePoint(19, 20.3)
+  Set p190 = f2d.CreatePoint(13, 13.1)
+  Set e191 = f2d.CreateLine(13, 5.5, 14, 5.5)
+  e191.StartPoint = p182
+  e191.EndPoint = p183
+  Set e192 = f2d.CreateLine(14, 5.5, 15, 9)
+  e192.StartPoint = p183
+  e192.EndPoint = p184
+  Set e193 = f2d.CreateLine(15, 9, 15, 9.5)
+  e193.StartPoint = p184
+  e193.EndPoint = p185
+  Set e194 = f2d.CreateLine(15, 9.5, 14.3, 9.5)
+  e194.StartPoint = p185
+  e194.EndPoint = p186
+  Set e195 = f2d.CreateLine(14.3, 9.5, 14.3, 11.5)
+  e195.StartPoint = p186
+  e195.EndPoint = p187
+  Set e196 = f2d.CreateLine(14.3, 11.5, 19, 11.5)
+  e196.StartPoint = p187
+  e196.EndPoint = p188
+  Set e197 = f2d.CreateLine(19, 11.5, 19, 20.3)
+  e197.StartPoint = p188
+  e197.EndPoint = p189
+  Set e198 = f2d.CreateLine(19, 20.3, 13, 13.1)
+  e198.StartPoint = p189
+  e198.EndPoint = p190
+  Set e199 = f2d.CreateLine(13, 13.1, 13, 5.5)
+  e199.StartPoint = p190
+  e199.EndPoint = p182
+  sk181.CloseEdition
+  part1.InWorkObject = sk181
+  part1.Update
+  Set ft200 = sf.AddNewPad(sk181, 3)
+  ft200.IsSymmetric = True
+  ft200.Name = "Latch"
+  rels.CreateFormula "F_Latch_half", "", ft200.FirstLimit.Dimension, "abs( ( LATCH_X1 ) - ( LATCH_X0 ) ) / 2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "groove Thumb_recess"
+  Set pl201 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 15.5, False)
+  hb.AppendHybridShape pl201
+  pl201.Name = "Plane_Thumb_recess"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk202 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl201))
+  sk202.Name = "Sketch_Thumb_recess"
+  ax(0) = 15.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk202.SetAbsoluteAxisData ax
+  Set f2d = sk202.OpenEdition()
+  Set cst = sk202.Constraints
+  Set p203 = f2d.CreatePoint(18, 11.5)
+  Set p204 = f2d.CreatePoint(18, 14.05)
+  Set p205 = f2d.CreatePoint(19.700599, 18.660474)
+  Set p206 = f2d.CreatePoint(20, 19.472177)
+  Set p207 = f2d.CreatePoint(20, 23.5)
+  Set p208 = f2d.CreatePoint(24, 23.5)
+  Set p209 = f2d.CreatePoint(24, 11.5)
+  Set e210 = f2d.CreateLine(18, 11.5, 18, 14.05)
+  e210.StartPoint = p203
+  e210.EndPoint = p204
+  Set e211 = f2d.CreateCircle(25.099999, 14.050001, 7.099999, 2.434847, 3.141593)
+  e211.StartPoint = p205
+  e211.EndPoint = p204
+  Set e212 = f2d.CreateCircle(18.75001, 19.472173, 1.24999, 5.576437, 6.283188)
+  e212.StartPoint = p205
+  e212.EndPoint = p206
+  Set e213 = f2d.CreateLine(20, 19.472177, 20, 23.5)
+  e213.StartPoint = p206
+  e213.EndPoint = p207
+  Set e214 = f2d.CreateLine(20, 23.5, 24, 23.5)
+  e214.StartPoint = p207
+  e214.EndPoint = p208
+  Set e215 = f2d.CreateLine(24, 23.5, 24, 11.5)
+  e215.StartPoint = p208
+  e215.EndPoint = p209
+  Set e216 = f2d.CreateLine(24, 11.5, 18, 11.5)
+  e216.StartPoint = p209
+  e216.EndPoint = p203
+  Set axl217 = f2d.CreateLine(0, 11.5, 30, 11.5)
+  axl217.Construction = True
+  sk202.CenterLine = axl217
+  sk202.CloseEdition
+  part1.InWorkObject = sk202
+  part1.Update
+  Set ft218 = sf.AddNewGroove(sk202)
+  ft218.FirstAngle.Value = 360
+  ft218.SecondAngle.Value = 0
+  ft218.Name = "Thumb_recess"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pocket Latch_slot_1"
+  Set pl219 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 14.25, False)
+  hb.AppendHybridShape pl219
+  pl219.Name = "Plane_Latch_slot_1"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk220 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl219))
+  sk220.Name = "Sketch_Latch_slot_1"
+  ax(0) = 14.25
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk220.SetAbsoluteAxisData ax
+  Set f2d = sk220.OpenEdition()
+  Set cst = sk220.Constraints
+  Set p221 = f2d.CreatePoint(12, 12.5)
+  Set p222 = f2d.CreatePoint(18, 12.5)
+  Set p223 = f2d.CreatePoint(18, 21.5)
+  Set p224 = f2d.CreatePoint(12, 21.5)
+  Set e225 = f2d.CreateLine(12, 12.5, 18, 12.5)
+  e225.StartPoint = p221
+  e225.EndPoint = p222
+  Set e226 = f2d.CreateLine(18, 12.5, 18, 21.5)
+  e226.StartPoint = p222
+  e226.EndPoint = p223
+  Set e227 = f2d.CreateLine(18, 21.5, 12, 21.5)
+  e227.StartPoint = p223
+  e227.EndPoint = p224
+  Set e228 = f2d.CreateLine(12, 21.5, 12, 12.5)
+  e228.StartPoint = p224
+  e228.EndPoint = p221
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e225)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e226)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e227)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e228)  ' catCstTypeHorizontality / Verticality
+  Set k229 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e225))  ' catCstTypeLength
+  rels.CreateFormula "F_Latch_slot_1_L229", "", k229.Dimension, "abs( ( Y_OUTER - WALL ) - ( 12.0mm ) )"
+  sk220.CloseEdition
+  part1.InWorkObject = sk220
+  part1.Update
+  Set ft230 = sf.AddNewPocket(sk220, 0.75)
+  ft230.IsSymmetric = True
+  ft230.Name = "Latch_slot_1"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "pocket Latch_slot_2"
+  Set pl231 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 16.75, False)
+  hb.AppendHybridShape pl231
+  pl231.Name = "Plane_Latch_slot_2"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk232 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl231))
+  sk232.Name = "Sketch_Latch_slot_2"
+  ax(0) = 16.75
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk232.SetAbsoluteAxisData ax
+  Set f2d = sk232.OpenEdition()
+  Set cst = sk232.Constraints
+  Set p233 = f2d.CreatePoint(12, 12.5)
+  Set p234 = f2d.CreatePoint(18, 12.5)
+  Set p235 = f2d.CreatePoint(18, 21.5)
+  Set p236 = f2d.CreatePoint(12, 21.5)
+  Set e237 = f2d.CreateLine(12, 12.5, 18, 12.5)
+  e237.StartPoint = p233
+  e237.EndPoint = p234
+  Set e238 = f2d.CreateLine(18, 12.5, 18, 21.5)
+  e238.StartPoint = p234
+  e238.EndPoint = p235
+  Set e239 = f2d.CreateLine(18, 21.5, 12, 21.5)
+  e239.StartPoint = p235
+  e239.EndPoint = p236
+  Set e240 = f2d.CreateLine(12, 21.5, 12, 12.5)
+  e240.StartPoint = p236
+  e240.EndPoint = p233
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e237)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e238)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 10, part1.CreateReferenceFromObject(e239)  ' catCstTypeHorizontality / Verticality
+  cst.AddMonoEltCst 13, part1.CreateReferenceFromObject(e240)  ' catCstTypeHorizontality / Verticality
+  Set k241 = cst.AddMonoEltCst(5, part1.CreateReferenceFromObject(e237))  ' catCstTypeLength
+  rels.CreateFormula "F_Latch_slot_2_L241", "", k241.Dimension, "abs( ( Y_OUTER - WALL ) - ( 12.0mm ) )"
+  sk232.CloseEdition
+  part1.InWorkObject = sk232
+  part1.Update
+  Set ft242 = sf.AddNewPocket(sk232, 0.75)
+  ft242.IsSymmetric = True
+  ft242.Name = "Latch_slot_2"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "shaft Recess_shell"
+  Set pl243 = hsf.AddNewPlaneOffset(part1.CreateReferenceFromObject(org.PlaneYZ), 15.5, False)
+  hb.AppendHybridShape pl243
+  pl243.Name = "Plane_Recess_shell"
+  part1.InWorkObject = hb
+  part1.Update
+  part1.InWorkObject = body1
+  Set sk244 = body1.Sketches.Add(part1.CreateReferenceFromObject(pl243))
+  sk244.Name = "Sketch_Recess_shell"
+  ax(0) = 15.5
+  ax(1) = 0
+  ax(2) = 0
+  ax(3) = 0
+  ax(4) = 1
+  ax(5) = 0
+  ax(6) = 0
+  ax(7) = 0
+  ax(8) = 1
+  sk244.SetAbsoluteAxisData ax
+  Set f2d = sk244.OpenEdition()
+  Set cst = sk244.Constraints
+  Set p245 = f2d.CreatePoint(16, 11.5)
+  Set p246 = f2d.CreatePoint(16, 14.05)
+  Set p247 = f2d.CreatePoint(18, 19.7421)
+  Set p248 = f2d.CreatePoint(20, 19.7421)
+  Set p249 = f2d.CreatePoint(20, 19.472177)
+  Set p250 = f2d.CreatePoint(19.700599, 18.660474)
+  Set p251 = f2d.CreatePoint(18, 14.05)
+  Set p252 = f2d.CreatePoint(18, 11.5)
+  Set e253 = f2d.CreateLine(16, 11.5, 16, 14.05)
+  e253.StartPoint = p245
+  e253.EndPoint = p246
+  Set e254 = f2d.CreateCircle(25.099996, 14.050002, 9.099996, 2.465813, 3.141593)
+  e254.StartPoint = p247
+  e254.EndPoint = p246
+  Set e255 = f2d.CreateLine(18, 19.7421, 20, 19.7421)
+  e255.StartPoint = p247
+  e255.EndPoint = p248
+  Set e256 = f2d.CreateLine(20, 19.7421, 20, 19.472177)
+  e256.StartPoint = p248
+  e256.EndPoint = p249
+  Set e257 = f2d.CreateCircle(18.75001, 19.472173, 1.24999, 5.576437, 6.283188)
+  e257.StartPoint = p250
+  e257.EndPoint = p249
+  Set e258 = f2d.CreateCircle(25.099999, 14.050001, 7.099999, 2.434847, 3.141593)
+  e258.StartPoint = p250
+  e258.EndPoint = p251
+  Set e259 = f2d.CreateLine(18, 14.05, 18, 11.5)
+  e259.StartPoint = p251
+  e259.EndPoint = p252
+  Set e260 = f2d.CreateLine(18, 11.5, 16, 11.5)
+  e260.StartPoint = p252
+  e260.EndPoint = p245
+  Set axl261 = f2d.CreateLine(0, 11.5, 30, 11.5)
+  axl261.Construction = True
+  sk244.CenterLine = axl261
+  sk244.CloseEdition
+  part1.InWorkObject = sk244
+  part1.Update
+  Set ft262 = sf.AddNewShaft(sk244)
+  ft262.FirstAngle.Value = 90
+  ft262.SecondAngle.Value = 90
+  ft262.Name = "Recess_shell"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "manual Bump_edge_fillets"
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "final update"
+  part1.Update
+  If Err.Number <> 0 Then log = log & "FAILED: " & stepName & " (" & Err.Description & ")" & vbCrLf: nFail = nFail + 1: Err.Clear
+  stepName = "done"
+  On Error GoTo 0
+  msg = "cover_example: built " & IIf(nFail = 0, "without errors", nFail & " step(s) failed") & vbCrLf & vbCrLf & log & vbCrLf & "Manual steps (need edge picks):" & vbCrLf & "- Bump_edge_fillets: Edge fillet R0.25 on the 4 proud side edges of each bump (X faces, above the plate)" & vbCrLf & ""
+  MsgBox msg, 64, "Reverse-engineering macro"
+  path = InputBox("Save the part as (.CATPart). Leave empty to skip.", "Save", "C:\Temp\cover_example.CATPart")
+  If path <> "" Then doc.SaveAs path
+End Sub
+
+Function IIf(c, a, b)
+  If c Then IIf = a Else IIf = b
+End Function
