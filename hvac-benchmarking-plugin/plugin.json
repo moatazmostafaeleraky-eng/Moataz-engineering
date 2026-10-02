@@ -1,0 +1,20 @@
+{
+  "name": "hvac-benchmarking-plugin",
+  "version": "0.1.0",
+  "description": "Local REST plugin for evidence-traceable HVAC teardown benchmarking and engineering comparison.",
+  "runtime": "python3 app.py",
+  "database": "SQLite",
+  "tools": [
+    "create_benchmark_project",
+    "generate_teardown_checklist",
+    "register_component",
+    "upload_evidence",
+    "record_measurement",
+    "record_observation",
+    "validate_project",
+    "generate_bom",
+    "compare_products",
+    "calculate_kpis",
+    "generate_report"
+  ]
+}

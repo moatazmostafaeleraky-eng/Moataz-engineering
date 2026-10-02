@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HVAC Benchmarking Teardown</title>
+<meta name="description" content="Offline-first tablet app for evidence-traceable HVAC teardown benchmarking.">
+<meta name="theme-color" content="#1d4e89">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app-bar">
+  <span class="brand">HVAC&nbsp;Bench</span>
+  <span class="project-name" id="current-project-name"></span>
+  <span class="spacer"></span>
+  <span id="net-badge" data-state="online">Online</span>
+</div>
+<nav id="nav-tabs" aria-label="Workflow sections"></nav>
+<main id="view" role="main"></main>
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
