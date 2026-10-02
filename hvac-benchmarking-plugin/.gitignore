@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+instance/*.db
+instance/evidence/
+.pytest_cache/
+node_modules/
+e2e/playwright-report/
+e2e/test-results/
+e2e/.cache/

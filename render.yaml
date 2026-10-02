@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: hvac-benchmarking
+    runtime: python
+    rootDir: hvac-benchmarking-plugin
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    envVars:
+      - key: HVAC_BENCHMARK_DB
+        value: /tmp/benchmark.db
