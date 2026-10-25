@@ -338,7 +338,7 @@ def full_design_export(body: FullDesignExport):
         raise
 
 @app.post('/api/reference-import/robodk-robot')
-async def import_robodk_robot(file: UploadFile = File(...)):
+async def import_robodk_robot(file: UploadFile = File(...), smooth: bool = Form(False), smooth_tolerance_mm: float = Form(0.25)):
     """Import an authorized RoboDK .robot reference asset.
 
     The converter only accepts the recognized legacy qCompress triangle-mesh
@@ -350,6 +350,8 @@ async def import_robodk_robot(file: UploadFile = File(...)):
     filename = Path(file.filename or '').name
     if not filename.lower().endswith('.robot'):
         raise HTTPException(415, 'Upload a RoboDK .robot file')
+    if not 0.05 <= smooth_tolerance_mm <= 1.0:
+        raise HTTPException(422, 'Smooth-surface tolerance must be between 0.05 and 1.0 mm')
     tmp_root = Path(tempfile.mkdtemp(prefix='raed-robodk-upload-'))
     source = tmp_root / filename
     package = tmp_root / 'ROBDK-REFERENCE-IMPORT.zip'
@@ -358,10 +360,11 @@ async def import_robodk_robot(file: UploadFile = File(...)):
         if len(data) > 200 * 1024 * 1024:
             raise HTTPException(413, 'The .robot file is larger than the 200 MB local import limit')
         source.write_bytes(data)
-        manifest = await asyncio.get_running_loop().run_in_executor(_cad_pool(), make_import_zip, source, package)
+        manifest = await asyncio.get_running_loop().run_in_executor(_cad_pool(), make_import_zip, source, package, smooth, smooth_tolerance_mm)
         skipped = [item['part'] for item in manifest.get('skipped_links', [])]
         return FileResponse(package, filename='ROBDK-REFERENCE-IMPORT.zip', media_type='application/zip', background=None,
-                            headers={'X-RAED-PARTS': str(manifest.get('part_count', 0)), 'X-RAED-SKIPPED': ','.join(skipped)})
+                            headers={'X-RAED-PARTS': str(manifest.get('part_count', 0)), 'X-RAED-SKIPPED': ','.join(skipped),
+                                     'X-RAED-SMOOTH': str(len(manifest.get('smooth_surface_parts', [])))})
     except HTTPException:
         shutil.rmtree(tmp_root, ignore_errors=True)
         raise

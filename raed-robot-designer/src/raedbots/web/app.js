@@ -299,13 +299,14 @@ $('robodk-build').onclick=action(async()=>{
 $('robodk-import').onclick=action(async()=>{
   const input=$('robodk-robot-file');
   if(!input.files?.length)throw new Error('Choose an authorized .robot file first.');
-  $('job-message').textContent='Reconstructing validated solids from the RoboDK meshes… open meshes can take several minutes.';
-  const form=new FormData();form.append('file',input.files[0]);
+  const smooth=$('robodk-smooth').checked;
+  $('job-message').textContent=smooth?'Reverse-engineering smooth surfaces for every link… this can take 10+ minutes.':'Reconstructing validated solids from the RoboDK meshes… this can take several minutes.';
+  const form=new FormData();form.append('file',input.files[0]);form.append('smooth',smooth?'true':'false');form.append('smooth_tolerance_mm',$('robodk-smooth-tol').value);
   const response=await fetch('/api/reference-import/robodk-robot',{method:'POST',body:form});
   if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.detail||'RoboDK import failed')}
-  const parts=response.headers.get('X-RAED-PARTS'),skipped=(response.headers.get('X-RAED-SKIPPED')||'').split(',').filter(Boolean);
+  const parts=response.headers.get('X-RAED-PARTS'),skipped=(response.headers.get('X-RAED-SKIPPED')||'').split(',').filter(Boolean),smoothCount=response.headers.get('X-RAED-SMOOTH');
   const blob=await response.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='ROBDK-REFERENCE-IMPORT.zip';a.click();URL.revokeObjectURL(url);
-  notice(`RoboDK reference package downloaded: ${parts||'?'} validated solid link(s)`+(skipped.length?`; skipped ${skipped.join(', ')} (mesh could not be closed — see robot-import-report.json).`:'.')+' Review robot-import-report.json before using it.',!skipped.length);
+  notice(`RoboDK reference package downloaded: ${parts||'?'} validated solid link(s)`+(smooth?` · ${smoothCount||0} with smooth surfaces`:'')+(skipped.length?`; skipped ${skipped.join(', ')} (mesh could not be closed — see robot-import-report.json).`:'.')+' Review robot-import-report.json before using it.',!skipped.length);
 });
 
 $('robodk-inspect').onclick=action(async()=>{

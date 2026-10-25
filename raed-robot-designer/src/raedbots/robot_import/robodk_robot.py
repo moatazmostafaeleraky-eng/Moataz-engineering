@@ -7,6 +7,9 @@ import struct
 import tempfile
 import zlib
 import zipfile
+
+import numpy as np
+
 from raedbots.branding import DESIGNER, COPYRIGHT_NOTICE, COPYRIGHT_TEXT
 import csv
 from pathlib import Path
@@ -205,12 +208,34 @@ def parse_legacy_qcompress_robot(source: Path) -> dict[str, Any]:
     }
 
 
-def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
+def home_pose_frames(mdh: list[dict[str, float]]) -> list[np.ndarray]:
+    """Modified-DH link frames at home (all joints zero), base frame first; metres."""
+    def rot_x(a):
+        c, s_ = math.cos(a), math.sin(a)
+        return np.array([[1, 0, 0, 0], [0, c, -s_, 0], [0, s_, c, 0], [0, 0, 0, 1.0]])
+
+    def rot_z(a):
+        c, s_ = math.cos(a), math.sin(a)
+        return np.array([[c, -s_, 0, 0], [s_, c, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1.0]])
+
+    def move(x, z):
+        t = np.eye(4)
+        t[0, 3], t[2, 3] = x, z
+        return t
+
+    frames = [np.eye(4)]
+    for row in mdh:
+        frames.append(frames[-1] @ rot_x(row["alpha"]) @ move(row["a"], 0) @ rot_z(row["theta"]) @ move(0, row["d"]))
+    return frames
+
+
+def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False, smooth_tol_mm: float = 0.25) -> dict[str, Any]:
     from raedbots.cad import occt_backend as oc
     from raedbots.cad.mesh_solid import mesh_to_solid
 
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest = parse_legacy_qcompress_robot(source)
+    frames = home_pose_frames(manifest["mdh"])
     actuator_screen = build_actuator_market_screen(manifest)
     parts_dir = output_dir / "Reference_Parts"
     parts_dir.mkdir(parents=True, exist_ok=True)
@@ -220,13 +245,17 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
     skipped_links = []
     for index, link in enumerate(manifest["links"], start=1):
         part_number = f"ROBDK-LINK-{index:02d}"
-        positions = [
+        local = np.asarray([
             point
             for surface in link["surfaces"]
             for point in surface["positions"]
-        ]
+        ], dtype=np.float64).reshape(-1, 3)
+        # RoboDK stores each body in its own joint frame; place it in the home pose
+        # so the parts assemble into the robot (and can feed the STEP -> RoboDK builder).
+        frame = frames[index - 1] if index - 1 < len(frames) else np.eye(4)
+        positions = (local @ frame[:3, :3].T + frame[:3, 3]).reshape(-1).tolist()
         try:
-            shape, report = mesh_to_solid(positions, part_name=part_number)
+            shape, report = mesh_to_solid(positions, part_name=part_number, smooth=smooth, smooth_tol_mm=smooth_tol_mm)
         except ValueError as exc:
             # One unrecoverable visual mesh must not discard the other validated links.
             solid_reports.append({"part": part_number, "status": "reconstruction_failed", "solid_count": 0, "error": str(exc)})
@@ -251,7 +280,12 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
     manifest["solid_reports"] = solid_reports
     manifest["skipped_links"] = skipped_links
     manifest["cad_status"] = "reconstructed_validated_solids"
-    manifest["cad_kind"] = "occt_brep_solids_from_closed_triangle_mesh"
+    smooth_parts = [r["part"] for r in solid_reports if r.get("surface") == "smooth"]
+    manifest["smooth_surface_parts"] = smooth_parts
+    manifest["cad_kind"] = ("reverse_engineered_smooth_brep" if smooth and len(smooth_parts) == len(placed)
+                            else "occt_brep_solids_from_closed_triangle_mesh")
+    manifest["placement"] = "home_pose_world_frame_from_modified_dh"
+    manifest["smooth_tolerance_mm"] = smooth_tol_mm if smooth else None
     manifest["stl_exported"] = False
     manifest["designed_by"] = DESIGNER
     manifest["copyright_notice"] = COPYRIGHT_NOTICE
@@ -269,6 +303,9 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
         "AUTHORIZED ROBODK REFERENCE IMPORT\n"
         "The STEP files are validated BREP solids reconstructed from available closed RoboDK triangle meshes.\n"
         "Open or non-manifold links may use VTK implicit-surface reconstruction; see solid_reports in robot-import-report.json.\n"
+        "All parts are placed in the robot's home pose (world frame, mm) from the file's modified DH chain, so they assemble in place.\n"
+        "With smooth surfaces enabled, each link is reverse-engineered into planes, cylinders, cones, spheres and NURBS plates\n"
+        "within 0.1 mm of the mesh; a link whose smooth result does not validate keeps its faceted solid (see 'surface' per part).\n"
         "They are mesh-derived solids, not the manufacturer's native CAD or design-intent feature trees.\n"
         "Surface reconstruction may smooth or close gaps in the visual mesh and is not manufacturing-accurate CAD.\n"
         "actuator-market-screen.* contains market-screening combinations from the local catalog; these are not identified ABB components.\n"
@@ -282,10 +319,10 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
     return manifest
 
 
-def make_import_zip(source: Path, output_zip: Path) -> dict[str, Any]:
+def make_import_zip(source: Path, output_zip: Path, smooth: bool = False, smooth_tol_mm: float = 0.25) -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix="raed-robodk-import-") as tmp:
         root = Path(tmp) / "ROBDK-REFERENCE-IMPORT"
-        manifest = export_reference_robot(source, root)
+        manifest = export_reference_robot(source, root, smooth=smooth, smooth_tol_mm=smooth_tol_mm)
         with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as archive:
             for path in root.rglob("*"):
                 if path.is_file():

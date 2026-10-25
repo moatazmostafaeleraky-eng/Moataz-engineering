@@ -425,8 +425,26 @@ def _closed_mesh_to_occt(positions: list[float], *, tolerance_mm: float, part_na
         return shape, report
 
 
+def _try_smooth(closed_positions: list[float], faceted, report: dict[str, Any], part_name: str, smooth_tol_mm: float):
+    """Swap the faceted solid for reverse-engineered smooth surfaces when they validate."""
+    from raedbots.cad.smooth_worker import smooth_in_subprocess
+
+    points = np.asarray(closed_positions, dtype=np.float64).reshape(-1, 3) * 1000.0
+    vertices, inverse = np.unique(points, axis=0, return_inverse=True)
+    shape, smooth_report = smooth_in_subprocess(vertices, inverse.reshape(-1, 3), part_name=part_name, tol_mm=smooth_tol_mm)
+    error = smooth_report.get("volume_error_pct")
+    if shape is not None and smooth_report.get("valid") and error is not None and abs(error) <= 2.0:
+        report.update(surface="smooth", smooth=smooth_report)
+        return shape, report
+    if shape is not None:
+        smooth_report = {**smooth_report, "status": "smooth_rejected_validation"}
+    report.update(surface="faceted", smooth=smooth_report)
+    return faceted, report
+
+
 def mesh_to_solid(
-    positions: list[float], *, tolerance_mm: float = 0.05, part_name: str = "part"
+    positions: list[float], *, tolerance_mm: float = 0.05, part_name: str = "part", smooth: bool = False,
+    smooth_tol_mm: float = 0.25,
 ) -> tuple[TopoDS_Shape, dict[str, Any]]:
     """Return validated OCCT solids; reconstruct open visual meshes when needed.
 
@@ -434,7 +452,14 @@ def mesh_to_solid(
     millimetres, matching the rest of the app's STEP convention. If ordinary
     manifold repair cannot close the input, an implicit VTK surface-reconstruction
     fallback is tried and its approximation settings are included in the report.
+    With ``smooth`` the closed mesh is also reverse-engineered into planes,
+    cylinders, cones, spheres and NURBS plates; the faceted solid is kept when
+    that result does not validate.
     """
+    def finish(closed, shape, report):
+        report.setdefault("surface", "faceted")
+        return _try_smooth(closed, shape, report, part_name, smooth_tol_mm) if smooth else (shape, report)
+
     flattened, repair_report = _manifold_repair(positions)
     if flattened:
         try:
@@ -443,7 +468,7 @@ def mesh_to_solid(
             )
             brep_report.update(repair_report)
             brep_report["status"] = "manifold3d_repaired+validated_solid"
-            return shape, brep_report
+            return finish(flattened, shape, brep_report)
         except Exception as direct_error:
             repair_report = {**repair_report, "direct_brep_error": str(direct_error)}
 
@@ -454,7 +479,7 @@ def mesh_to_solid(
             brep_report.update(close_report)
             brep_report["input_mesh_repair_status"] = repair_report.get("status", "direct_brep_failed")
             brep_report["status"] = "welded_and_closed+validated_solid"
-            return shape, brep_report
+            return finish(closed, shape, brep_report)
         except Exception as close_error:
             repair_report = {**repair_report, "weld_and_close_error": str(close_error)}
 
@@ -469,4 +494,4 @@ def mesh_to_solid(
     brep_report.update(reconstruction_report)
     brep_report["input_mesh_repair_status"] = repair_report.get("status", "direct_brep_failed")
     brep_report["status"] = "vtk_surface_reconstructed+validated_solid"
-    return shape, brep_report
+    return finish(reconstructed_positions, shape, brep_report)

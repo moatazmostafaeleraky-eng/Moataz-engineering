@@ -93,3 +93,5 @@ footer .copyright-notice{color:var(--mint);font-size:10px;font-weight:650;letter
 label em{float:none;margin-left:5px;font:10px ui-monospace,monospace;color:#7e9099;font-style:normal}
 .studio>.inputs-panel{align-self:start}
 .geo-more{grid-column:1/-1}
+.smooth-option{margin:4px 0 12px;color:#c7d3d1}
+.smooth-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:4px 0 12px}.smooth-row .smooth-option{margin:0;flex:1;min-width:260px}.smooth-tol{display:flex;align-items:center;gap:8px;margin:0;font-size:11px;white-space:nowrap}.smooth-tol select{margin:0;width:auto;font-size:11px;padding:6px 8px}
