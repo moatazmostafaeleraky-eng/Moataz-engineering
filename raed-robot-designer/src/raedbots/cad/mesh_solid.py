@@ -431,9 +431,20 @@ def _try_smooth(closed_positions: list[float], faceted, report: dict[str, Any], 
 
     points = np.asarray(closed_positions, dtype=np.float64).reshape(-1, 3) * 1000.0
     vertices, inverse = np.unique(points, axis=0, return_inverse=True)
-    shape, smooth_report = smooth_in_subprocess(vertices, inverse.reshape(-1, 3), part_name=part_name, tol_mm=smooth_tol_mm)
+    faces = inverse.reshape(-1, 3)
+    shape, smooth_report = smooth_in_subprocess(vertices, faces, part_name=part_name, tol_mm=smooth_tol_mm)
     error = smooth_report.get("volume_error_pct")
-    if shape is not None and smooth_report.get("valid") and error is not None and abs(error) <= 2.0:
+    accepted = shape is not None and smooth_report.get("valid") and error is not None
+    if smooth_tol_mm > 0.1 and not (accepted and abs(error) <= 1.0):
+        # A patch that misses its area check at a loose fit tolerance falls back to
+        # triangles; a tighter fit usually segments it cleanly, so keep the better run.
+        retry_shape, retry_report = smooth_in_subprocess(vertices, faces, part_name=part_name, tol_mm=0.1)
+        retry_error = retry_report.get("volume_error_pct")
+        if retry_shape is not None and retry_report.get("valid") and retry_error is not None and (
+            not accepted or abs(retry_error) < abs(error)
+        ):
+            shape, smooth_report, error, accepted = retry_shape, {**retry_report, "retried_from_tol_mm": smooth_tol_mm}, retry_error, True
+    if accepted and abs(error) <= 2.0:
         report.update(surface="smooth", smooth=smooth_report)
         return shape, report
     if shape is not None:
