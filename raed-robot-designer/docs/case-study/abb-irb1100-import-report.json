@@ -1,0 +1,604 @@
+{
+  "name": "ABB IRB 1100-4/0.58",
+  "source_filename": "ABB-IRB-1100-4-0-58.robot",
+  "source_sha256": "eefacddfb55a8212d8b2b2f23e54896edcdcfc89b4dbe557dc193caadb230d58",
+  "units": "metres",
+  "payload_kg": 4.0,
+  "reach_m": 0.58,
+  "mass_kg": 21.0,
+  "metadata_warnings": [],
+  "home": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "mdh": [
+    {
+      "alpha": 0.0,
+      "a": 0.0,
+      "theta": 0.0,
+      "d": 0.327
+    },
+    {
+      "alpha": -1.5707963267948966,
+      "a": 0.0,
+      "theta": -1.5707963267948966,
+      "d": 0.0
+    },
+    {
+      "alpha": 0.0,
+      "a": 0.28,
+      "theta": 0.0,
+      "d": 0.0
+    },
+    {
+      "alpha": -1.5707963267948966,
+      "a": 0.01,
+      "theta": 0.0,
+      "d": 0.3
+    },
+    {
+      "alpha": 1.5707963267948966,
+      "a": 0.0,
+      "theta": 0.0,
+      "d": 0.0
+    },
+    {
+      "alpha": -1.5707963267948966,
+      "a": 0.0,
+      "theta": 3.141592653589793,
+      "d": 0.064
+    }
+  ],
+  "limits": [
+    [
+      -4.014257279586958,
+      4.014257279586958
+    ],
+    [
+      -2.007128639793479,
+      1.9722220547535925
+    ],
+    [
+      -3.5779249665883754,
+      0.9599310885968813
+    ],
+    [
+      -4.014257279586958,
+      4.014257279586958
+    ],
+    [
+      -2.181661564992912,
+      2.181661564992912
+    ],
+    [
+      -6.981317007977318,
+      6.981317007977318
+    ]
+  ],
+  "links": [
+    {
+      "name": "Link 1",
+      "metrics": {
+        "surface_count": 1,
+        "triangle_count": 20892,
+        "vertex_count": 62676,
+        "bbox_m": {
+          "min": [
+            -0.149,
+            -0.079,
+            0.0
+          ],
+          "max": [
+            0.079,
+            0.079,
+            0.1595
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.228,
+          0.158,
+          0.1595
+        ],
+        "surface_area_m2": 0.17014971,
+        "colors": [
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Link 2",
+      "metrics": {
+        "surface_count": 1,
+        "triangle_count": 34028,
+        "vertex_count": 102084,
+        "bbox_m": {
+          "min": [
+            -0.0842652,
+            -0.0911769,
+            -0.181
+          ],
+          "max": [
+            0.0859257,
+            0.0911969,
+            0.0500346
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.1701909,
+          0.1823738,
+          0.2310346
+        ],
+        "surface_area_m2": 0.17759833,
+        "colors": [
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Link 3",
+      "metrics": {
+        "surface_count": 5,
+        "triangle_count": 25977,
+        "vertex_count": 77931,
+        "bbox_m": {
+          "min": [
+            -0.0509775,
+            -0.0510007,
+            -0.0895
+          ],
+          "max": [
+            0.3253164,
+            0.0509919,
+            0.0895
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.3762939,
+          0.1019926,
+          0.179
+        ],
+        "surface_area_m2": 0.17747441,
+        "colors": [
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Link 4",
+      "metrics": {
+        "surface_count": 1,
+        "triangle_count": 14586,
+        "vertex_count": 43758,
+        "bbox_m": {
+          "min": [
+            -0.063,
+            -0.072,
+            -0.052
+          ],
+          "max": [
+            0.057,
+            0.0725,
+            0.0555
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.12,
+          0.1445,
+          0.1075
+        ],
+        "surface_area_m2": 0.0805949,
+        "colors": [
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Link 5",
+      "metrics": {
+        "surface_count": 23,
+        "triangle_count": 48558,
+        "vertex_count": 145674,
+        "bbox_m": {
+          "min": [
+            -0.0449802,
+            -0.0515,
+            -0.2265
+          ],
+          "max": [
+            0.0713676,
+            0.0515,
+            0.0375
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.1163478,
+          0.103,
+          0.264
+        ],
+        "surface_area_m2": 0.12385696,
+        "colors": [
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          [
+            0.4706,
+            0.4902,
+            0.5569,
+            1.0
+          ],
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Link 6",
+      "metrics": {
+        "surface_count": 1,
+        "triangle_count": 12672,
+        "vertex_count": 38016,
+        "bbox_m": {
+          "min": [
+            -0.038,
+            -0.0376727,
+            -0.035
+          ],
+          "max": [
+            0.038,
+            0.0634,
+            0.0365
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.076,
+          0.1010727,
+          0.0715
+        ],
+        "surface_area_m2": 0.03844296,
+        "colors": [
+          [
+            0.902,
+            0.902,
+            0.902,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Link 7",
+      "metrics": {
+        "surface_count": 1,
+        "triangle_count": 710,
+        "vertex_count": 2130,
+        "bbox_m": {
+          "min": [
+            -0.02,
+            -0.02,
+            -0.008
+          ],
+          "max": [
+            0.02,
+            0.02,
+            0.0
+          ]
+        },
+        "envelope_dimensions_m": [
+          0.04,
+          0.04,
+          0.008
+        ],
+        "surface_area_m2": 0.00468021,
+        "colors": [
+          [
+            0.1725,
+            0.1725,
+            0.1725,
+            1.0
+          ]
+        ]
+      }
+    }
+  ],
+  "robot_envelope": {
+    "bbox_m": {
+      "min": [
+        -0.149,
+        -0.0911769,
+        -0.2265
+      ],
+      "max": [
+        0.3253164,
+        0.0911969,
+        0.1595
+      ]
+    },
+    "dimensions_m": [
+      0.47431639999999997,
+      0.1823738,
+      0.386
+    ]
+  },
+  "benchmark_mode": "detailed_reference_design",
+  "cad_status": "reconstructed_validated_solids",
+  "cad_kind": "occt_brep_solids_from_closed_triangle_mesh",
+  "manufacturing_cad_present": false,
+  "scope": "Authorized RoboDK reference import. Kinematics and available visual meshes only; no hidden internal CAD inferred.",
+  "files": [
+    "Reference_Parts/ROBDK-LINK-01.step",
+    "Reference_Parts/ROBDK-LINK-02.step",
+    "Reference_Parts/ROBDK-LINK-03.step",
+    "Reference_Parts/ROBDK-LINK-04.step",
+    "Reference_Parts/ROBDK-LINK-05.step",
+    "Reference_Parts/ROBDK-LINK-06.step",
+    "Reference_Parts/ROBDK-LINK-07.step",
+    "ROBDK-REFERENCE-ASSEMBLY.step"
+  ],
+  "part_count": 7,
+  "solid_reports": [
+    {
+      "part": "ROBDK-LINK-01",
+      "triangle_count": 16398,
+      "shell_count": 1,
+      "solid_count": 1,
+      "sewing_tolerance_mm": 0.05,
+      "brep_method": "sewing",
+      "status": "manifold3d_repaired+validated_solid",
+      "simplify_tolerance_mm": 0.05,
+      "manifold_triangle_count": 16398
+    },
+    {
+      "part": "ROBDK-LINK-02",
+      "triangle_count": 15668,
+      "shell_count": 1,
+      "solid_count": 1,
+      "sewing_tolerance_mm": 0.05,
+      "brep_method": "sewing",
+      "status": "manifold3d_repaired+validated_solid",
+      "simplify_tolerance_mm": 0.05,
+      "manifold_triangle_count": 15668
+    },
+    {
+      "part": "ROBDK-LINK-03",
+      "triangle_count": 16436,
+      "shell_count": 1,
+      "solid_count": 1,
+      "brep_method": "shared_edge_topology",
+      "sewing_error": "ROBDK-LINK-03: one reconstructed BREP solid failed OCCT validation",
+      "status": "manifold3d_repaired+validated_solid",
+      "simplify_tolerance_mm": 0.05,
+      "manifold_triangle_count": 16436
+    },
+    {
+      "part": "ROBDK-LINK-04",
+      "triangle_count": 9932,
+      "shell_count": 5,
+      "solid_count": 5,
+      "brep_method": "shared_edge_topology",
+      "sewing_error": "ROBDK-LINK-04: one reconstructed BREP solid failed OCCT validation",
+      "status": "manifold3d_repaired+validated_solid",
+      "simplify_tolerance_mm": 0.05,
+      "manifold_triangle_count": 9932
+    },
+    {
+      "part": "ROBDK-LINK-05",
+      "triangle_count": 31156,
+      "shell_count": 1,
+      "solid_count": 1,
+      "brep_method": "shared_edge_topology",
+      "sewing_error": "ROBDK-LINK-05: one reconstructed BREP solid failed OCCT validation",
+      "status": "welded_and_closed+validated_solid",
+      "weld_tolerance_mm": 9.999999999999999e-05,
+      "open_edges_before_closing": 10,
+      "holes_closed": 1,
+      "manifold_triangle_count": 31156,
+      "volume_m3": 0.001448169442717038,
+      "input_mesh_repair_status": "input_mesh_not_manifold"
+    },
+    {
+      "part": "ROBDK-LINK-06",
+      "triangle_count": 8392,
+      "shell_count": 5,
+      "solid_count": 5,
+      "sewing_tolerance_mm": 0.05,
+      "brep_method": "sewing",
+      "status": "welded_and_closed+validated_solid",
+      "weld_tolerance_mm": 9.999999999999999e-05,
+      "open_edges_before_closing": 4,
+      "holes_closed": 1,
+      "manifold_triangle_count": 8392,
+      "volume_m3": 0.00032555087407405925,
+      "input_mesh_repair_status": "input_mesh_not_manifold"
+    },
+    {
+      "part": "ROBDK-LINK-07",
+      "triangle_count": 710,
+      "shell_count": 1,
+      "solid_count": 1,
+      "sewing_tolerance_mm": 0.05,
+      "brep_method": "sewing",
+      "status": "manifold3d_repaired+validated_solid",
+      "simplify_tolerance_mm": 0.05,
+      "manifold_triangle_count": 710
+    }
+  ],
+  "skipped_links": [],
+  "stl_exported": false,
+  "designed_by": "Moataz Mostafa",
+  "copyright_notice": "Designed by: Moataz Mostafa"
+}

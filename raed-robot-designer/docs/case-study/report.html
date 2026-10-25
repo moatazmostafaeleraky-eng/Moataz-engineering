@@ -75,9 +75,34 @@ li{margin:2px 0}
 <h2>2. مصادر البيانات وحدود الدراسة</h2>
 <ul>
   <li><b>مواصفات <span class="en">R-1</span>:</b> لم يكن من الممكن فتح صفحة المنتج <span class="en">raedbots.com/product/RAED_R-1_IND</span> من بيئة العمل، لذلك أُخذت القيم من قائمة السوق العامة على منصة <span class="en">Egypt Innovate</span> (حمولة <span class="en">11 kg</span>، 6 محاور، مدى <span class="en">1300 mm</span>، سرعة حتى <span class="en">3 m/s</span>). هي قيم <b>غير مُتحقق منها</b> من داتا شيت رسمي، والبرنامج يعرضها بهذه الصفة.</li>
-  <li><b>المرجع المنافس:</b> موديل <span class="en">Yaskawa Motoman UP6</span> من مكتبة <span class="en">RoboDK</span> (مضمّن في المشروع مع بصمة <span class="en">SHA-256</span>). تحميل موديل جديد من <span class="en">robodk.com/library</span> لم يكن متاحًا لأن الموقع محجوب في سياسة شبكة البيئة.</li>
+  <li><b>المراجع المنافسة:</b> موديل <span class="en">Yaskawa Motoman UP6</span> من مكتبة <span class="en">RoboDK</span> (مضمّن في المشروع)، وملف <span class="en">ABB IRB 1100-4/0.58</span> بصيغة <span class="en">.robot</span> من مكتبة <span class="en">RoboDK</span> زوّدنا به مباشرة لأن موقع <span class="en">robodk.com</span> محجوب في سياسة شبكة البيئة.</li>
   <li><b>نطاق الحساب:</b> عزوم الجاذبية الاستاتيكية فقط بتقييم مستمر (<span class="en">continuous rating</span>). العزم الديناميكي، الانحراف (<span class="en">FEA</span>)، الحرارة، والدقة الفيزيائية خارج النطاق ومُعلَّمة <span class="unk">Unverified</span> في البرنامج — السعة الحقيقية ستكون أقل من الحد الاستاتيكي.</li>
 </ul>
+
+<h2>خريطة إمكانيات البرنامج في هذا التقرير</h2>
+<p>كل إمكانية في البرنامج اتجرّبت فعليًا على نفس مشروع فئة <span class="en">R-1</span>، والجدول ده بيقولك فين نتيجتها:</p>
+<table>
+  <tr><th>الوضع</th><th>الإمكانية</th><th>القسم</th><th>النتيجة</th></tr>
+  <tr><td rowspan="9">1 · تصميم روبوت جديد</td><td>قوالب التطبيقات الجاهزة</td><td class="n">3.01</td><td class="pass">✓</td></tr>
+  <tr><td>استخراج المتطلبات من نص عربي</td><td class="n">4.2</td><td class="pass">✓</td></tr>
+  <tr><td>القيود: أقصى كتلة + المخزون المتاح</td><td class="n">4.3</td><td class="pass">✓ (فشل مخزون حقيقي)</td></tr>
+  <tr><td>نقاط المهمة والعوائق وفحص التصادم</td><td class="n">3.02 · 4.4</td><td class="pass">✓ (تصادم محتمل)</td></tr>
+  <tr><td>الحفظ والحساب بإصدارات غير قابلة للتعديل</td><td class="n">3.02 · 4.1</td><td class="pass">✓</td></tr>
+  <tr><td>مستكشف المفاصل، النموذج المرجعي، نطاق الحركة</td><td class="n">4.5</td><td class="pass">✓ + تحذير جديد</td></tr>
+  <tr><td>محسّن هندسة الوصلات + تصدير <span class="en">STEP/STL</span></td><td class="n">3.03 · 4.6</td><td class="pass">✓</td></tr>
+  <tr><td>الفحوص الهندسية (22 فحص)</td><td class="n">3.04 · 4.3 · 4.4</td><td class="pass">✓</td></tr>
+  <tr><td>إدارة المشاريع والإصدارات</td><td class="n">4.1</td><td class="pass">✓</td></tr>
+  <tr><td rowspan="3">2 · مقارنة المنافسين</td><td>فحص ملف <span class="en">RoboDK .robot</span> (ABB)</td><td class="n">4.7</td><td class="pass">✓</td></tr>
+  <tr><td>تصدير وصلات المنافس كـ <span class="en">STEP solids</span></td><td class="n">4.7 · 4.12</td><td class="pass">✓ 7/7 بعد الإصلاح</td></tr>
+  <tr><td>بناء روبوت <span class="en">RoboDK</span> من أجزاء <span class="en">STEP</span></td><td class="n">4.8</td><td class="pass">✓</td></tr>
+  <tr><td rowspan="3">3 · هندسة المشغلات</td><td>تحجيم المحاور (جديد)</td><td class="n">3.05</td><td class="pass">✓</td></tr>
+  <tr><td>كتالوج المكونات وحالة الأدلة</td><td class="n">4.9</td><td class="pass">✓</td></tr>
+  <tr><td><span class="en">BOM</span> وفجوات التوريد في مصر</td><td class="n">4.9</td><td class="pass">✓</td></tr>
+  <tr><td rowspan="4">4 · المقارنة والتقارير</td><td>مقارنة بدائل الكتالوج و <span class="en">Pareto</span></td><td class="n">3.07</td><td class="pass">✓</td></tr>
+  <tr><td>المقارنة مع <span class="en">R-1</span> والمنافسين (جديد) — ومعاها ABB</td><td class="n">3.06 · 4.10</td><td class="pass">✓</td></tr>
+  <tr><td>المراجعة وحزمة <span class="en">ZIP</span> (<span class="en">STEP</span>، <span class="en">URDF</span>، <span class="en">BOM</span>…)</td><td class="n">3.07 · 4.11</td><td class="pass">✓</td></tr>
+  <tr><td>تقرير هندسي <span class="en">PDF</span> (جديد)</td><td class="n">3.07 · 4.11</td><td class="pass">✓</td></tr>
+</table>
 
 <h2 class="page-break">3. سير العمل داخل البرنامج خطوة بخطوة</h2>
 
@@ -142,6 +167,125 @@ li{margin:2px 0}
 </div>
 <p>بعد تسجيل المراجعة باسم المراجع تُنتج حزمة <span class="en">ZIP</span> مربوطة بالإصدار تحتوي: أجزاء وتجميع <span class="en">STEP/STL</span> بالمليمتر، <span class="en">URDF</span>، <span class="en">BOM</span>، تقرير فجوات التوريد في مصر، و<b>الجديد</b>: <span class="en">engineering-report.pdf</span> و<span class="en">actuator-sizing.json</span> و<span class="en">benchmark.json</span> — مع بصمات <span class="en">SHA-256</span> لكل ملف في <span class="en">manifest</span>.</p>
 
+<h2 class="page-break">4. جولة كاملة على باقي إمكانيات البرنامج</h2>
+<p>الجولة دي اتعملت على مشروع ثاني بنفس قالب <span class="en">R-1</span> اسمه <span class="en">RAED R-1 class · full capability walkthrough</span> (الإصدار <span class="en">rev-ec9ec874d2</span>)، وأضفنا عليه قيود مخزون وكتلة وعائق، واستخدمنا ملف <span class="en">ABB IRB 1100</span> كمنافس.</p>
+
+<h3><span class="step">4.1</span>إدارة المشاريع والإصدارات</h3>
+<div class="two">
+  <div>
+    <p>كل مشروع محفوظ محليًا، وكل ضغطة <span class="en">Save &amp; calculate</span> أو مقارنة بدائل بتعمل إصدارًا جديدًا ببصمة <span class="en">SHA-256</span> للمدخلات، فمحدش يقدر يعدّل نتيجة اتراجعت. المشروع ده فيه 4 إصدارات (الأصلي + 3 بدائل من المقارنة) وتقدر تفتح أي واحد منهم من قائمة <span class="en">Current revision</span>.</p>
+    <p>المراجعة مربوطة ببصمة الإصدار بالظبط: لو غيّرت أي مدخل لازم إصدار جديد ومراجعة جديدة قبل التصدير.</p>
+  </div>
+  <figure class="half"><img src="screenshots/E1-sidebar.png" alt="" style="max-height:95mm"><figcaption>أوضاع العمل الأربعة وقائمة المشاريع</figcaption></figure>
+</div>
+
+<h3><span class="step">4.2</span>استخراج المتطلبات من نص عربي</h3>
+<div class="two">
+  <div>
+    <p>كتبنا في خانة <span class="en">Extract requirements from text</span>:</p>
+    <p class="note">«روبوت لتغذية ماكينة CNC: صندوق 8 كجم، حمولة 11 كجم، مدى 1.3 متر، من المخزن»</p>
+    <table>
+      <tr><th>الحقل</th><th>اللي البرنامج استخرجه</th></tr>
+      <tr><td>كتلة القطعة</td><td class="n pass">8 kg</td></tr>
+      <tr><td>الحمولة</td><td class="n pass">11 kg</td></tr>
+      <tr><td>المدى</td><td class="n pass">1.3 m</td></tr>
+      <tr><td>استخدام المخزون فقط</td><td class="pass">مفعّل</td></tr>
+      <tr><td>زمن الدورة / التطبيق</td><td class="unk">قيم افتراضية (12 s / Pick &amp; place) — لازم تتراجع</td></tr>
+    </table>
+    <p class="src">المستخرج قائم على قواعد مش ذكاء اصطناعي: اللي مش مذكور في النص بيفضل قيمة افتراضية ظاهرة للمراجعة، ولا يُخمَّن.</p>
+  </div>
+  <figure class="half"><img src="screenshots/A1-parse.png" alt="" style="max-height:120mm"><figcaption>القيم بعد الاستخراج</figcaption></figure>
+</div>
+
+<h3 class="page-break"><span class="step">4.3</span>القيود والمخزون المتاح</h3>
+<div class="two">
+  <div>
+    <p>بعد تطبيق قالب <span class="en">R-1</span> فتحنا <span class="en">Constraints &amp; inventory</span> وحددنا:</p>
+    <ul>
+      <li>أقصى كتلة للروبوت <span class="en">60 kg</span> — الكتلة التقديرية <span class="en">54.1 kg</span> فالقيد اتحقق.</li>
+      <li>مخزون الورشة: <span class="en">SGM7A-08A ×2</span>، <span class="en">SGM7A-04A ×4</span>، <span class="en">SGM7A-01A ×6</span>، كلهم معتمدين.</li>
+    </ul>
+    <div class="note"><b>النتيجة:</b> فحص <span class="en">inventory_constraint</span> <span class="fail">فشل</span>: <span class="en">insufficient_qty: SGM7A-08A7A need 3, have 2</span>. يعني لازم نشتري محرك <span class="en">750 W</span> إضافي (أو نغيّر توزيع المحركات) قبل التجميع. وفحص <span class="en">inventory_other_components</span> بيفضل <span class="unk">غير مُتحقق</span> لأن مطابقة المخزون حاليًا للمحركات بس.</div>
+  </div>
+  <figure class="half"><img src="screenshots/A2-constraints.png" alt="" style="max-height:140mm"><figcaption>القيود وبيانات المخزون</figcaption></figure>
+</div>
+
+<h3><span class="step">4.4</span>العوائق وفحص التصادم</h3>
+<p>أضفنا صندوق يمثّل غلاف ماكينة الـ <span class="en">CNC</span> عند <span class="en">(1.75, 0.35, 0.80) m</span> بأبعاد <span class="en">0.8 × 1.2 × 1.6 m</span> جنب نقطة الظرف.</p>
+<figure><img src="screenshots/A3-obstacles.png" alt="" style="max-height:62mm"><figcaption>نقاط المهمة الثلاث والعائق</figcaption></figure>
+<div class="note"><b>النتيجة:</b> فحص <span class="en">collision_sampled_aabb</span> علّم تداخلًا محتملًا بين العائق والوصلة <span class="en">L6</span> والأداة عند الوضع المرجعي (<span class="unk">Unverified</span> — فحص صناديق مبدئي يحتاج مراجعة دقيقة، مش إثبات تصادم). التلات نقاط لسه قابلة للوصول. ده بيقول إن مكان الروبوت بالنسبة للماكينة محتاج مراجعة في تخطيط الخلية.</div>
+<table>
+  <tr><th>الفحص</th><th>الحالة</th><th>السبب</th></tr>
+  <tr><td class="n">static_torque_J2 / J3 / J5</td><td class="fail">Failed</td><td class="n">torque_exceeds_continuous_rating</td></tr>
+  <tr><td class="n">payload_static_wrist</td><td class="fail">Failed</td><td class="n">payload_static_exceeds_wrist</td></tr>
+  <tr><td class="n">inventory_constraint</td><td class="fail">Failed</td><td class="n">SGM7A-08A7A: need 3, have 2</td></tr>
+  <tr><td class="n">collision_sampled_aabb</td><td class="unk">Unverified</td><td class="n">obstacle → L6, tool</td></tr>
+  <tr><td class="n">task_Conveyor / Chuck / Out</td><td class="pass">Pass</td><td>—</td></tr>
+  <tr><td class="n">family_reach · payload_requirement · cycle_time</td><td class="pass">Pass</td><td>—</td></tr>
+  <tr><td class="n">dynamic_torque · deflection · thermal · accuracy · repeatability</td><td class="unk">Unverified</td><td>خارج نطاق الإصدار</td></tr>
+</table>
+
+<h3 class="page-break"><span class="step">4.5</span>مستكشف حركة المفاصل، النموذج المرجعي ونطاق الحركة</h3>
+<p>المنزلقات بتحرّك التصميم المحفوظ (من غير ما تغيّر نتائجه) وتعرض موضع <span class="en">TCP</span> لحظيًا، وسحابة <span class="en">Motion range</span> بتوضح مساحة العمل. ونقدر نبدّل لنموذج <span class="en">UP6</span> المرجعي للمقارنة البصرية.</p>
+<div class="two">
+  <figure><img src="screenshots/A6-design-pose.png" alt=""><figcaption>التصميم عند <span class="en">J = (35, 30, 40, 0, 45, 0)°</span> — <span class="en">TCP (1.276, 0.893, 0.723) m</span></figcaption></figure>
+  <figure><img src="screenshots/A7-reference.png" alt=""><figcaption>النموذج المرجعي <span class="en">UP6</span> مع نطاق الحركة</figcaption></figure>
+</div>
+<div class="good"><b>تحسين جديد ظهر من التجربة:</b> وضع زي <span class="en">(35, −20, 40, 0, 30, 0)°</span> بينزّل الـ <span class="en">TCP</span> لـ <span class="en">Z = −0.687 m</span> تحت الأرضية، والبرنامج ماكانش بينبّه. دلوقتي قراءة الـ <span class="en">TCP</span> بتظهر بالأحمر مع <span class="en">“below floor (Z &lt; 0)”</span>.</div>
+<figure><img src="screenshots/A6c-below-floor.png" alt="" style="max-height:80mm"><figcaption>التحذير الجديد في شريط المشهد</figcaption></figure>
+
+<h3 class="page-break"><span class="step">4.6</span>تصدير هندسة الروبوت الكاملة <span class="en">STEP/STL</span></h3>
+<p>زر <span class="en">Download STEP package</span> على أي حل من محسّن الهندسة بيطلّع حزمة فيها <b>14 جزء + التجميع الكامل</b> (قاعدة، 6 وصلات مجوفة، 6 أغلفة مفاصل، فلانشة أداة) كل جزء <span class="en">STEP</span> و <span class="en">STL</span> بالمليمتر، وموضوعين في وضع <span class="en">home</span>.</p>
+<figure><img src="screenshots/A8-geometry.png" alt="" style="max-height:105mm"><figcaption>أفضل 6 حلول للهندسة لعائلة <span class="en">Long</span></figcaption></figure>
+
+<h3 class="page-break"><span class="step">4.7</span>مقارنة المنافسين: فحص وتصدير <span class="en">ABB IRB 1100</span></h3>
+<p>رفعنا ملف <span class="en">ABB-IRB-1100-4-0-58.robot</span> في وضع <span class="en">Competitor Benchmark</span>. الفحص قرأ البيانات وأبعاد كل وصلة وجدول <span class="en">DH</span> المعدّل وحدود المفاصل:</p>
+<figure><img src="screenshots/r-B1.png" alt="" style="max-height:105mm"><figcaption>نتيجة فحص ملف <span class="en">ABB</span>: حمولة <span class="en">4 kg</span>، مدى <span class="en">0.58 m</span>، كتلة <span class="en">21 kg</span>، 7 وصلات</figcaption></figure>
+<p>بعدها <span class="en">Export reference STEP ZIP</span> بيحوّل شبكة كل وصلة لـ <span class="en">solid</span> مقفول ومُتحقق منه في <span class="en">OpenCascade</span>. <b>أول تجربة فشلت كلها</b> بسبب وصلة واحدة — التفاصيل والإصلاح في 4.12. بعد الإصلاح طلعت الـ 7 وصلات:</p>
+<figure><img src="screenshots/B3-abb-solids.png" alt=""><figcaption>الوصلات السبعة مقروءة من ملفات <span class="en">STEP</span> المصدّرة نفسها: كلها <span class="en">valid</span></figcaption></figure>
+
+<h3 class="page-break"><span class="step">4.8</span>بناء روبوت <span class="en">RoboDK</span> من أجزاء <span class="en">STEP</span> بتاعتنا</h3>
+<p>عشان نقفل الدايرة: أخدنا القاعدة والوصلات الست من حزمة <span class="en">STEP</span> لتصميم عائلة <span class="en">Long</span>، ورفعناهم في <span class="en">STEP → RoboDK .robot</span>. البرنامج ربط كل ملف بمحوره تلقائيًا من اسمه، ودخّلنا حدود المفاصل من جدول <span class="en">DH</span> للتصميم.</p>
+<figure><img src="screenshots/r-B2.png" alt="" style="max-height:130mm"><figcaption>ربط الأجزاء وحدود المفاصل</figcaption></figure>
+<p>لأن <span class="en">RoboDK</span> مش متثبت في البيئة، البرنامج طلّع حزمة بناء فيها الـ 7 أجزاء + <span class="en">config.json</span> + ماكرو <span class="en">build_in_robodk.py</span>؛ تشغّل الماكرو جوه <span class="en">RoboDK</span> فيطلع ملف <span class="en">.robot</span>.</p>
+<div class="note"><b>مهم:</b> الـ 13 قيمة لآلية <span class="en">RoboDK</span> دخّلناها من أطوال التصميم بالمليمتر <span class="en">[320, 0, 700, 140, 640, 120, 0…]</span> (d1، a1، a2، a3، d4، d6). ترتيبها لازم يتطابق مع نافذة <span class="en">Build Mechanism</span> في <span class="en">RoboDK</span> قبل تشغيل الماكرو، وبعدها تتحرّك كل مفصلة لوحدها للتأكد من الاتجاه والحدود.</div>
+
+<h3 class="page-break"><span class="step">4.9</span>الكتالوج، <span class="en">BOM</span> والتوريد في مصر</h3>
+<p>الـ <span class="en">BOM</span> للإصدار فيه 25 بند: 15 جزء تصنيع داخلي (قاعدة، وصلات، أغلفة، فلانشة) و10 مشتريات (محركات، مخفضات، رولمان بلي، مسامير، جريبر، مادة تثبيت). كل سعر <span class="unk">Unknown</span> لحد ما يتعمل بحث موردين حقيقي، والبرنامج مش بيخترع أسعار.</p>
+<figure><img src="screenshots/r-C2bom.png" alt="" style="max-height:80mm"><figcaption>بنود الشراء في الـ <span class="en">BOM</span> — <span class="en">CAD</span> المشتريات المُتحقق منه: 0 من 9</figcaption></figure>
+<figure><img src="screenshots/r-C2cat.png" alt="" style="max-height:95mm"><figcaption>كتالوج المكونات مع مصدر كل قيمة وحالة الدليل — والـ <span class="en">Encoder/Drive</span> ظاهرين كفجوة صريحة</figcaption></figure>
+
+<h3 class="page-break"><span class="step">4.10</span>المقارنة مع <span class="en">R-1</span> بعد إضافة <span class="en">ABB</span></h3>
+<p>بمجرد فحص ملف <span class="en">ABB</span>، اتضاف تلقائيًا لجدول المقارنة:</p>
+<figure><img src="screenshots/r-D1.png" alt=""><figcaption>التصميم، <span class="en">R-1</span>، <span class="en">UP6</span> و <span class="en">ABB IRB 1100</span></figcaption></figure>
+<p>مؤشر الحمولة/الكتلة لـ <span class="en">ABB IRB 1100</span> = <b class="en">0.190</b> مقابل <b class="en">0.046</b> لـ <span class="en">UP6</span> — روبوت حديث وخفيف. ده رقم مرجعي مفيد لهدف تخفيف ذراع <span class="en">R-1</span> (القسم 6).</p>
+
+<h3><span class="step">4.11</span>المراجعة والتصدير</h3>
+<p>بعد تسجيل المراجعة نزّلنا حزمة <span class="en">ZIP</span> (45 ملف) والتقرير الهندسي <span class="en">PDF</span>. محتوى الحزمة غير ملفات الـ <span class="en">CAD</span>:</p>
+<table>
+  <tr><th>الملف</th><th>المحتوى</th></tr>
+  <tr><td class="n">CAD/ (STEP + STL)</td><td>أجزاء وتجميع بالمليمتر</td></tr>
+  <tr><td class="n">robot.urdf</td><td>النموذج الحركي</td></tr>
+  <tr><td class="n">BOM.csv · reports.json</td><td>قائمة المواد</td></tr>
+  <tr><td class="n">procurement-egypt.html</td><td>فجوات التوريد في مصر</td></tr>
+  <tr><td class="n">snapshot.json · solver.json · catalog.json</td><td>المدخلات والنتائج والكتالوج المستخدم</td></tr>
+  <tr><td class="n">actuator-sizing.json · benchmark.json · engineering-report.pdf</td><td>الجديد في 0.3</td></tr>
+  <tr><td class="n">review.json · manifest.json</td><td>قرار المراجعة وبصمات <span class="en">SHA-256</span> لكل ملف</td></tr>
+</table>
+
+<h3 class="page-break"><span class="step">4.12</span>مشاكل ظهرت من التجربة واتصلحت في البرنامج</h3>
+<p>تجربة ملف <span class="en">ABB</span> الحقيقي كشفت أعطال ماكانتش ظاهرة في الاختبارات القديمة. اتصلحت كلها، واتعاد التصدير لحد ما الوصلات السبعة طلعت سليمة:</p>
+<table>
+  <tr><th>المشكلة</th><th>السبب</th><th>الإصلاح</th><th>بعد الإصلاح</th></tr>
+  <tr><td>وصلة واحدة بتفشل ⇒ الحزمة كلها بتفشل</td><td>خطأ وصلة واحدة كان بيوقف التصدير كله</td><td>كل وصلة بتتعالج لوحدها وأي فشل بيتسجل في التقرير</td><td class="pass">ما بقاش في فشل كلي</td></tr>
+  <tr><td><span class="en">Link 3</span> و <span class="en">Link 4</span> مش بيطلعوا</td><td>الشبكة اتصلحت ومقفولة، لكن "خياطة" المثلثات في <span class="en">OpenCascade</span> كانت بتبوّظها</td><td>بناء الـ <span class="en">BREP</span> مباشرة من طوبولوجيا الشبكة (حافة واحدة مشتركة لكل ضلع) لو الخياطة فشلت</td><td class="pass">صالحين؛ الحجم مطابق للشبكة: <span class="en">2423.1</span> و <span class="en">1056.0 cm³</span></td></tr>
+  <tr><td><span class="en">Link 5</span> و <span class="en">Link 6</span> مشوّهين ومتكسرين لـ 28 و 9 قطع</td><td>كانوا بيروحوا لإعادة بناء سطح تقريبية (<span class="en">VTK</span>)، مع إن المشكلة الحقيقية رؤوس مكررة وثقب صغير</td><td>مرحلة جديدة: لحم الرؤوس، حذف الأوجه المكررة، وقفل الثقوب الصغيرة — قبل اللجوء لـ <span class="en">VTK</span></td><td class="pass">شبكة مقفولة نضيفة بشكلها الأصلي (<span class="en">L5</span> جسم واحد، <span class="en">L6</span> خمس أجسام منفصلة فعلًا)؛ الحجم الحقيقي <span class="en">1448.2</span> و <span class="en">325.6 cm³</span> (الطريقة القديمة كانت مضخّمة <span class="en">+61%</span> و <span class="en">+27%</span>)</td></tr>
+  <tr><td>البرنامج بيهنج طول التصدير</td><td>حسابات <span class="en">OpenCascade/VTK</span> بتمسك الـ <span class="en">GIL</span> لدقايق جوه نفس عملية السيرفر</td><td>التحويل بيشتغل في عملية منفصلة</td><td class="pass">السيرفر بيرد في <span class="en">9 ms</span> أثناء التصدير</td></tr>
+  <tr><td>تقرير الاستيراد <span class="en">32 MB</span></td><td>كان بيحفظ إحداثيات كل المثلثات</td><td>التقرير بيحفظ مقاييس الوصلات بس (الهندسة موجودة في <span class="en">STEP</span>)</td><td class="pass"><span class="en">12.5 KB</span></td></tr>
+  <tr><td>الـ <span class="en">TCP</span> تحت الأرضية من غير تنبيه</td><td>مافيش فحص في المستكشف</td><td>تحذير أحمر في شريط المشهد</td><td class="pass">✓</td></tr>
+</table>
+<p class="src">زمن تصدير <span class="en">ABB IRB 1100</span> الكامل: <span class="en">329 s</span> للوصلات السبعة (كان <span class="en">375 s</span> قبل مرحلة اللحم وقفل الثقوب، لأن <span class="en">VTK</span> ما بقاش محتاج). اتضاف اختبار تلقائي اختياري (<span class="en">RAED_ROBODK_SAMPLE</span>) بيتأكد إن كل وصلات أي ملف <span class="en">.robot</span> حقيقي بتطلع، و3 اختبارات وحدة لمسارات الإصلاح الجديدة.</p>
+
 <h2 class="page-break">5. دراسة حساسية: ماذا يحتاج كل حجم ذراع؟</h2>
 <p>شغّلنا نموذج التحجيم نفسه على العائلات الثلاث بثلاث حمولات (خامة <span class="en">Al 6061</span>) لاستخراج العزم المستمر المطلوب — هذه الأرقام هي مدخل مباشر لاختيار المخفضات والمحركات:</p>
 <table>
@@ -174,7 +318,9 @@ li{margin:2px 0}
   <tr><td>المقارنة المعيارية</td><td>صفحة <span class="en">Benchmark vs RAED R-1</span> تغلق فجوة كانت مذكورة في التوثيق (المقارنة بين التصميم والمنافسين لم تكن مربوطة). تضيف ملفات <span class="en">RoboDK</span> المفحوصة تلقائيًا. <span class="en">API</span>: <code>POST …/benchmark</code></td></tr>
   <tr><td>التقارير</td><td>تقرير هندسي <span class="en">PDF</span> لأي إصدار محسوب، ومضمّن في حزمة المراجعة مع <span class="en">JSON</span> للتحجيم والمقارنة. <span class="en">API</span>: <code>GET …/report.pdf</code></td></tr>
   <tr><td>الواجهة</td><td>قوالب تطبيقات جاهزة (تغذية <span class="en">CNC</span> فئة <span class="en">R-1</span>، لحام <span class="en">MIG</span>، رص وتغليف، التقاط خفيف)؛ تطبيقات جديدة في القائمة؛ نقل محسّن الهندسة بجوار المشهد بدل تكدسه في العمود الأيسر؛ عرض أفضل 6 حلول؛ إزالة العناوين المكررة في صفحات الأوضاع؛ وحدات القياس بجوار أسمائها؛ منتقي ملفات منسق؛ إصلاح النص العربي المقطوع في قائمة فئة الروبوت؛ مسح إشعارات المعلومات عند تغيير الصفحة.</td></tr>
-  <tr><td>الأداء والجودة</td><td>توحيد نموذج الأحمال الاستاتيكية بين الفحوص والتحجيم، وتسريع <span class="en">gravity_torques</span> حوالي 4 مرات بنتائج مطابقة (فرق <span class="en">1e-14</span>). اختبارات جديدة: 5 (إجمالي <span class="en">29/29</span> ناجحة).</td></tr>
+  <tr><td>الأداء والجودة</td><td>توحيد نموذج الأحمال الاستاتيكية بين الفحوص والتحجيم، وتسريع <span class="en">gravity_torques</span> حوالي 4 مرات بنتائج مطابقة (فرق <span class="en">1e-14</span>). اختبارات جديدة: 8 (إجمالي <span class="en">32/32</span> ناجحة + اختبار اختياري على ملف <span class="en">.robot</span> حقيقي).</td></tr>
+  <tr><td>استيراد المنافسين <span class="en">RoboDK → STEP</span></td><td>إصلاحات القسم 4.12: معالجة كل وصلة لوحدها، بناء <span class="en">BREP</span> من طوبولوجيا الشبكة، مرحلة لحم وقفل الثقوب قبل <span class="en">VTK</span>، تشغيل التحويل في عملية منفصلة، تقرير خفيف، ورسالة بعدد الوصلات المصدّرة. النتيجة: <span class="en">ABB IRB 1100</span> طلع 7/7.</td></tr>
+  <tr><td>المستكشف</td><td>تحذير لما الـ <span class="en">TCP</span> ينزل تحت الأرضية.</td></tr>
 </table>
 
 <h2>8. اقتراحات تطوير تخدم شغل <span class="en">RaedBots</span></h2>

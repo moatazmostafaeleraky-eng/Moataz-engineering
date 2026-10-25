@@ -12,6 +12,8 @@
 - **Quick-start application templates**: RAED R-1 class CNC tending, MIG welding, palletizing/packaging, light pick & place — fill requirements, task poses and the geometry target.
 - More applications (machine tending, material handling, palletizing, packaging); geometry optimizer moved beside the 3D view; cleaner mode pages, inline units and a styled file picker.
 - `gravity_torques` vectorized (identical results, ~4× faster) and the static load model shared between checks and sizing.
+- **RoboDK → STEP import now exports every link** (tested on the ABB IRB 1100-4/0.58 library file, 7/7 links): one failing link no longer aborts the package; closed meshes that OpenCascade sewing breaks are built directly from their shared-edge topology; RoboDK colour patches are welded, de-duplicated and pinhole-closed before any approximate VTK reconstruction (exact volumes instead of +27–61 % inflated ones); the conversion runs in a separate process so the app stays responsive; the import report no longer embeds raw triangles (32 MB → 12 KB). Set `RAED_ROBODK_SAMPLE` to a `.robot` file to run the end-to-end regression test.
+- Joint explorer warns when the TCP goes below the floor (Z < 0).
 
 Worked example: [RAED R-1 class CNC machine-tending case study (PDF, Arabic)](docs/case-study/RAED-R1-Case-Study.pdf) with the generated [engineering report](docs/case-study/engineering-report-rev-e7daf6eba8.pdf).
 

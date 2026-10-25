@@ -12,16 +12,19 @@ import numpy as np
 
 from OCP.BRep import BRep_Builder
 from OCP.BRepBuilderAPI import (
+    BRepBuilderAPI_MakeEdge,
     BRepBuilderAPI_MakeFace,
     BRepBuilderAPI_MakePolygon,
     BRepBuilderAPI_MakeSolid,
+    BRepBuilderAPI_MakeVertex,
+    BRepBuilderAPI_MakeWire,
     BRepBuilderAPI_Sewing,
 )
 from OCP.BRepCheck import BRepCheck_Analyzer
 from OCP.ShapeFix import ShapeFix_Solid
 from OCP.TopAbs import TopAbs_SHELL
 from OCP.TopExp import TopExp_Explorer
-from OCP.TopoDS import TopoDS, TopoDS_Compound, TopoDS_Shape
+from OCP.TopoDS import TopoDS, TopoDS_Compound, TopoDS_Shape, TopoDS_Shell
 from OCP.gp import gp_Pnt
 
 
@@ -91,6 +94,86 @@ def _manifold_repair(positions: list[float]) -> tuple[list[float], dict[str, Any
             "manifold_triangle_count": int(solid.num_tri()),
         }
     return [], {"status": "input_mesh_not_manifold"}
+
+
+def _boundary_loops(faces: np.ndarray) -> tuple[int, list[list[int]]]:
+    """Open boundary half-edges and the loops they form, ordered opposite to the faces."""
+    edges = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 0]]])
+    present = {tuple(e) for e in edges.tolist()}
+    open_edges = [(a, b) for a, b in present if (b, a) not in present]
+    following: dict[int, list[int]] = {}
+    for a, b in open_edges:
+        following.setdefault(b, []).append(a)
+    used: set[tuple[int, int]] = set()
+    loops = []
+    for a, b in open_edges:
+        if (b, a) in used:
+            continue
+        loop, current = [b], a
+        used.add((b, a))
+        while current != b:
+            loop.append(current)
+            choices = [x for x in following.get(current, []) if (current, x) not in used]
+            if not choices or len(loop) > len(open_edges):
+                loop = []
+                break
+            used.add((current, choices[0]))
+            current = choices[0]
+        if loop:
+            loops.append(loop)
+    return len(open_edges), loops
+
+
+def _weld_and_close_repair(positions: list[float]) -> tuple[list[float], dict[str, Any]]:
+    """Close visual meshes that are watertight except for split vertices, duplicates and pinholes.
+
+    RoboDK stores each colour region as its own surface, so coincident vertices are
+    duplicated and a few small gaps remain. Welding them, dropping duplicate faces
+    and fan-closing small boundary loops keeps the original triangles; the implicit
+    VTK reconstruction is only needed when this cannot produce a manifold.
+    """
+    import manifold3d
+
+    points = np.asarray(positions, dtype=np.float64).reshape(-1, 3)
+    if not len(points) or len(points) % 3:
+        return [], {"status": "invalid_triangle_vertex_array"}
+    for weld_m in (1e-7, 1e-6, 1e-5):
+        keys = np.round(points / weld_m).astype(np.int64)
+        _, first, inverse = np.unique(keys, axis=0, return_index=True, return_inverse=True)
+        vertices = points[first]
+        faces = inverse.reshape(-1, 3)
+        faces = faces[(faces[:, 0] != faces[:, 1]) & (faces[:, 1] != faces[:, 2]) & (faces[:, 0] != faces[:, 2])]
+        _, unique_rows = np.unique(np.sort(faces, axis=1), axis=0, return_index=True)
+        faces = faces[np.sort(unique_rows)]
+        if not len(faces):
+            continue
+        open_edges, loops = _boundary_loops(faces)
+        # Only pinholes are closed; large openings need a real reconstruction.
+        if open_edges > max(0.01 * len(faces), 12) or any(len(loop) > 200 for loop in loops):
+            continue
+        extra_vertices, extra_faces = [], []
+        for loop in loops:
+            centre = len(vertices) + len(extra_vertices)
+            extra_vertices.append(vertices[loop].mean(axis=0))
+            extra_faces.extend([loop[i], loop[(i + 1) % len(loop)], centre] for i in range(len(loop)))
+        all_vertices = np.vstack([vertices, extra_vertices]) if extra_vertices else vertices
+        all_faces = np.vstack([faces, extra_faces]) if extra_faces else faces
+        solid = manifold3d.Manifold(manifold3d.Mesh(all_vertices.astype(np.float32), all_faces.astype(np.uint32)))
+        if solid.status() != manifold3d.Error.NoError or solid.num_tri() == 0 or solid.volume() <= 0:
+            continue
+        simplified = solid.simplify(0.00005)
+        if simplified.status() == manifold3d.Error.NoError and simplified.num_tri() and simplified.volume() > 0:
+            solid = simplified
+        mesh = solid.to_mesh()
+        return mesh.vert_properties[mesh.tri_verts].reshape(-1).tolist(), {
+            "status": "welded_and_closed",
+            "weld_tolerance_mm": weld_m * 1000.0,
+            "open_edges_before_closing": int(open_edges),
+            "holes_closed": len(loops),
+            "manifold_triangle_count": int(solid.num_tri()),
+            "volume_m3": float(solid.volume()),
+        }
+    return [], {"status": "weld_and_close_not_manifold"}
 
 
 def _vtk_surface_reconstruction(
@@ -263,6 +346,85 @@ def _build_occt_solids(
     }
 
 
+def _build_occt_solids_from_topology(
+    positions: list[float], *, part_name: str
+) -> tuple[TopoDS_Shape, dict[str, int | float | str]]:
+    """Build BREP solids directly from a closed indexed mesh, without sewing.
+
+    A manifold3d result is already a closed 2-manifold whose triangles share
+    exact vertices. Sewing re-derives that adjacency with a distance tolerance
+    and can merge nearby features into invalid shells; sharing one OCCT edge per
+    mesh edge keeps the topology the mesh already has.
+    """
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+
+    points = np.asarray(positions, dtype=np.float64).reshape(-1, 3) * 1000.0
+    unique, inverse = np.unique(points, axis=0, return_inverse=True)
+    tris = inverse.reshape(-1, 3)
+    tris = tris[(tris[:, 0] != tris[:, 1]) & (tris[:, 1] != tris[:, 2]) & (tris[:, 0] != tris[:, 2])]
+    if not len(tris):
+        raise ValueError(f"{part_name}: mesh contains no usable triangles")
+    n = len(unique)
+    rows = np.concatenate([tris[:, 0], tris[:, 1]])
+    cols = np.concatenate([tris[:, 1], tris[:, 2]])
+    _, labels = connected_components(coo_matrix((np.ones(len(rows)), (rows, cols)), shape=(n, n)), directed=False)
+    face_labels = labels[tris[:, 0]]
+
+    vertices = [BRepBuilderAPI_MakeVertex(gp_Pnt(*map(float, p))).Vertex() for p in unique]
+    edges: dict[tuple[int, int], Any] = {}
+    builder = BRep_Builder()
+    solids = TopoDS_Compound()
+    builder.MakeCompound(solids)
+    solid_count = 0
+    for label in np.unique(face_labels):
+        shell = TopoDS_Shell()
+        builder.MakeShell(shell)
+        for tri in tris[face_labels == label]:
+            wire_edges = []
+            for a, b in ((tri[0], tri[1]), (tri[1], tri[2]), (tri[2], tri[0])):
+                key = (min(a, b), max(a, b))
+                if key not in edges:
+                    edges[key] = BRepBuilderAPI_MakeEdge(vertices[key[0]], vertices[key[1]]).Edge()
+                edge = edges[key]
+                wire_edges.append(edge if a < b else TopoDS.Edge_s(edge.Reversed()))
+            wire = BRepBuilderAPI_MakeWire(*wire_edges)
+            face = BRepBuilderAPI_MakeFace(wire.Wire(), True) if wire.IsDone() else None
+            if face is None or not face.IsDone():
+                raise ValueError(f"{part_name}: degenerate triangle prevents a closed shell")
+            builder.Add(shell, face.Face())
+        shell.Closed(True)
+        solid_builder = BRepBuilderAPI_MakeSolid(shell)
+        if not solid_builder.IsDone():
+            raise ValueError(f"{part_name}: closed mesh body could not be made into a solid")
+        fixer = ShapeFix_Solid()
+        fixer.Init(solid_builder.Solid())
+        fixer.Perform()
+        fixed = fixer.Solid()
+        if not BRepCheck_Analyzer(fixed).IsValid():
+            raise ValueError(f"{part_name}: topology-built solid failed OCCT validation")
+        builder.Add(solids, fixed)
+        solid_count += 1
+    return solids, {
+        "triangle_count": int(len(tris)),
+        "shell_count": solid_count,
+        "solid_count": solid_count,
+        "brep_method": "shared_edge_topology",
+    }
+
+
+def _closed_mesh_to_occt(positions: list[float], *, tolerance_mm: float, part_name: str):
+    """Sew first (historic path); fall back to shared-edge topology when sewing is invalid."""
+    try:
+        shape, report = _build_occt_solids(positions, tolerance_mm=tolerance_mm, part_name=part_name)
+        report["brep_method"] = "sewing"
+        return shape, report
+    except Exception as sewing_error:
+        shape, report = _build_occt_solids_from_topology(positions, part_name=part_name)
+        report["sewing_error"] = str(sewing_error)
+        return shape, report
+
+
 def mesh_to_solid(
     positions: list[float], *, tolerance_mm: float = 0.05, part_name: str = "part"
 ) -> tuple[TopoDS_Shape, dict[str, Any]]:
@@ -276,7 +438,7 @@ def mesh_to_solid(
     flattened, repair_report = _manifold_repair(positions)
     if flattened:
         try:
-            shape, brep_report = _build_occt_solids(
+            shape, brep_report = _closed_mesh_to_occt(
                 flattened, tolerance_mm=tolerance_mm, part_name=part_name
             )
             brep_report.update(repair_report)
@@ -285,9 +447,20 @@ def mesh_to_solid(
         except Exception as direct_error:
             repair_report = {**repair_report, "direct_brep_error": str(direct_error)}
 
+    closed, close_report = _weld_and_close_repair(positions)
+    if closed:
+        try:
+            shape, brep_report = _closed_mesh_to_occt(closed, tolerance_mm=tolerance_mm, part_name=part_name)
+            brep_report.update(close_report)
+            brep_report["input_mesh_repair_status"] = repair_report.get("status", "direct_brep_failed")
+            brep_report["status"] = "welded_and_closed+validated_solid"
+            return shape, brep_report
+        except Exception as close_error:
+            repair_report = {**repair_report, "weld_and_close_error": str(close_error)}
+
     try:
         reconstructed_positions, reconstruction_report = _vtk_surface_reconstruction(positions)
-        shape, brep_report = _build_occt_solids(
+        shape, brep_report = _closed_mesh_to_occt(
             reconstructed_positions, tolerance_mm=tolerance_mm, part_name=part_name
         )
     except Exception as exc:

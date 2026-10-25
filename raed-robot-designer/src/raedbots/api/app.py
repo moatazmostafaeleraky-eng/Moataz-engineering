@@ -1,10 +1,14 @@
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+import asyncio
+import multiprocessing
 from typing import Literal
 import uuid
 import math
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from raedbots import ENGINE_VERSION
@@ -25,6 +29,19 @@ from raedbots.benchmark.references import references as benchmark_references
 from raedbots.storage import store
 
 app=FastAPI(title='RAED Robot Designer',version='0.3.0')
+
+_CAD_POOL=None
+
+def _cad_pool():
+    """One worker process for mesh-to-solid reconstruction.
+
+    OpenCascade and VTK keep the GIL for minutes on large RoboDK meshes; running them in
+    a thread froze every other request, so the long conversion runs in its own process.
+    """
+    global _CAD_POOL
+    if _CAD_POOL is None:
+        _CAD_POOL=ProcessPoolExecutor(max_workers=1,mp_context=multiprocessing.get_context('spawn'))
+    return _CAD_POOL
 app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','testserver','[::1]','*.manus.computer'])
 WEB=Path(__file__).resolve().parents[1]/'web'
 
@@ -341,8 +358,10 @@ async def import_robodk_robot(file: UploadFile = File(...)):
         if len(data) > 200 * 1024 * 1024:
             raise HTTPException(413, 'The .robot file is larger than the 200 MB local import limit')
         source.write_bytes(data)
-        make_import_zip(source, package)
-        return FileResponse(package, filename='ROBDK-REFERENCE-IMPORT.zip', media_type='application/zip', background=None)
+        manifest = await asyncio.get_running_loop().run_in_executor(_cad_pool(), make_import_zip, source, package)
+        skipped = [item['part'] for item in manifest.get('skipped_links', [])]
+        return FileResponse(package, filename='ROBDK-REFERENCE-IMPORT.zip', media_type='application/zip', background=None,
+                            headers={'X-RAED-PARTS': str(manifest.get('part_count', 0)), 'X-RAED-SKIPPED': ','.join(skipped)})
     except HTTPException:
         shutil.rmtree(tmp_root, ignore_errors=True)
         raise
@@ -366,7 +385,7 @@ async def inspect_robodk_robot(file: UploadFile = File(...)):
         if len(data) > 200 * 1024 * 1024:
             raise HTTPException(413, 'The .robot file is larger than the 200 MB local import limit')
         source.write_bytes(data)
-        manifest = parse_legacy_qcompress_robot(source)
+        manifest = await run_in_threadpool(parse_legacy_qcompress_robot, source)
         return {
             key: value for key, value in manifest.items() if key != 'links'
         } | {
@@ -461,7 +480,7 @@ async def build_robodk_from_step(
 
         package=tmp_root/'RAED-ROBDK-6AXIS-BUILD-PACKAGE.zip'
         config['source_filenames']=source_filenames
-        mode=create_robodk_bundle(part_paths,config,package,tmp_root)
+        mode=await run_in_threadpool(create_robodk_bundle,part_paths,config,package,tmp_root)
         return FileResponse(
             package,
             filename=package.name,

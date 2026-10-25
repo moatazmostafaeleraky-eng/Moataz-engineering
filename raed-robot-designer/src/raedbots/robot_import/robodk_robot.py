@@ -225,7 +225,13 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
             for surface in link["surfaces"]
             for point in surface["positions"]
         ]
-        shape, report = mesh_to_solid(positions, part_name=part_number)
+        try:
+            shape, report = mesh_to_solid(positions, part_name=part_number)
+        except ValueError as exc:
+            # One unrecoverable visual mesh must not discard the other validated links.
+            solid_reports.append({"part": part_number, "status": "reconstruction_failed", "solid_count": 0, "error": str(exc)})
+            skipped_links.append({"part": part_number, "reason": str(exc)})
+            continue
         solid_reports.append({"part": part_number, **report})
         if not report["solid_count"]:
             skipped_links.append({"part": part_number, "reason": report["status"]})
@@ -235,9 +241,11 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
         placed.append(shape)
         files.append(str(step.relative_to(output_dir)))
     assembly = output_dir / "ROBDK-REFERENCE-ASSEMBLY.step"
-    if placed:
-        oc.export(oc.compound(placed), assembly)
-        files.append(str(assembly.relative_to(output_dir)))
+    if not placed:
+        raise ValueError("No RoboDK link could be converted to a validated solid: "
+                         + "; ".join(item["reason"] for item in skipped_links))
+    oc.export(oc.compound(placed), assembly)
+    files.append(str(assembly.relative_to(output_dir)))
     manifest["files"] = files
     manifest["part_count"] = len(placed)
     manifest["solid_reports"] = solid_reports
@@ -247,6 +255,8 @@ def export_reference_robot(source: Path, output_dir: Path) -> dict[str, Any]:
     manifest["stl_exported"] = False
     manifest["designed_by"] = DESIGNER
     manifest["copyright_notice"] = COPYRIGHT_NOTICE
+    # Raw triangle coordinates are already in the STEP files; keep the report readable.
+    manifest["links"] = [{"name": link["name"], "metrics": link["metrics"]} for link in manifest["links"]]
     (output_dir / "robot-import-report.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     (output_dir / "actuator-market-screen.json").write_text(json.dumps(actuator_screen, ensure_ascii=False, indent=2), encoding="utf-8")
     with (output_dir / "actuator-market-screen.csv").open("w", newline="", encoding="utf-8-sig") as handle:

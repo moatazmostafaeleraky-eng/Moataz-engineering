@@ -189,7 +189,9 @@ function draw(){
   $('add-task').disabled=reference;
   $('add-task').title=reference?'Select Current design to capture its TCP pose.':'';
   const p=reference?viewer.referenceTransforms.at(-1).elements.slice(12,15):[scene.tcp.x_m,scene.tcp.y_m,scene.tcp.z_m];
-  $('tcp-label').textContent=(reference?'Flange ':'TCP ')+p.map(n=>fmt(n,3)).join(' / ')+' m';
+  const belowFloor=p[2]<0;
+  $('tcp-label').textContent=(reference?'Flange ':'TCP ')+p.map(n=>fmt(n,3)).join(' / ')+' m'+(belowFloor?' · below floor (Z < 0)':'');
+  $('tcp-label').classList.toggle('fail',belowFloor);
 }
 function renderSceneControls(){
   if(!scene)return;
@@ -297,10 +299,13 @@ $('robodk-build').onclick=action(async()=>{
 $('robodk-import').onclick=action(async()=>{
   const input=$('robodk-robot-file');
   if(!input.files?.length)throw new Error('Choose an authorized .robot file first.');
+  $('job-message').textContent='Reconstructing validated solids from the RoboDK meshes… open meshes can take several minutes.';
   const form=new FormData();form.append('file',input.files[0]);
   const response=await fetch('/api/reference-import/robodk-robot',{method:'POST',body:form});
   if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.detail||'RoboDK import failed')}
-  const blob=await response.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='ROBDK-REFERENCE-IMPORT.zip';a.click();URL.revokeObjectURL(url);notice('RoboDK reference package downloaded. Review robot-import-report.json before using it.',true);
+  const parts=response.headers.get('X-RAED-PARTS'),skipped=(response.headers.get('X-RAED-SKIPPED')||'').split(',').filter(Boolean);
+  const blob=await response.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='ROBDK-REFERENCE-IMPORT.zip';a.click();URL.revokeObjectURL(url);
+  notice(`RoboDK reference package downloaded: ${parts||'?'} validated solid link(s)`+(skipped.length?`; skipped ${skipped.join(', ')} (mesh could not be closed — see robot-import-report.json).`:'.')+' Review robot-import-report.json before using it.',!skipped.length);
 });
 
 $('robodk-inspect').onclick=action(async()=>{
