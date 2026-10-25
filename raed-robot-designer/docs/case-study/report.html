@@ -43,6 +43,7 @@ li{margin:2px 0}
 .page-break{break-before:page}
 .step{display:inline-block;background:var(--ink);color:#fff;border-radius:4px;padding:0 7px;font:600 8.5pt Inter,sans-serif;margin-left:6px}
 .src{font-size:8.5pt;color:var(--muted)}
+.warn{border-right:4px solid #c98a1b;background:#fdf5e6;padding:8px 12px;border-radius:4px;font-size:9.5pt;margin:8px 0}
 </style>
 </head>
 <body>
@@ -92,8 +93,9 @@ li{margin:2px 0}
   <tr><td>محسّن هندسة الوصلات + تصدير <span class="en">STEP/STL</span></td><td class="n">3.03 · 4.6</td><td class="pass">✓</td></tr>
   <tr><td>الفحوص الهندسية (22 فحص)</td><td class="n">3.04 · 4.3 · 4.4</td><td class="pass">✓</td></tr>
   <tr><td>إدارة المشاريع والإصدارات</td><td class="n">4.1</td><td class="pass">✓</td></tr>
-  <tr><td rowspan="3">2 · مقارنة المنافسين</td><td>فحص ملف <span class="en">RoboDK .robot</span> (ABB)</td><td class="n">4.7</td><td class="pass">✓</td></tr>
+  <tr><td rowspan="4">2 · مقارنة المنافسين</td><td>فحص ملف <span class="en">RoboDK .robot</span> (ABB)</td><td class="n">4.7</td><td class="pass">✓</td></tr>
   <tr><td>تصدير وصلات المنافس كـ <span class="en">STEP solids</span></td><td class="n">4.7 · 4.12</td><td class="pass">✓ 7/7 بعد الإصلاح</td></tr>
+  <tr><td><span class="en">STEP</span> بأسطح ناعمة — هندسة عكسية (جديد)</td><td class="n">4.13 · 4.14</td><td class="pass">✓ 7/7 ناعم</td></tr>
   <tr><td>بناء روبوت <span class="en">RoboDK</span> من أجزاء <span class="en">STEP</span></td><td class="n">4.8</td><td class="pass">✓</td></tr>
   <tr><td rowspan="3">3 · هندسة المشغلات</td><td>تحجيم المحاور (جديد)</td><td class="n">3.05</td><td class="pass">✓</td></tr>
   <tr><td>كتالوج المكونات وحالة الأدلة</td><td class="n">4.9</td><td class="pass">✓</td></tr>
@@ -286,6 +288,24 @@ li{margin:2px 0}
 </table>
 <p class="src">زمن تصدير <span class="en">ABB IRB 1100</span> الكامل: <span class="en">329 s</span> للوصلات السبعة (كان <span class="en">375 s</span> قبل مرحلة اللحم وقفل الثقوب، لأن <span class="en">VTK</span> ما بقاش محتاج). اتضاف اختبار تلقائي اختياري (<span class="en">RAED_ROBODK_SAMPLE</span>) بيتأكد إن كل وصلات أي ملف <span class="en">.robot</span> حقيقي بتطلع، و3 اختبارات وحدة لمسارات الإصلاح الجديدة.</p>
 
+<h3 class="page-break"><span class="step">4.13</span>تصدير <span class="en">STEP</span> بأسطح ناعمة (هندسة عكسية)</h3>
+<p>ملفات <span class="en">RoboDK</span> فيها شبكات مثلثات بس، فالـ <span class="en">STEP</span> العادي بيطلع آلاف الأوجه المسطحة. أضفنا اختيار <b>Smooth surfaces</b> في صفحة الاستيراد (دقة المطابقة <span class="en">0.10 / 0.25 / 0.50 mm</span>) بيحوّل الشبكة لأسطح <span class="en">CAD</span> حقيقية:</p>
+<ol>
+  <li>تنضيف الشبكة (حواف متناهية الصغر ومثلثات إبرية).</li>
+  <li>تقسيم الشبكة لمناطق وتطبيق أسطح تحليلية: مستويات، أسطوانات، مخاريط (أسطح بزاوية سحب للسبك)، وكرات — وأي منطقة حرة بتتحول لسطح <span class="en">B-spline</span> مقصوص.</li>
+  <li>نقل رؤوس الحدود على خطوط تقاطع الأسطح الحقيقية، وبناء الحواف عليها.</li>
+  <li>كل وجه بيتراجع على الشبكة الأصلية (المساحة في حدود <span class="en">8%</span> والانحراف في حدود السماحية)؛ أي منطقة مش بتنجح في الفحص بتفضل مثلثات دقيقة على نفس الحواف المشتركة — فالجسم دايمًا مقفول وصالح.</li>
+  <li>القبول النهائي: الجسم صالح في <span class="en">OpenCascade</span> وفرق الحجم عن الشبكة ≤ <span class="en">2%</span>؛ ولو الفرق أكبر من <span class="en">1%</span> البرنامج بيعيد المحاولة تلقائيًا بدقة <span class="en">0.10 mm</span> ويختار الأفضل. غير كده بيرجع للـ <span class="en">STEP</span> المضلع.</li>
+</ol>
+<p>النتيجة على <span class="en">ABB IRB 1100</span> (من البرنامج نفسه، دقة <span class="en">0.25 mm</span>):</p>
+<!--SMOOTH_TABLE-->
+<figure><img src="screenshots/S1-smooth-assembly.png" alt=""><figcaption>الروبوت كامل بعد التصدير الناعم في وضع الـ <span class="en">Home</span> — الألوان حسب نوع السطح</figcaption></figure>
+<figure><img src="screenshots/S2-smooth-L1-L3.png" alt="" style="max-height:85mm"><figcaption>الوصلات 1–3: أزرق مستوى، أخضر أسطوانة، تركواز مخروط، بنفسجي كرة، برتقالي <span class="en">B-spline</span>، رمادي مثلثات متبقية</figcaption></figure>
+<div class="warn"><b>حدود صريحة:</b> ده هندسة عكسية من شبكة عرض بصري، مش ملف التصميم الأصلي. المناطق الرمادية (أغلبها تقويسات السبك والحواف اللي متمثلة بمثلث أو اتنين في الشبكة) بتفضل مثلثات دقيقة لأن مافيش معلومات كفاية لاستنتاج سطحها. الأبعاد في حدود دقة الشبكة نفسها، فالملف مناسب للتجميع والمقارنة والتغليف ودراسات الوصول — مش للتصنيع المباشر.</div>
+
+<h3><span class="step">4.14</span>هل في أجزاء ناقصة في الروبوت؟</h3>
+<p><b>لا.</b> الملف فيه 7 وصلات: القاعدة، الكتف، الذراع العلوي، الكوع، الساعد، المعصم، والفلانشة — وكلهم طالعين. الإحساس بالنقص كان سببه إن التجميع القديم كان بيحط كل الوصلات على نقطة الأصل في إحداثياتها المحلية فتتراكب فوق بعض. دلوقتي كل وصلة بتتحط في مكانها من جدول <span class="en">DH</span> المعدّل (الفلانشة عند <span class="en">(364, 0, 617) mm</span> مطابقة لبيانات <span class="en">ABB</span>). ملاحظة: ملفات <span class="en">RoboDK</span> فيها الغلاف الخارجي بس — المحركات والمخفضات والكابلات الداخلية مش موجودة أصلًا في المصدر.</p>
+
 <h2 class="page-break">5. دراسة حساسية: ماذا يحتاج كل حجم ذراع؟</h2>
 <p>شغّلنا نموذج التحجيم نفسه على العائلات الثلاث بثلاث حمولات (خامة <span class="en">Al 6061</span>) لاستخراج العزم المستمر المطلوب — هذه الأرقام هي مدخل مباشر لاختيار المخفضات والمحركات:</p>
 <table>
@@ -320,6 +340,7 @@ li{margin:2px 0}
   <tr><td>الواجهة</td><td>قوالب تطبيقات جاهزة (تغذية <span class="en">CNC</span> فئة <span class="en">R-1</span>، لحام <span class="en">MIG</span>، رص وتغليف، التقاط خفيف)؛ تطبيقات جديدة في القائمة؛ نقل محسّن الهندسة بجوار المشهد بدل تكدسه في العمود الأيسر؛ عرض أفضل 6 حلول؛ إزالة العناوين المكررة في صفحات الأوضاع؛ وحدات القياس بجوار أسمائها؛ منتقي ملفات منسق؛ إصلاح النص العربي المقطوع في قائمة فئة الروبوت؛ مسح إشعارات المعلومات عند تغيير الصفحة.</td></tr>
   <tr><td>الأداء والجودة</td><td>توحيد نموذج الأحمال الاستاتيكية بين الفحوص والتحجيم، وتسريع <span class="en">gravity_torques</span> حوالي 4 مرات بنتائج مطابقة (فرق <span class="en">1e-14</span>). اختبارات جديدة: 8 (إجمالي <span class="en">32/32</span> ناجحة + اختبار اختياري على ملف <span class="en">.robot</span> حقيقي).</td></tr>
   <tr><td>استيراد المنافسين <span class="en">RoboDK → STEP</span></td><td>إصلاحات القسم 4.12: معالجة كل وصلة لوحدها، بناء <span class="en">BREP</span> من طوبولوجيا الشبكة، مرحلة لحم وقفل الثقوب قبل <span class="en">VTK</span>، تشغيل التحويل في عملية منفصلة، تقرير خفيف، ورسالة بعدد الوصلات المصدّرة. النتيجة: <span class="en">ABB IRB 1100</span> طلع 7/7.</td></tr>
+  <tr><td><span class="en">STEP</span> ناعم</td><td>هندسة عكسية للشبكة لأسطح مستوية/أسطوانية/مخروطية/كروية و <span class="en">B-spline</span> مع تحقق كل وجه، عامل منفصل معزول عن الأعطال، إعادة محاولة تلقائية بدقة أعلى، ووضع الوصلات في وضع الـ <span class="en">Home</span> من <span class="en">DH</span> (القسمين 4.13 و 4.14).</td></tr>
   <tr><td>المستكشف</td><td>تحذير لما الـ <span class="en">TCP</span> ينزل تحت الأرضية.</td></tr>
 </table>
 
