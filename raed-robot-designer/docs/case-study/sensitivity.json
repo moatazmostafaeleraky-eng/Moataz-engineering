@@ -1,0 +1,92 @@
+[
+{
+"family": "compact",
+"material": "al6061",
+"payload": 3,
+"J2": 93.0,
+"J3": 40.4,
+"J5": 11.0,
+"flange": 0.767,
+"mass": 25.7
+},
+{
+"family": "compact",
+"material": "al6061",
+"payload": 6,
+"J2": 121.7,
+"J3": 58.8,
+"J5": 20.0,
+"flange": 0.767,
+"mass": 25.7
+},
+{
+"family": "compact",
+"material": "al6061",
+"payload": 11,
+"J2": 169.7,
+"J3": 89.5,
+"J5": 34.8,
+"flange": 0.767,
+"mass": 25.7
+},
+{
+"family": "medium",
+"material": "al6061",
+"payload": 3,
+"J2": 195.1,
+"J3": 70.6,
+"J5": 11.7,
+"flange": 1.112,
+"mass": 43.0
+},
+{
+"family": "medium",
+"material": "al6061",
+"payload": 6,
+"J2": 233.4,
+"J3": 94.0,
+"J5": 20.9,
+"flange": 1.112,
+"mass": 43.0
+},
+{
+"family": "medium",
+"material": "al6061",
+"payload": 11,
+"J2": 297.5,
+"J3": 133.2,
+"J5": 36.3,
+"flange": 1.112,
+"mass": 43.0
+},
+{
+"family": "long",
+"material": "al6061",
+"payload": 3,
+"J2": 318.1,
+"J3": 106.6,
+"J5": 12.9,
+"flange": 1.472,
+"mass": 54.1
+},
+{
+"family": "long",
+"material": "al6061",
+"payload": 6,
+"J2": 366.8,
+"J3": 135.3,
+"J5": 22.7,
+"flange": 1.472,
+"mass": 54.1
+},
+{
+"family": "long",
+"material": "al6061",
+"payload": 11,
+"J2": 448.5,
+"J3": 183.3,
+"J5": 39.1,
+"flange": 1.472,
+"mass": 54.1
+}
+]

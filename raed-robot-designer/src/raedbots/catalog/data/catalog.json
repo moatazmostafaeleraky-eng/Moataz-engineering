@@ -1,0 +1,272 @@
+{
+  "version": "mvp-0.1",
+  "notes": "Commercial model numbers are from public manufacturer literature. Values used for sizing are marked in data_source. They were not re-verified by lab test in this repository. Raedbots has not published an approved component list.",
+  "materials": [
+    {
+      "id": "al6061",
+      "name": "Aluminum 6061-T6",
+      "density_kg_m3": 2700,
+      "E_Pa": 6.89e10,
+      "Sy_Pa": 2.76e8,
+      "data_source": "public MMPDS/matweb-range values, unverified in session",
+      "process": ["cnc"]
+    },
+    {
+      "id": "s235",
+      "name": "Steel S235",
+      "density_kg_m3": 7850,
+      "E_Pa": 2.1e11,
+      "Sy_Pa": 2.35e8,
+      "data_source": "EN 10025 typical values, unverified in session",
+      "process": ["cnc", "sheet"]
+    }
+  ],
+  "link_families": [
+    {
+      "id": "compact",
+      "name": "Compact 0.85 m",
+      "description": "Spherical-wrist 6R designed in-house for machine tending",
+      "reach_m": 0.85,
+      "section": "box",
+      "width_m": 0.09,
+      "height_m": 0.09,
+      "wall_m": 0.008,
+      "base_size_m": 0.28,
+      "dh": [
+        {"a_m": 0.0, "alpha_rad": 1.57079632679, "d_m": 0.22, "q_min_rad": -3.054, "q_max_rad": 3.054},
+        {"a_m": 0.35, "alpha_rad": 0.0, "d_m": 0.0, "q_min_rad": -1.745, "q_max_rad": 1.745},
+        {"a_m": 0.08, "alpha_rad": 1.57079632679, "d_m": 0.0, "q_min_rad": -2.967, "q_max_rad": 2.967},
+        {"a_m": 0.0, "alpha_rad": -1.57079632679, "d_m": 0.32, "q_min_rad": -3.054, "q_max_rad": 3.054},
+        {"a_m": 0.0, "alpha_rad": 1.57079632679, "d_m": 0.0, "q_min_rad": -2.094, "q_max_rad": 2.094},
+        {"a_m": 0.0, "alpha_rad": 0.0, "d_m": 0.09, "q_min_rad": -6.283, "q_max_rad": 6.283}
+      ]
+    },
+    {
+      "id": "medium",
+      "name": "Medium 1.25 m",
+      "description": "In-house 6R covering typical pick-and-place cells",
+      "reach_m": 1.25,
+      "section": "box",
+      "width_m": 0.11,
+      "height_m": 0.11,
+      "wall_m": 0.01,
+      "base_size_m": 0.34,
+      "dh": [
+        {"a_m": 0.0, "alpha_rad": 1.57079632679, "d_m": 0.28, "q_min_rad": -3.054, "q_max_rad": 3.054},
+        {"a_m": 0.52, "alpha_rad": 0.0, "d_m": 0.0, "q_min_rad": -1.745, "q_max_rad": 1.745},
+        {"a_m": 0.12, "alpha_rad": 1.57079632679, "d_m": 0.0, "q_min_rad": -2.967, "q_max_rad": 2.967},
+        {"a_m": 0.0, "alpha_rad": -1.57079632679, "d_m": 0.48, "q_min_rad": -3.054, "q_max_rad": 3.054},
+        {"a_m": 0.0, "alpha_rad": 1.57079632679, "d_m": 0.0, "q_min_rad": -2.094, "q_max_rad": 2.094},
+        {"a_m": 0.0, "alpha_rad": 0.0, "d_m": 0.10, "q_min_rad": -6.283, "q_max_rad": 6.283}
+      ]
+    },
+    {
+      "id": "long",
+      "name": "Long 1.65 m",
+      "description": "In-house 6R for longer reach cells",
+      "reach_m": 1.65,
+      "section": "tube",
+      "width_m": 0.13,
+      "height_m": 0.13,
+      "wall_m": 0.012,
+      "base_size_m": 0.40,
+      "dh": [
+        {"a_m": 0.0, "alpha_rad": 1.57079632679, "d_m": 0.32, "q_min_rad": -3.054, "q_max_rad": 3.054},
+        {"a_m": 0.70, "alpha_rad": 0.0, "d_m": 0.0, "q_min_rad": -1.745, "q_max_rad": 1.745},
+        {"a_m": 0.14, "alpha_rad": 1.57079632679, "d_m": 0.0, "q_min_rad": -2.967, "q_max_rad": 2.967},
+        {"a_m": 0.0, "alpha_rad": -1.57079632679, "d_m": 0.64, "q_min_rad": -3.054, "q_max_rad": 3.054},
+        {"a_m": 0.0, "alpha_rad": 1.57079632679, "d_m": 0.0, "q_min_rad": -2.094, "q_max_rad": 2.094},
+        {"a_m": 0.0, "alpha_rad": 0.0, "d_m": 0.12, "q_min_rad": -6.283, "q_max_rad": 6.283}
+      ]
+    }
+  ],
+  "motors": [
+    {
+      "id": "sgm7a-01a",
+      "kind": "motor",
+      "manufacturer": "Yaskawa",
+      "model": "SGM7A-01A7A",
+      "description": "0.1 kW AC servo",
+      "mass_kg": 0.53,
+      "data_source": "Yaskawa Sigma-7 SGM7A catalog excerpt (public), not lab-verified here",
+      "specs": {
+        "rated_torque_nm": 0.318,
+        "peak_torque_nm": 1.11,
+        "rated_speed_rpm": 3000,
+        "max_speed_rpm": 6000,
+        "rotor_inertia_kgm2": 3.94e-6,
+        "voltage_v": 200
+      },
+      "cad_status": "envelope",
+      "cost_status": "unknown"
+    },
+    {
+      "id": "sgm7a-04a",
+      "kind": "motor",
+      "manufacturer": "Yaskawa",
+      "model": "SGM7A-04A7A",
+      "description": "0.4 kW AC servo",
+      "mass_kg": 1.2,
+      "data_source": "Yaskawa Sigma-7 SGM7A catalog excerpt (public), not lab-verified here",
+      "specs": {
+        "rated_torque_nm": 1.27,
+        "peak_torque_nm": 4.46,
+        "rated_speed_rpm": 3000,
+        "max_speed_rpm": 6000,
+        "rotor_inertia_kgm2": 2.43e-5,
+        "voltage_v": 200
+      },
+      "cad_status": "envelope",
+      "cost_status": "unknown"
+    },
+    {
+      "id": "sgm7a-08a",
+      "kind": "motor",
+      "manufacturer": "Yaskawa",
+      "model": "SGM7A-08A7A",
+      "description": "0.75 kW AC servo",
+      "mass_kg": 2.2,
+      "data_source": "Yaskawa Sigma-7 SGM7A catalog excerpt (public), not lab-verified here",
+      "specs": {
+        "rated_torque_nm": 2.39,
+        "peak_torque_nm": 8.36,
+        "rated_speed_rpm": 3000,
+        "max_speed_rpm": 6000,
+        "rotor_inertia_kgm2": 8.7e-5,
+        "voltage_v": 200
+      },
+      "cad_status": "envelope",
+      "cost_status": "unknown"
+    }
+  ],
+  "gearboxes": [
+    {
+      "id": "csg-17-100",
+      "kind": "gearbox",
+      "manufacturer": "Harmonic Drive",
+      "model": "CSG-17-100-2UH",
+      "description": "Strain-wave gearbox ratio 100",
+      "mass_kg": 0.56,
+      "data_source": "Harmonic Drive CSG-2UH catalog excerpt (public), not lab-verified here",
+      "specs": {
+        "ratio": 100,
+        "rated_torque_nm": 24,
+        "peak_torque_nm": 54,
+        "efficiency": 0.75,
+        "max_input_rpm": 7000,
+        "interface": "CSG-17"
+      },
+      "cad_status": "envelope",
+      "cost_status": "unknown"
+    },
+    {
+      "id": "csg-25-80",
+      "kind": "gearbox",
+      "manufacturer": "Harmonic Drive",
+      "model": "CSG-25-80-2UH",
+      "description": "Strain-wave gearbox ratio 80",
+      "mass_kg": 1.21,
+      "data_source": "Harmonic Drive CSG-2UH catalog excerpt (public), not lab-verified here",
+      "specs": {
+        "ratio": 80,
+        "rated_torque_nm": 75,
+        "peak_torque_nm": 157,
+        "efficiency": 0.75,
+        "max_input_rpm": 5600,
+        "interface": "CSG-25"
+      },
+      "cad_status": "envelope",
+      "cost_status": "unknown"
+    },
+    {
+      "id": "csg-32-50",
+      "kind": "gearbox",
+      "manufacturer": "Harmonic Drive",
+      "model": "CSG-32-50-2UH",
+      "description": "Strain-wave gearbox ratio 50",
+      "mass_kg": 2.4,
+      "data_source": "Harmonic Drive CSG-2UH catalog excerpt (public), not lab-verified here",
+      "specs": {
+        "ratio": 50,
+        "rated_torque_nm": 178,
+        "peak_torque_nm": 433,
+        "efficiency": 0.75,
+        "max_input_rpm": 4800,
+        "interface": "CSG-32"
+      },
+      "cad_status": "envelope",
+      "cost_status": "unknown"
+    }
+  ],
+  "bearings": [
+    {
+      "id": "skf-6206",
+      "kind": "bearing",
+      "manufacturer": "SKF",
+      "model": "6206-2RS1",
+      "description": "Deep groove ball bearing 30x62x16",
+      "mass_kg": 0.2,
+      "data_source": "SKF public product listing typical mass/size",
+      "specs": {"id_mm": 30, "od_mm": 62, "B_mm": 16, "C_dyn_n": 20300},
+      "cad_status": "standard_dims_verified",
+      "cost_status": "unknown"
+    }
+  ],
+  "fasteners": [
+    {
+      "id": "iso4762-m6x20",
+      "kind": "fastener",
+      "manufacturer": "ISO",
+      "model": "ISO 4762 M6x20 12.9",
+      "description": "Socket head cap screw",
+      "mass_kg": 0.008,
+      "data_source": "ISO 4762 dimensions; mass estimated from steel density",
+      "specs": {"thread": "M6", "length_mm": 20, "standard": "ISO 4762"},
+      "cad_status": "standard_dims_verified",
+      "cost_status": "unknown"
+    }
+  ],
+  "tools": [
+    {
+      "id": "rg2",
+      "name": "Parallel gripper RG2",
+      "family": "gripper",
+      "manufacturer": "OnRobot",
+      "model": "RG2",
+      "mass_kg": 0.78,
+      "mass_includes": "gripper body, no workpiece, no tool changer",
+      "com": {"x_m": 0, "y_m": 0, "z_m": 0.07, "frame": "flange"},
+      "inertia": {"ixx": 0.002, "iyy": 0.002, "izz": 0.0015, "frame": "com", "source": "estimate_from_envelope_density"},
+      "tcp": {"x_m": 0, "y_m": 0, "z_m": 0.213, "frame": "flange"},
+      "flange_pattern": "ISO-9409-1-50-4-M6",
+      "adapter_mass_kg": 0.15,
+      "process": {"stroke_mm": 110, "grip_force_n_max": 40, "payload_kg_stated": 2.0},
+      "collision_box_m": [0.15, 0.15, 0.22],
+      "data_source": "OnRobot RG2 public specs excerpt; inertia estimated"
+    },
+    {
+      "id": "mb-evo-24",
+      "name": "MIG torch envelope",
+      "family": "welding_torch",
+      "manufacturer": "ABICOR BINZEL",
+      "model": "MB EVO 24 (envelope)",
+      "mass_kg": 1.6,
+      "mass_includes": "torch body estimate; cable mass not included as lumped TCP mass",
+      "com": {"x_m": 0.04, "y_m": 0, "z_m": 0.12, "frame": "flange"},
+      "inertia": {"ixx": 0.004, "iyy": 0.006, "izz": 0.003, "frame": "com", "source": "estimate_from_envelope_density"},
+      "tcp": {"x_m": 0.18, "y_m": 0.0, "z_m": 0.25, "qw": 0.9239, "qx": 0, "qy": 0.3827, "qz": 0, "frame": "flange"},
+      "flange_pattern": "ISO-9409-1-50-4-M6",
+      "adapter_mass_kg": 0.25,
+      "process": {"process": "gmaw", "stickout_mm": 15, "travel_speed_m_s": 0.012},
+      "collision_box_m": [0.28, 0.08, 0.08],
+      "data_source": "Public torch mass/length ranges; this is an envelope, not a certified torch CAD"
+    }
+  ],
+  "flange": {
+    "id": "iso9409-50",
+    "standard": "ISO 9409-1-50-4-M6",
+    "pcd_mm": 50,
+    "bolt": "M6",
+    "bolts": 4
+  }
+}

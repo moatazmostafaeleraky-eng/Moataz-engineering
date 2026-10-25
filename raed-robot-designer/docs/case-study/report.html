@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>RAED Robot Designer · Case Study</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+@page{size:A4;margin:14mm 13mm 16mm}
+:root{--ink:#14191c;--muted:#5d6b70;--accent:#2f7d4a;--mint:#b5edb2;--red:#c0392b;--amber:#b7791f;--line:#d9e0dd;--soft:#f3f6f4}
+*{box-sizing:border-box}
+body{font-family:Cairo,Inter,sans-serif;color:var(--ink);font-size:10.5pt;line-height:1.75;margin:0}
+.en,code,.num{font-family:Inter,sans-serif;direction:ltr;unicode-bidi:isolate}
+h1{font-size:25pt;line-height:1.3;margin:0 0 8px}
+h2{font-size:14.5pt;color:var(--accent);margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--line);break-after:avoid}
+h3{font-size:11.5pt;margin:14px 0 4px;break-after:avoid}
+p{margin:4px 0 8px}
+.cover{height:262mm;display:flex;flex-direction:column;justify-content:space-between;background:#101416;color:#ecf0ec;margin:-14mm -13mm 0;padding:24mm 18mm 18mm;break-after:page}
+.cover .eyebrow{color:var(--mint);letter-spacing:2px;font:600 9pt Inter,sans-serif;direction:ltr;text-align:right}
+.cover h1{color:#fff;font-size:28pt}
+.cover .sub{color:#a9b8b6;font-size:12pt}
+.cover img{width:100%;border-radius:10px;border:1px solid #2b3438;margin:14px 0}
+.cover .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:9.5pt;color:#b9c6c4}
+.cover .meta b{display:block;color:#fff;font-size:10.5pt}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--soft)}
+.kpi span{display:block;font-size:8.5pt;color:var(--muted)}
+.kpi strong{font:700 15pt Inter,sans-serif;direction:ltr;display:block;text-align:right}
+.kpi.ok strong{color:var(--accent)}.kpi.bad strong{color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:9pt;margin:6px 0 10px;break-inside:avoid}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:right;vertical-align:top}
+th{background:#eef3f0;font-weight:600}
+td.n{font-family:Inter,sans-serif;direction:ltr;text-align:left;white-space:nowrap}
+.fail{color:var(--red);font-weight:600}.pass{color:var(--accent);font-weight:600}.unk{color:var(--amber);font-weight:600}
+figure{margin:8px 0 12px;break-inside:avoid;text-align:center}
+figure img{max-width:100%;border:1px solid var(--line);border-radius:6px}
+figure.half img{max-height:118mm}
+figcaption{font-size:8.5pt;color:var(--muted);margin-top:3px}
+.note{border-right:4px solid var(--amber);background:#fbf6ec;padding:8px 12px;border-radius:4px;font-size:9.5pt;margin:8px 0}
+.good{border-right:4px solid var(--accent);background:#eef6f0;padding:8px 12px;border-radius:4px;font-size:9.5pt;margin:8px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+ol,ul{margin:4px 0 8px;padding-right:20px}
+li{margin:2px 0}
+.page-break{break-before:page}
+.step{display:inline-block;background:var(--ink);color:#fff;border-radius:4px;padding:0 7px;font:600 8.5pt Inter,sans-serif;margin-left:6px}
+.src{font-size:8.5pt;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div>
+    <div class="eyebrow">RAED ROBOT DESIGNER v0.3 · PRACTICAL CASE STUDY</div>
+    <h1>دراسة حالة تطبيقية:<br>تصميم روبوت صناعي من فئة <span class="en">RAED R-1</span> لخلية تغذية ماكينة <span class="en">CNC</span></h1>
+    <p class="sub">من المتطلبات إلى هندسة الذراع، تحجيم المحاور، المقارنة مع <span class="en">R-1</span> والمنافسين، ثم حزمة مراجعة <span class="en">CAD</span> وتقرير هندسي — كل ذلك داخل البرنامج وبإصدار مُسجَّل واحد.</p>
+    <img src="screenshots/03-calculated.png" alt="">
+  </div>
+  <div class="meta">
+    <div>إعداد<b>Moataz Mostafa</b></div>
+    <div>التاريخ<b class="en">25 Oct 2026</b></div>
+    <div>الإصدار المرجعي<b class="en">rev-e7daf6eba8 · long</b></div>
+  </div>
+</section>
+
+<h2>1. الملخص التنفيذي</h2>
+<p>الهدف: التحقق — باستخدام البرنامج نفسه — من إمكانية تصميم ذراع صناعي سداسي المحاور يحقق المواصفات العامة المعلنة لروبوت <span class="en">RAED R-1</span> (حمولة <span class="en">11 kg</span>، مدى <span class="en">1.30 m</span>)، في تطبيق تغذية ماكينة <span class="en">CNC</span> (سير ← ظرف الماكينة ← خروج)، مع تحديد الفجوات التي يجب إغلاقها قبل النموذج الأولي.</p>
+<div class="kpis">
+  <div class="kpi ok"><span>المدى المحسوب عند الفلانشة</span><strong>1.472 m</strong></div>
+  <div class="kpi ok"><span>نقاط المهمة القابلة للوصول</span><strong>3 / 3</strong></div>
+  <div class="kpi ok"><span>زمن المسار التقديري (الهدف 20 s)</span><strong>2.85 s</strong></div>
+  <div class="kpi bad"><span>سعة الحمولة الاستاتيكية بالمشغلات الحالية</span><strong>0.0 kg</strong></div>
+</div>
+<div class="good"><b>النتيجة الهندسية:</b> الهندسة الحركية (عائلة <span class="en">Long</span>) تحقق مدى <span class="en">R-1</span> بهامش <span class="en">+172 mm</span> وتصل لجميع نقاط الخلية. لكن مجموعة المحركات/المخفضات الموجودة في الكتالوج الحالي لا تستطيع حمل الذراع ممدودًا أفقيًا حتى بدون حمولة: المحور <span class="en">J2</span> يحتاج <span class="en">448.5 N·m</span> مستمر عند <span class="en">11 kg</span> مقابل <span class="en">89.6 N·m</span> مسموح (<span class="en">445 %</span>)، و<span class="en">J3</span> يحتاج <span class="en">183.3 N·m</span> مقابل <span class="en">75 N·m</span>، و<span class="en">J5</span> يحتاج <span class="en">39.1 N·m</span> مقابل <span class="en">24 N·m</span>.</div>
+<p><b>القرار:</b> الهندسة صالحة للمرحلة التالية؛ يجب إعادة تحجيم مشغلات <span class="en">J2/J3/J5</span> وإضافة موازنة جاذبية (<span class="en">counterbalance</span>) على <span class="en">J2</span> قبل اعتماد نموذج أولي. التفاصيل والتوصيات في الأقسام 5–7.</p>
+
+<h2>2. مصادر البيانات وحدود الدراسة</h2>
+<ul>
+  <li><b>مواصفات <span class="en">R-1</span>:</b> لم يكن من الممكن فتح صفحة المنتج <span class="en">raedbots.com/product/RAED_R-1_IND</span> من بيئة العمل، لذلك أُخذت القيم من قائمة السوق العامة على منصة <span class="en">Egypt Innovate</span> (حمولة <span class="en">11 kg</span>، 6 محاور، مدى <span class="en">1300 mm</span>، سرعة حتى <span class="en">3 m/s</span>). هي قيم <b>غير مُتحقق منها</b> من داتا شيت رسمي، والبرنامج يعرضها بهذه الصفة.</li>
+  <li><b>المرجع المنافس:</b> موديل <span class="en">Yaskawa Motoman UP6</span> من مكتبة <span class="en">RoboDK</span> (مضمّن في المشروع مع بصمة <span class="en">SHA-256</span>). تحميل موديل جديد من <span class="en">robodk.com/library</span> لم يكن متاحًا لأن الموقع محجوب في سياسة شبكة البيئة.</li>
+  <li><b>نطاق الحساب:</b> عزوم الجاذبية الاستاتيكية فقط بتقييم مستمر (<span class="en">continuous rating</span>). العزم الديناميكي، الانحراف (<span class="en">FEA</span>)، الحرارة، والدقة الفيزيائية خارج النطاق ومُعلَّمة <span class="unk">Unverified</span> في البرنامج — السعة الحقيقية ستكون أقل من الحد الاستاتيكي.</li>
+</ul>
+
+<h2 class="page-break">3. سير العمل داخل البرنامج خطوة بخطوة</h2>
+
+<h3><span class="step">01</span>اختيار قالب التطبيق وإدخال المتطلبات</h3>
+<div class="two">
+  <div>
+    <p>من بطاقة <span class="en">Quick-start templates</span> (ميزة جديدة في <span class="en">v0.3</span>) اخترنا <b class="en">RAED R-1 class · CNC tending</b>. القالب يملأ النموذج ونقاط المهمة وهدف محسّن الهندسة دفعة واحدة، ثم تُراجع القيم قبل الحفظ.</p>
+    <table>
+      <tr><th>المتطلب</th><th>القيمة</th></tr>
+      <tr><td>التطبيق</td><td class="n">CNC machine tending</td></tr>
+      <tr><td>كتلة القطعة / الحمولة المحددة</td><td class="n">8 kg / 11 kg</td></tr>
+      <tr><td>تعريف الحمولة</td><td>تشمل الأداة + المهايئ + القطعة</td></tr>
+      <tr><td>المدى المطلوب</td><td class="n">1.30 m</td></tr>
+      <tr><td>زمن الدورة / سرعة <span class="en">TCP</span></td><td class="n">20 s / 1.0 m/s</td></tr>
+      <tr><td>المستجيب الطرفي</td><td class="n">RG2 parallel gripper</td></tr>
+      <tr><td>الخامة / التصنيع</td><td class="n">Al 6061 / CNC</td></tr>
+      <tr><td>نقاط المهمة (م)</td><td class="n">Conveyor (0.85, −0.55, 0.75)<br>Chuck (1.05, 0.35, 0.95)<br>Out (0.60, 0.85, 0.75)</td></tr>
+    </table>
+  </div>
+  <figure class="half"><img src="screenshots/02-template-form.png" alt=""><figcaption>لوحة المتطلبات بعد تطبيق القالب</figcaption></figure>
+</div>
+
+<h3><span class="step">02</span>الحفظ والحساب — الخلية الافتراضية</h3>
+<p>زر <span class="en">Save &amp; calculate</span> ينشئ إصدارًا غير قابل للتعديل (<span class="en">rev-e7daf6eba8</span>) ويختار البرنامج عائلة <span class="en">Long</span> تلقائيًا لتغطية المدى. المشهد يعرض الذراع ونقاط المهمة ونطاق الحركة.</p>
+<figure><img src="screenshots/03b-tasks.png" alt=""><figcaption>نقاط المهمة الثلاث بإحداثيات العالم — كلها قابلة للوصول بحل <span class="en">IK</span></figcaption></figure>
+
+<h3 class="page-break"><span class="step">03</span>تحسين هندسة الوصلات <span class="en">Full 6R geometry</span></h3>
+<p>محسّن الهندسة (أصبح الآن بجوار المشهد ثلاثي الأبعاد ويعرض أفضل 6 حلول مع زر لعرض الباقي) بحث في 24 تركيبة لطول الذراع العلوي والساعد وإزاحة المعصم للوصول لنقطة الظرف <span class="en">(1.05, 0.35, 0.95)</span>. أفضل حل متوازن: ذراع علوي <span class="en">644 mm</span>، ساعد <span class="en">730 mm</span>، معصم <span class="en">120 mm</span>، خطأ وصول <span class="en">0.57 mm</span>، هامش مدى <span class="en">35 mm</span>. كل حل قابل للتصدير كحزمة <span class="en">STEP</span> لأجزاء منفصلة وتجميع كامل.</p>
+<figure><img src="screenshots/04-geometry.png" alt="" style="max-height:120mm"><figcaption>نتائج محسّن الهندسة — أفضل 6 مرشحين</figcaption></figure>
+<div class="note">ملاحظة تصميمية: حلول بوصلات أقصر (مثل <span class="en">574 / 576 mm</span>) تصل للهدف أيضًا بهامش أقل، وتقلل عزم <span class="en">J2</span> بشكل ملحوظ. ربط المحسّن بالعزم مقترح في القسم 7.</div>
+
+<h3><span class="step">04</span>الفحوص الهندسية</h3>
+<p>من 20 فحصًا: نجح الوصول للنقاط الثلاث، التصادم المبدئي (<span class="en">AABB</span>)، المدى، تعريف الحمولة وزمن المسار. فشلت فحوص العزم الاستاتيكي لـ <span class="en">J2/J3/J5</span> وحمولة المعصم، وبقيت الديناميكا والانحراف والحرارة والدقة <span class="unk">غير مُتحقق منها</span> بشكل صريح بدلًا من افتراض نجاحها.</p>
+<figure><img src="screenshots/05-checks.png" alt="" style="max-height:105mm"><figcaption>صفحة الفحوص: كل فحص بطريقته وافتراضاته ودليله</figcaption></figure>
+
+<h3 class="page-break"><span class="step">05</span>تحجيم المحاور <span class="en">Axis torque sizing</span> — ميزة جديدة</h3>
+<p>الفحص الأصلي يقيّم وضعًا واحدًا فقط. الصفحة الجديدة تمسح <span class="en">J2 × J3 × J5</span> عبر كامل حدودها (<span class="en">1323</span> وضعًا)، وتجد أعلى عزم إمساك لكل محور، وتقارنه بالأقل بين تقييم المخفض وتقييم المحرك منعكسًا عبر نسبة التخفيض، ثم تحسب أكبر كتلة يمكن حملها عند <span class="en">TCP</span>.</p>
+<figure><img src="screenshots/06-sizing.png" alt="" style="max-height:150mm"><figcaption>استغلال كل محور مقابل تقييمه المستمر — العلامة = 100 %</figcaption></figure>
+<table>
+  <tr><th>المحور</th><th>المحرك / المخفض</th><th>أسوأ عزم (N·m)</th><th>المسموح (N·m)</th><th>الاستغلال</th><th>المطلوب عند 11 kg</th><th>أقل نسبة للمحرك الحالي</th></tr>
+  <tr><td class="n">J2</td><td class="n">SGM7A-08A / CSG-32-50</td><td class="n">399.2</td><td class="n">89.6 (motor)</td><td class="n fail">445 %</td><td class="n">448.5</td><td class="n">≈ 250</td></tr>
+  <tr><td class="n">J3</td><td class="n">SGM7A-08A / CSG-25-80</td><td class="n">154.4</td><td class="n">75.0 (gearbox)</td><td class="n fail">206 %</td><td class="n">183.3</td><td class="n">≈ 102</td></tr>
+  <tr><td class="n">J5</td><td class="n">SGM7A-04A / CSG-17-100</td><td class="n">29.3</td><td class="n">24.0 (gearbox)</td><td class="n fail">122 %</td><td class="n">39.1</td><td class="n">≈ 41</td></tr>
+  <tr><td class="n">J1 / J4 / J6</td><td class="n">—</td><td class="n">≈ 0</td><td class="n">—</td><td class="n pass">0 %</td><td class="n">≈ 0</td><td class="n">—</td></tr>
+</table>
+<p class="src">المحاور ذات المحور الرأسي (J1) أو المحوري (J4/J6) لا تحمل عزم جاذبية في هذا النموذج الاستاتيكي؛ تحجيمها يحتاج الحساب الديناميكي.</p>
+
+<h3 class="page-break"><span class="step">06</span>المقارنة مع <span class="en">RAED R-1</span> والمنافسين — ميزة جديدة</h3>
+<p>الصفحة تربط نتائج الإصدار المحسوبة بمواصفات <span class="en">R-1</span> وبمرجع <span class="en">UP6</span>، وأي ملف <span class="en">RoboDK .robot</span> يتم فحصه في وضع <span class="en">Competitor Benchmark</span> يُضاف للجدول تلقائيًا. كل قيمة تحمل مصدرها ودرجة الثقة فيها.</p>
+<figure><img src="screenshots/08-benchmark.png" alt="" style="max-height:150mm"><figcaption>فحوص الهدف وجدول المقارنة</figcaption></figure>
+<table>
+  <tr><th>الروبوت</th><th>الدور</th><th>الحمولة (kg)</th><th>المدى (m)</th><th>الكتلة (kg)</th><th>المصدر</th></tr>
+  <tr><td>تصميم <span class="en">RAED</span> (هذا الإصدار)</td><td>تصميم</td><td class="n fail">0.00 (static)</td><td class="n pass">1.472</td><td class="n">54.1 (est.)</td><td>حساب استاتيكي + مسح حركي</td></tr>
+  <tr><td class="en">RAED R-1 (IND)</td><td>هدف</td><td class="n">11.00</td><td class="n">1.30</td><td class="n">غير معلن</td><td>قائمة سوق عامة — غير مُتحقق</td></tr>
+  <tr><td class="en">Yaskawa Motoman UP6</td><td>منافس</td><td class="n">6.00</td><td class="n">1.373</td><td class="n">130</td><td>رأس ملف <span class="en">RoboDK</span> — غير مُتحقق</td></tr>
+</table>
+
+<h3><span class="step">07</span>بدائل الكتالوج، والمراجعة والتصدير</h3>
+<div class="two">
+  <figure><img src="screenshots/09-compare.png" alt=""><figcaption>مقارنة بدائل الكتالوج: لا بديل يجتاز الفحوص بالمشغلات الحالية</figcaption></figure>
+  <figure><img src="screenshots/10-export.png" alt=""><figcaption>تسجيل المراجعة وتنزيل الحزمة وتقرير <span class="en">PDF</span></figcaption></figure>
+</div>
+<p>بعد تسجيل المراجعة باسم المراجع تُنتج حزمة <span class="en">ZIP</span> مربوطة بالإصدار تحتوي: أجزاء وتجميع <span class="en">STEP/STL</span> بالمليمتر، <span class="en">URDF</span>، <span class="en">BOM</span>، تقرير فجوات التوريد في مصر، و<b>الجديد</b>: <span class="en">engineering-report.pdf</span> و<span class="en">actuator-sizing.json</span> و<span class="en">benchmark.json</span> — مع بصمات <span class="en">SHA-256</span> لكل ملف في <span class="en">manifest</span>.</p>
+
+<h2 class="page-break">5. دراسة حساسية: ماذا يحتاج كل حجم ذراع؟</h2>
+<p>شغّلنا نموذج التحجيم نفسه على العائلات الثلاث بثلاث حمولات (خامة <span class="en">Al 6061</span>) لاستخراج العزم المستمر المطلوب — هذه الأرقام هي مدخل مباشر لاختيار المخفضات والمحركات:</p>
+<table>
+  <tr><th>العائلة</th><th>مدى الفلانشة (m)</th><th>كتلة تقديرية (kg)</th><th>الحمولة (kg)</th><th>J2 مطلوب (N·m)</th><th>J3 مطلوب (N·m)</th><th>J5 مطلوب (N·m)</th></tr>
+  <tr><td class="n" rowspan="3">Compact</td><td class="n" rowspan="3">0.767</td><td class="n" rowspan="3">25.7</td><td class="n">3</td><td class="n">93.0</td><td class="n">40.4</td><td class="n">11.0</td></tr>
+  <tr><td class="n">6</td><td class="n">121.7</td><td class="n">58.8</td><td class="n">20.0</td></tr>
+  <tr><td class="n">11</td><td class="n">169.7</td><td class="n">89.5</td><td class="n">34.8</td></tr>
+  <tr><td class="n" rowspan="3">Medium</td><td class="n" rowspan="3">1.112</td><td class="n" rowspan="3">43.0</td><td class="n">3</td><td class="n">195.1</td><td class="n">70.6</td><td class="n">11.7</td></tr>
+  <tr><td class="n">6</td><td class="n">233.4</td><td class="n">94.0</td><td class="n">20.9</td></tr>
+  <tr><td class="n">11</td><td class="n">297.5</td><td class="n">133.2</td><td class="n">36.3</td></tr>
+  <tr><td class="n" rowspan="3">Long</td><td class="n" rowspan="3">1.472</td><td class="n" rowspan="3">54.1</td><td class="n">3</td><td class="n">318.1</td><td class="n">106.6</td><td class="n">12.9</td></tr>
+  <tr><td class="n">6</td><td class="n">366.8</td><td class="n">135.3</td><td class="n">22.7</td></tr>
+  <tr><td class="n"><b>11</b></td><td class="n"><b>448.5</b></td><td class="n"><b>183.3</b></td><td class="n"><b>39.1</b></td></tr>
+</table>
+<div class="good"><b>قراءة النتائج:</b> في عائلة <span class="en">Long</span> كل كيلوجرام حمولة يضيف حوالي <span class="en">16.3 N·m</span> على <span class="en">J2</span> (ذراع عزم ≈ <span class="en">1.66 m</span>)، بينما وزن الذراع نفسه (وصلات + مشغلات <span class="en">J3–J6</span>) يمثل حوالي <span class="en">270 N·m</span> من الـ <span class="en">448.5</span> — أي حوالي <b>60 %</b>. تخفيف الذراع وموازنة <span class="en">J2</span> أكثر تأثيرًا من أي تعديل على الحمولة.</div>
+
+<h2>6. التوصيات الهندسية لروبوت فئة <span class="en">R-1</span></h2>
+<ol>
+  <li><b>موازنة جاذبية على <span class="en">J2</span>:</b> زنبرك أو أسطوانة غاز تعادل جزءًا كبيرًا من عزم الوزن الذاتي (≈ <span class="en">270 N·m</span>)، وهو حل شائع في الروبوتات الصناعية من هذه الفئة، ويقلل حجم المخفض والمحرك وحمل الفرامل.</li>
+  <li><b>إعادة تحجيم المشغلات:</b> <span class="en">J2</span> يحتاج مخفضًا بتقييم مستمر لا يقل عن <span class="en">~450 N·m</span> قبل هامش الديناميكا (أو أقل بعد الموازنة)، و<span class="en">J3 ≥ ~185 N·m</span>، و<span class="en">J5 ≥ ~40 N·m</span>. مع محرك <span class="en">SGM7A-08A</span> على <span class="en">J2</span> تلزم نسبة تخفيض ≈ <span class="en">250</span> أو محرك أكبر.</li>
+  <li><b>تخفيف الساعد والمعصم:</b> نقل محركات <span class="en">J4–J6</span> للخلف قرب الكوع (<span class="en">rear-mounted wrist drives</span>)، واستخدام أجزاء مسبوكة/مفرغة من الألومنيوم بتصميم <span class="en">DFM</span> للتشغيل المحلي.</li>
+  <li><b>اختيار الأبعاد مع العزم:</b> حلول الهندسة ذات الوصلات الأقصر التي ما زالت تحقق <span class="en">1.30 m</span> تقلل عزم <span class="en">J2</span>؛ المدى المحسوب الحالي <span class="en">1.47 m</span> يتجاوز الهدف بـ <span class="en">172 mm</span> يمكن التضحية بجزء منها.</li>
+  <li><b>المرحلة التالية قبل النموذج الأولي:</b> عزم ديناميكي على مسار الخلية الفعلي، حساب <span class="en">RMS</span> حراري للمحركات، و<span class="en">FEA</span> لانحراف الوصلات عند الحمولة الكاملة.</li>
+</ol>
+
+<h2 class="page-break">7. ما تم تطويره في البرنامج (الإصدار 0.3)</h2>
+<table>
+  <tr><th>المجال</th><th>التحسين</th></tr>
+  <tr><td>تحجيم المشغلات</td><td>صفحة <span class="en">Axis torque sizing</span>: مسح أوضاع لأسوأ عزم، المحدِّد (مخفض/محرك)، أشرطة استغلال، العزم المطلوب عند الحمولة المحددة، أقل نسبة تخفيض، وسعة الحمولة الاستاتيكية والمحور المحدِّد. <span class="en">API</span>: <code>GET …/actuator-sizing</code></td></tr>
+  <tr><td>المقارنة المعيارية</td><td>صفحة <span class="en">Benchmark vs RAED R-1</span> تغلق فجوة كانت مذكورة في التوثيق (المقارنة بين التصميم والمنافسين لم تكن مربوطة). تضيف ملفات <span class="en">RoboDK</span> المفحوصة تلقائيًا. <span class="en">API</span>: <code>POST …/benchmark</code></td></tr>
+  <tr><td>التقارير</td><td>تقرير هندسي <span class="en">PDF</span> لأي إصدار محسوب، ومضمّن في حزمة المراجعة مع <span class="en">JSON</span> للتحجيم والمقارنة. <span class="en">API</span>: <code>GET …/report.pdf</code></td></tr>
+  <tr><td>الواجهة</td><td>قوالب تطبيقات جاهزة (تغذية <span class="en">CNC</span> فئة <span class="en">R-1</span>، لحام <span class="en">MIG</span>، رص وتغليف، التقاط خفيف)؛ تطبيقات جديدة في القائمة؛ نقل محسّن الهندسة بجوار المشهد بدل تكدسه في العمود الأيسر؛ عرض أفضل 6 حلول؛ إزالة العناوين المكررة في صفحات الأوضاع؛ وحدات القياس بجوار أسمائها؛ منتقي ملفات منسق؛ إصلاح النص العربي المقطوع في قائمة فئة الروبوت؛ مسح إشعارات المعلومات عند تغيير الصفحة.</td></tr>
+  <tr><td>الأداء والجودة</td><td>توحيد نموذج الأحمال الاستاتيكية بين الفحوص والتحجيم، وتسريع <span class="en">gravity_torques</span> حوالي 4 مرات بنتائج مطابقة (فرق <span class="en">1e-14</span>). اختبارات جديدة: 5 (إجمالي <span class="en">29/29</span> ناجحة).</td></tr>
+</table>
+
+<h2>8. اقتراحات تطوير تخدم شغل <span class="en">RaedBots</span></h2>
+<ol>
+  <li><b>كتالوج مخفضات ومحركات أكبر بأدلة موثقة:</b> فئات <span class="en">RV</span> وهارمونيك كبيرة، إضافة سجلات <span class="en">encoder</span> و<span class="en">drive</span> والفرامل، مع حالة الدليل (موثق / عرض سوق / تقديري) وتوافرها لدى موردين في مصر بالسعر والعملة وزمن التوريد وتاريخ التحقق.</li>
+  <li><b>وحدة موازنة <span class="en">J2</span>:</b> تصميم الزنبرك/الأسطوانة (الصلابة، الشد المسبق، نقاط التثبيت) وإعادة حساب العزم بعد الموازنة.</li>
+  <li><b>ديناميكا على المسار:</b> <span class="en">Recursive Newton–Euler</span> على مسار نقاط الخلية بملف سرعة واقعي، ثم <span class="en">RMS</span> حراري لاختيار المحرك، وتحويل فحص <span class="en">dynamic_torque</span> من <span class="unk">Unverified</span> إلى فحص حقيقي.</li>
+  <li><b>ربط محسّن الهندسة بالعزم والكتلة:</b> هدف جديد يقلل عزم <span class="en">J2</span> المطلوب مع الحفاظ على الوصول، بدل الاعتماد على وكيل كتلة تقريبي.</li>
+  <li><b><span class="en">FEA</span> للوصلات:</b> حساب انحراف الطرف تحت الحمولة الكاملة (مثلًا <span class="en">CalculiX</span>) لتغذية فحص <span class="en">deflection</span> وتقدير الدقة.</li>
+  <li><b>مولد عروض خلايا للمبيعات:</b> من القالب ونقاط المهمة إلى مخطط الخلية وزمن الدورة وتقرير <span class="en">PDF</span> للعميل — مفيد لتكامل الروبوت مع مصنّعي الماكينات المحليين.</li>
+  <li><b>تكلفة بالجنيه ونمذجة <span class="en">DFM</span>:</b> تقدير تكلفة الأجزاء المصنّعة محليًا (تشغيل <span class="en">CNC</span>، صاج، سباكة) لكل إصدار، ومقارنة التكلفة/الأداء في صفحة المقارنة.</li>
+  <li><b>تصدير البرمجة دون اتصال:</b> تصدير الإصدار مع نقاط المهمة كمحطة <span class="en">RoboDK</span> جاهزة لمحاكاة الخلية وتوليد برنامج الروبوت.</li>
+</ol>
+
+<p class="src" style="margin-top:18px">المصادر: <span class="en">Egypt Innovate — RAED R-1 Cobot marketplace listing</span>؛ <span class="en">RoboDK library — Yaskawa Motoman UP6</span> (مضمّن في المشروع)؛ نتائج البرنامج من الإصدار <span class="en">rev-e7daf6eba8</span> (بصمة المدخلات <span class="en">b0376b68cbe7</span>). جميع النتائج للمراجعة الهندسية فقط وليست اعتمادًا للتصنيع. <b>Designed by: Moataz Mostafa.</b></p>
+</body>
+</html>

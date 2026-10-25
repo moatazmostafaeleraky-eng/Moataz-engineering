@@ -1,0 +1,48 @@
+...                                                                      [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\starlette\testclient.py:40
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\starlette\testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:609: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    simple_dir = oneOf(["X", "Y", "Z", "XY", "XZ", "YZ"])
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:613: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    cqtype = oneOf(
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:616: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    cqtype = cqtype.setParseAction(pyparsing_common.upcaseTokens)
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:622: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    direction_op = oneOf([">", "<"])
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:625: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    center_nth_op = oneOf([">>", "<<"])
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:635: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    other_op = oneOf(["|", "#", "+", "-"])
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:638: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    named_view = oneOf(["front", "back", "left", "right", "top", "bottom"])
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:763: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    delta_op = oneOf(["exc", "except"])
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:770: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    atom.setParseAction(atom_callback)
+
+tests/test_application.py::test_full_project_calculation_review_and_export
+  F:\Code\raedbots-designer\.venv\Lib\site-packages\cadquery\selectors.py:793: PyparsingDeprecationWarning: 'infixNotation' deprecated - use 'infix_notation'
+    expr = infixNotation(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 11 warnings in 9.00s

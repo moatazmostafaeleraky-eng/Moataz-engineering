@@ -1,0 +1,188 @@
+انت شايف الحاجات القديمة الي كانت ف تطبيق ليها لازمه ولا ممكن نشتغل ع الحاجات الي عملناها بس ؟
+Lite
+أيوه، الحاجات القديمة ليها لازمة جدًا، لكن مش كلها تستمر بنفس الشكل في الواجهة. الأفضل ما نمسحهاش؛ نعيد ترتيبها ونخلي الجديد هو الـmain workflow.
+ما يجب الاحتفاظ به
+1. Requirements & Project Management
+ده مهم عشان كل تصميم يبقى مربوط بـ:
+Application.
+Payload.
+Reach.
+Cycle time.
+End effector.
+Material.
+Manufacturing process.
+Revision.
+بدونه مش هنعرف نقارن تصميمين أو نعرف ليه خرج تصميم معين.
+2. Kinematics وIK
+دي أهم بنية تحتية عندنا. نحتاجها في:
+حساب الوصول للنقطة.
+Joint limits.
+Workspace.
+TCP pose.
+Path planning.
+مقارنة ABB مع تصميم Raed Bots.
+تحديد أطوال الـLinks.
+3. Full Geometry Optimizer
+ده يبقى جوهر تصميم روبوت Raed Bots:
+text
+Target pose
+↓
+اختيار morphology
+↓
+تحسين link lengths
+↓
+توليد جسم كامل
+↓
+STEP parts + assembly
+4. CAD Export
+نحتفظ به ونطوره، لأنه المخرج الأساسي:
+STEP لكل Link.
+STEP Assembly.
+STL للمعاينة.
+URDF.
+BOM.
+Design manifest.
+5. Catalog
+الكتالوج الحالي مهم جدًا كأساس لاختيار:
+Motors.
+Gearboxes.
+Bearings.
+Fasteners.
+End effectors.
+Materials.
+لكن يحتاج لاحقًا فصل واضح بين:
+text
+Verified catalog item
+Market candidate
+Estimated item
+Placeholder
+6. Compare Designs
+مهم جدًا لأن هدف البرنامج تسريع شغل Raed Bots. نحتاج مقارنة:
+تصميم داخلي جديد.
+ABB imported benchmark.
+Yaskawa benchmark.
+نسخ مختلفة من نفس الروبوت.
+Motor/reducer combinations.
+7. Engineering Checks وRevision History
+دي ضرورية عشان البرنامج ما يبقاش مجرد CAD generator. كل نتيجة لازم يكون لها:
+Input.
+Assumptions.
+Warnings.
+Revision.
+Source.
+Confidence level.
+ما يحتاج إعادة تصميم أو تقليل ظهوره
+1. الـSimple Configuration القديم
+الجزء الذي يختار:
+text
+Compact / Medium / Long
+لا نحذفه، لكنه يتحول إلى:
+text
+Quick Start Template
+بدل ما يكون هو التطبيق كله.
+2. Industrial Shell القديم
+نحتفظ به كـfallback أو preview سريع، لكن لا يكون هو التصميم الرئيسي. التصميم الرئيسي يجب أن يكون:
+text
+Full 6R Parametric Robot
+3. Mass وCycle Time التقديري
+نحتفظ بهم، لكن يظهروا بوضوح كـ:
+text
+Approximate
+Requires motor dynamics validation
+ولا يتم عرضهم كأرقام نهائية.
+4. Procurement القديم
+يظل موجودًا، لكنه حاليًا ليس Live Market Search حقيقي. نحتاج لاحقًا تطويره ليشمل:
+Supplier.
+Price.
+Currency.
+Availability.
+Lead time.
+Source URL.
+Date checked.
+Country/Egypt availability.
+5. SCARA وDelta وCartesian
+لا نحتاج إزالتهم من الـbackend، لكن في الواجهة الأفضل يظهروا كـ:
+text
+Coming soon
+إلى أن يكون عندهم generators حقيقية.
+الشكل الأفضل للتطبيق
+بدل ما كل الوظائف تبقى متداخلة، نخليه أربع Modes:
+Mode 1 — New Robot Design
+لتصميم روبوت Raed Bots من الصفر:
+text
+Requirements
+→ 6-axis morphology
+→ Link optimization
+→ Full geometry
+→ Motor selection
+→ CAD export
+Mode 2 — Competitor Benchmark
+لاستيراد ملفات RoboDK أو ملفات منافسين:
+text
+.robot import
+→ Detailed mesh analysis
+→ Link metrics
+→ Envelope
+→ DH and joint limits
+→ Benchmark report
+Mode 3 — Actuator Engineering
+لاختيار:
+text
+Motor
++ Gearbox
++ Encoder
++ Bearing
++ Drive
+مع حساب:
+Rated torque.
+Peak torque.
+Speed.
+Ratio.
+Efficiency.
+Mass.
+Inertia.
+Market candidates.
+Mode 4 — Compare & Report
+للمقارنة بين:
+Raed Bots design.
+ABB.
+Yaskawa.
+Candidate motor configurations.
+Different link lengths.
+Different tools.
+الخلاصة
+لا نبدأ من الصفر ولا نمسح القديم.
+القرار الصحيح:
+text
+Keep old engines
+Refactor old UI
+Promote new workflows
+Hide obsolete MVP screens
+يعني:
+الجزء
+القرار
+Requirements
+Keep
+Kinematics / IK
+Keep and expand
+Old simple optimizer
+Keep as quick-start
+Full robot geometry
+Make primary
+CAD export
+Keep and expand
+Catalog
+Keep, add evidence status
+Motor selection
+Expand significantly
+RoboDK import
+New primary mode
+Compare designs
+Keep and connect to benchmark
+Procurement
+Keep but mark current limitations
+Old industrial shell
+Fallback preview only
+SCARA/Delta
+Keep and expand
+فلو هدفنا بناء نظام داخلي لشركة Raed Bots، فالأنسب هو إعادة هيكلة الواجهة حول الـ4 Modes، وليس حذف الوظائف القديمة. القديم هو الـengineering backbone، والجديد هو الـproduct workflow.
