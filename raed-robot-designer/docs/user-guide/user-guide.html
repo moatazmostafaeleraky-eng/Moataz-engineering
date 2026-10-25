@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>RAED Robot Designer · دليل الاستخدام</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+@page{size:A4;margin:14mm 13mm 16mm}
+:root{--ink:#14191c;--muted:#5d6b70;--accent:#2f7d4a;--mint:#b5edb2;--red:#c0392b;--amber:#b7791f;--blue:#2c6aa6;--line:#d9e0dd;--soft:#f3f6f4}
+*{box-sizing:border-box}
+body{font-family:Cairo,Inter,sans-serif;color:var(--ink);font-size:10.5pt;line-height:1.75;margin:0}
+.en,code{font-family:Inter,sans-serif;direction:ltr;unicode-bidi:isolate}
+code{background:#eef2f0;border-radius:3px;padding:0 4px;font-size:9pt}
+h1{font-size:25pt;line-height:1.3;margin:0 0 8px}
+h2{font-size:14.5pt;color:var(--accent);margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--line);break-after:avoid}
+h3{font-size:12pt;margin:16px 0 4px;break-after:avoid}
+p{margin:4px 0 8px}
+.cover{height:262mm;display:flex;flex-direction:column;justify-content:space-between;background:#101416;color:#ecf0ec;margin:-14mm -13mm 0;padding:24mm 18mm 18mm;break-after:page}
+.cover .eyebrow{color:var(--mint);letter-spacing:2px;font:600 9pt Inter,sans-serif;direction:ltr;text-align:right}
+.cover h1{color:#fff;font-size:28pt}
+.cover .sub{color:#a9b8b6;font-size:12pt}
+.cover img{width:100%;border-radius:10px;border:1px solid #2b3438;margin:14px 0}
+.cover .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:9.5pt;color:#b9c6c4}
+.cover .meta b{display:block;color:#fff;font-size:10.5pt}
+table{width:100%;border-collapse:collapse;font-size:9pt;margin:6px 0 10px;break-inside:avoid}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:right;vertical-align:top}
+th{background:#eef3f0;font-weight:600}
+td.n{font-family:Inter,sans-serif;direction:ltr;text-align:left;white-space:nowrap}
+.fail{color:var(--red);font-weight:600}.pass{color:var(--accent);font-weight:600}.unk{color:var(--amber);font-weight:600}
+figure{margin:8px 0 12px;break-inside:avoid;text-align:center}
+figure img{max-width:100%;max-height:110mm;border:1px solid var(--line);border-radius:6px}
+figcaption{font-size:8.5pt;color:var(--muted);margin-top:3px}
+.io{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0;break-inside:avoid}
+.io>div{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:9.5pt}
+.io .in{background:#eef4fb;border-color:#c9daee}
+.io .out{background:#eef6f0;border-color:#cde3d3}
+.io h4{margin:0 0 4px;font-size:10pt}
+.io .in h4{color:var(--blue)}.io .out h4{color:var(--accent)}
+.io ul{margin:0;padding-right:18px}
+.ex{border-right:4px solid var(--ink);background:var(--soft);padding:8px 12px;border-radius:4px;font-size:9.5pt;margin:8px 0;break-inside:avoid}
+.ex b.t{display:block;margin-bottom:2px}
+.note{border-right:4px solid var(--amber);background:#fbf6ec;padding:8px 12px;border-radius:4px;font-size:9.5pt;margin:8px 0;break-inside:avoid}
+.how{counter-reset:s;list-style:none;padding:0;margin:6px 0}
+.how li{counter-increment:s;position:relative;padding-right:30px;margin:4px 0}
+.how li::before{content:counter(s);position:absolute;right:0;top:2px;width:21px;height:21px;border-radius:50%;background:var(--accent);color:#fff;font:600 9pt Inter,sans-serif;display:flex;align-items:center;justify-content:center}
+.page-break{break-before:page}
+.mode{display:inline-block;background:var(--ink);color:#fff;border-radius:4px;padding:0 8px;font:600 9pt Inter,sans-serif;margin-left:6px}
+.tag{display:inline-block;background:#e6efe9;color:var(--accent);border-radius:4px;padding:0 6px;font:600 8.5pt Inter,sans-serif;margin-left:4px}
+ol,ul{margin:4px 0 8px;padding-right:20px}
+li{margin:2px 0}
+.src{font-size:8.5pt;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.toc td:first-child{width:34px;text-align:center}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div>
+    <div class="eyebrow">RAED ROBOT DESIGNER · v0.3 · USER GUIDE</div>
+    <h1>دليل استخدام البرنامج<br>خطوة بخطوة… بالتطبيق</h1>
+    <p class="sub">كل جزء في البرنامج: بتدخّل إيه، وبيطلعلك إيه، ومثال حقيقي اتعمل على البرنامج نفسه (روبوت فئة <span class="en">RAED R-1</span> لتغذية ماكينة <span class="en">CNC</span> + ملف منافس <span class="en">ABB IRB 1100</span>).</p>
+    <img src="../case-study/screenshots/03-calculated.png" alt="">
+  </div>
+  <div class="meta">
+    <div><b>الإصدار</b>RAED Robot Designer 0.3</div>
+    <div><b>اللغة</b>عربي مصري — والمصطلحات الهندسية زي ما هي في البرنامج</div>
+    <div><b>إعداد</b>Moataz Mostafa</div>
+  </div>
+</section>
+
+<h2>البرنامج ده بيعمل إيه؟</h2>
+<p>البرنامج بيمشي معاك في دورة تصميم روبوت صناعي سداسي المحاور (<span class="en">6R</span>) من أولها لآخرها: تكتب المتطلبات (الحمولة، المدى، التطبيق…)، فيقترح هندسة الذراع، ويحسب العزم على كل محور، ويطلّع <span class="en">BOM</span>، ويقارنك بالمنافسين، وفي الآخر يطلّع حزمة <span class="en">CAD</span> (<span class="en">STEP/STL</span>) و<span class="en">URDF</span> وتقرير <span class="en">PDF</span> — وكل ده مربوط بـ"إصدار" محفوظ ماحدش يقدر يعدّل نتيجته بعد ما اتراجعت.</p>
+<p>البرنامج مقسوم لـ <b>4 أوضاع</b> في الشريط اللي على الشمال، وتحت كل وضع صفحاته:</p>
+
+<table class="toc">
+  <tr><th>#</th><th>الوضع / الصفحة</th><th>بتدخّل إيه (باختصار)</th><th>بيطلعلك إيه (باختصار)</th></tr>
+  <tr><td class="n">01</td><td><b>New Robot Design</b> → Requirements &amp; 6R geometry</td><td>الحمولة، المدى، التطبيق، زمن الدورة، الخامة، نقاط المهمة، العوائق، القيود</td><td>إصدار محسوب، روبوت في مشهد <span class="en">3D</span>، كتلة تقديرية، حلول هندسة وصلات + <span class="en">STEP</span></td></tr>
+  <tr><td class="n">01</td><td>Engineering checks</td><td>— (بتقرا الإصدار المحسوب)</td><td>~20 فحص: ناجح / فاشل / غير مُتحقق، وكل فحص بسببه ودليله</td></tr>
+  <tr><td class="n">02</td><td><b>Competitor Benchmark</b> → Import &amp; benchmark</td><td>ملف <span class="en">RoboDK .robot</span> لروبوت منافس</td><td>بيانات الروبوت + أبعاد كل وصلة + <span class="en">DH</span> + حزمة <span class="en">STEP</span> للوصلات (عادي أو ناعم)</td></tr>
+  <tr><td class="n">02</td><td>STEP → RoboDK .robot</td><td>7 ملفات <span class="en">STEP</span> (قاعدة + 6 وصلات) + حدود المفاصل + 13 قيمة آلية</td><td>حزمة بناء فيها ماكرو يعمل ملف <span class="en">.robot</span> جوه <span class="en">RoboDK</span></td></tr>
+  <tr><td class="n">03</td><td><b>Actuator Engineering</b> → Axis torque sizing</td><td>— (الإصدار المحسوب)</td><td>أسوأ عزم لكل محور، نسبة الاستغلال، العزم المطلوب، أقل نسبة تخفيض</td></tr>
+  <tr><td class="n">03</td><td>Actuator catalog &amp; BOM</td><td>— (الإصدار المحسوب)</td><td><span class="en">BOM</span> كامل + كتالوج المكونات بحالة الدليل + فجوات التوريد في مصر</td></tr>
+  <tr><td class="n">04</td><td><b>Compare &amp; Report</b> → Design comparison</td><td>زرار Compare designs</td><td>لحد 6 بدائل (عائلة/خامة/محركات) كإصدارات جديدة + ترتيب <span class="en">Pareto</span></td></tr>
+  <tr><td class="n">04</td><td>Benchmark vs RAED R-1</td><td>زرار Refresh benchmark</td><td>تصميمك مقابل هدف <span class="en">R-1</span> والمنافسين في جدول واحد</td></tr>
+  <tr><td class="n">04</td><td>Review &amp; CAD export</td><td>اسم المراجع + ملاحظات</td><td>حزمة <span class="en">ZIP</span> (CAD، URDF، BOM، JSON، PDF) + تقرير <span class="en">PDF</span></td></tr>
+</table>
+
+<div class="note"><b>قاعدة مهمة في البرنامج كله:</b> أي حاجة مش معروفة بتفضل مكتوبة <span class="unk">Unknown / Unverified</span> — البرنامج مش بيخترع أسعار ولا بيفترض إن فحص نجح من غير دليل. فلو شفت "غير مُتحقق" ده معناه "محتاج شغل أو بيانات"، مش "تمام".</div>
+
+<h2 class="page-break">0. التشغيل وإدارة المشاريع</h2>
+<h3>تشغيل البرنامج</h3>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>من فولدر المشروع في <span class="en">PowerShell</span>:<br><code>.\.venv\Scripts\python.exe run.py</code> (أو <code>start.ps1</code>)</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>البرنامج بيفتح على <code>http://127.0.0.1:8765</code> في المتصفح.</li><li>شغال على جهازك بس — مش محتاج إنترنت ولا مفتاح <span class="en">API</span>.</li></ul></div>
+</div>
+<h3>شريط الجنب: الأوضاع والمشاريع</h3>
+<div class="two">
+<figure><img src="../case-study/screenshots/E1-sidebar.png" alt="" style="max-height:80mm"><figcaption>الأوضاع الأربعة، وتحتها قائمة المشاريع وزرار مشروع جديد</figcaption></figure>
+</div>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li><b>＋ New project</b>: مشروع جديد فاضي.</li><li>قائمة <b>Local projects</b>: تفتح مشروع قديم.</li><li>قائمة <b>Current revision</b> (فوق الصفحة): تختار أي إصدار محسوب قبل كده.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>كل مشروع محفوظ على الجهاز.</li><li>كل ضغطة <b>Save &amp; calculate</b> بتعمل <b>إصدار جديد</b> ليه بصمة <span class="en">SHA-256</span> للمدخلات (زي <code>rev-e7daf6eba8</code>).</li><li>الإصدار القديم مابيتغيرش أبدًا؛ لو غيرت أي رقم لازم تحسب تاني.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>مشروع "RAED R-1 class · full capability walkthrough" طلع فيه 4 إصدارات: الأصلي + 3 بدائل اتعملوا من صفحة المقارنة، وتقدر تفتح أي واحد منهم.</div>
+
+<h2 class="page-break"><span class="mode">MODE 01</span>تصميم روبوت جديد — New Robot Design</h2>
+
+<h3>1.1 القوالب الجاهزة + متطلبات التصميم</h3>
+<p>دي أول حاجة تعملها. إما تختار قالب جاهز من <b>Quick-start templates</b> (بيملا الفورم ونقاط المهمة وهدف الهندسة مرة واحدة)، أو تكتب القيم بإيدك.</p>
+<figure><img src="../case-study/screenshots/02-template-form.png" alt=""><figcaption>لوحة المتطلبات بعد اختيار قالب RAED R-1 class · CNC tending</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل (الحقول)</h4><ul>
+    <li><b>Project name</b> — اسم المشروع</li>
+    <li><b>Application</b> — التطبيق: Pick &amp; place، CNC tending، Material handling، Palletizing، Packaging، Arc welding</li>
+    <li><b>Workpiece mass (kg)</b> — وزن القطعة نفسها</li>
+    <li><b>Specified payload (kg)</b> — الحمولة اللي الروبوت لازم يشيلها</li>
+    <li><b>Payload definition</b> — الحمولة شاملة الأداة والمهايئ ولا القطعة بس</li>
+    <li><b>Reach (m)</b> و <b>Cycle time (s)</b> و <b>TCP speed (m/s)</b></li>
+    <li><b>End effector</b> — الأداة (جريبر، تورش…) أو "اختار حسب التطبيق"</li>
+    <li><b>Material</b> — الخامة (أو قارن الاتنين)، و <b>Manufacturing process</b>: CNC أو Sheet metal</li>
+    <li><b>Delivery governorate</b> — المحافظة (لتقرير التوريد)</li>
+  </ul></div>
+  <div class="out"><h4>الخرج</h4><ul>
+    <li>الفورم متعبّي وجاهز للمراجعة.</li>
+    <li>لو اخترت قالب: نقاط المهمة وهدف محسّن الهندسة بيتملوا كمان.</li>
+    <li>لسه مافيش حساب — الحساب بيحصل لما تدوس <b>Save &amp; calculate</b>.</li>
+  </ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا (قالب RAED R-1 class · CNC tending):</b>
+التطبيق CNC machine tending · القطعة 8 kg · الحمولة 11 kg (شاملة الأداة والمهايئ) · المدى 1.30 m · زمن الدورة 20 s · سرعة TCP 1.0 m/s · الأداة RG2 parallel gripper · الخامة Al 6061 · التصنيع CNC.</div>
+
+<h3>1.2 استخراج المتطلبات من نص (عربي أو إنجليزي)</h3>
+<p>جوه الفورم افتح <b>Extract requirements from text</b>، اكتب الطلب زي ما العميل قاله، ودوس <b>Extract &amp; review values</b>.</p>
+<div class="two"><figure><img src="../case-study/screenshots/A1-parse.png" alt="" style="max-height:95mm"><figcaption>القيم بعد الاستخراج</figcaption></figure></div>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>جملة حرة، مثلًا:<br>«روبوت لتغذية ماكينة CNC: صندوق 8 كجم، حمولة 11 كجم، مدى 1.3 متر، من المخزن»</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>الحقول اللي اتفهمت بتتملي: القطعة 8 kg، الحمولة 11 kg، المدى 1.3 m، و"من المخزن" ⇐ تفعيل استخدام المخزون.</li><li>اللي ماتذكرش (زمن الدورة، التطبيق) بيفضل قيمة افتراضية ظاهرة (12 s / Pick &amp; place) — <b>لازم تراجعها بنفسك</b>.</li></ul></div>
+</div>
+<div class="note">الاستخراج قايم على قواعد ثابتة مش ذكاء اصطناعي؛ مش بيخمّن.</div>
+
+<h3>1.3 القيود والمخزون — Constraints &amp; inventory</h3>
+<div class="two"><figure><img src="../case-study/screenshots/A2-constraints.png" alt="" style="max-height:90mm"><figcaption>القيود وبيانات المخزون</figcaption></figure></div>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li><b>Maximum robot mass (kg)</b> — أقصى وزن مسموح (اختياري).</li><li><b>Use available inventory</b> — استخدم اللي في المخزن بس.</li><li><b>Inventory JSON</b> — صف لكل صنف: <code>sku, model, qty_available, approved, updated, source</code>.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>فحص <code>mass_constraint</code>: ناجح/فاشل.</li><li>فحص <code>inventory_constraint</code>: بيقولك ناقصك إيه بالظبط.</li><li>المطابقة حاليًا للمحركات بس؛ باقي المكونات بتفضل غير مُتحقق منها.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>أقصى كتلة 60 kg والكتلة التقديرية 54.1 kg ⇐ <span class="pass">ناجح</span>. المخزن فيه SGM7A-08A ×2، SGM7A-04A ×4، SGM7A-01A ×6 ⇐ <span class="fail">فشل</span>: <code>SGM7A-08A need 3, have 2</code> — يعني محتاج تشتري محرك 750 W زيادة قبل التجميع.</div>
+
+<h3 class="page-break">1.4 نقاط المهمة والعوائق — Task poses &amp; Obstacles</h3>
+<div class="two">
+<figure><img src="../case-study/screenshots/03b-tasks.png" alt="" style="max-height:80mm"><figcaption>نقاط المهمة الثلاثة بإحداثيات العالم</figcaption></figure>
+<figure><img src="../case-study/screenshots/A3-obstacles.png" alt="" style="max-height:80mm"><figcaption>النقاط + عائق يمثل غلاف ماكينة الـ CNC</figcaption></figure>
+</div>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li><b>＋ Add current TCP</b>: يضيف مكان طرف الروبوت الحالي كنقطة مهمة (بالمتر، إحداثيات العالم) — وترتيب القائمة هو ترتيب المسار.</li><li><b>＋ Add box</b>: عائق صندوق بمركزه وأبعاده.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>فحص وصول (<span class="en">IK</span>) لكل نقطة: <code>task_…</code> ناجح/فاشل.</li><li>زمن مسار تقديري لو في نقطتين أو أكتر.</li><li>فحص تصادم مبدئي بالصناديق <code>collision_sampled_aabb</code> — إنذار للمراجعة، مش إثبات.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>Conveyor (0.85, −0.55, 0.75) · Chuck (1.05, 0.35, 0.95) · Out (0.60, 0.85, 0.75) — التلاتة <span class="pass">قابلين للوصول</span>. العائق عند (1.75, 0.35, 0.80) بأبعاد 0.8 × 1.2 × 1.6 m ⇐ إنذار تداخل محتمل مع الوصلة L6 والأداة <span class="unk">Unverified</span> ⇐ مكان الروبوت جنب الماكينة محتاج مراجعة في تخطيط الخلية.</div>
+
+<h3>1.5 الحساب — Save &amp; calculate، والخلية الافتراضية</h3>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>زرار <b>Save &amp; calculate</b> (فوق على اليمين) بعد ما تراجع كل المدخلات.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul>
+    <li>إصدار جديد محفوظ (<code>rev-…</code>) والبرنامج بيختار عائلة الروبوت (Compact / Medium / Long) اللي تغطي المدى.</li>
+    <li>الروبوت في المشهد <span class="en">3D</span> مع نقاط المهمة (اسحب للف، عجلة الماوس للزووم، كليك يمين للتحريك).</li>
+    <li>المؤشرات: <b>Estimated robot mass</b>، <b>Cycle time</b> التقديري، وعدد الفحوص الغير مُتحقق منها.</li>
+    <li>رقم الفحوص بيظهر جنب <b>Engineering checks</b> في الشريط.</li>
+  </ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>اتعمل الإصدار <code>rev-e7daf6eba8</code>، البرنامج اختار عائلة <b>Long</b>، والكتلة التقديرية 54.1 kg، و20 فحص. (الصورة اللي على الغلاف هي الشاشة دي.)</div>
+
+<h3>1.6 استكشاف حركة المفاصل — Explore joint motion</h3>
+<div class="two">
+<figure><img src="../case-study/screenshots/A6-design-pose.png" alt="" style="max-height:72mm"><figcaption>التصميم عند J = (35, 30, 40, 0, 45, 0)°</figcaption></figure>
+<figure><img src="../case-study/screenshots/A7-reference.png" alt="" style="max-height:72mm"><figcaption>نموذج UP6 المرجعي مع نطاق الحركة</figcaption></figure>
+</div>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>6 منزلقات للمفاصل J1–J6، وزرار <b>Home pose</b>.</li><li><b>Motion range</b>: تشغيل سحابة مساحة العمل.</li><li><b>Robot model</b>: تصميمك المحفوظ أو نموذج UP6 المرجعي.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>مكان الـ <span class="en">TCP</span> لحظيًا تحت المشهد.</li><li>لو الـ TCP نزل تحت الأرض بيظهر بالأحمر "below floor (Z &lt; 0)".</li><li>التحريك هنا للعرض بس — مش بيغيّر نتايج الإصدار.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>عند (35, 30, 40, 0, 45, 0)° الـ TCP = (1.276, 0.893, 0.723) m. وعند (35, −20, 40, 0, 30, 0)° نزل لـ Z = −0.687 m فظهر التحذير الأحمر.</div>
+
+<h3 class="page-break">1.7 هندسة الروبوت الكاملة — Full 6R robot geometry</h3>
+<p>ده "محسّن الهندسة": بيدوّر على أطوال وصلات (ذراع علوي، ساعد، إزاحة معصم) توصّل الـ TCP لنقطة هدف، وبعدين يطلّع <span class="en">CAD</span> للحل اللي تختاره.</p>
+<figure><img src="../case-study/screenshots/04-geometry.png" alt=""><figcaption>نتائج المحسّن — أفضل 6 حلول، وزرار لعرض الباقي</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li><b>Robot category</b> و <b>Morphology / size</b> (العائلة).</li><li><b>Geometry objective</b>: Balanced / Reach margin / Lower mass.</li><li><b>Target X, Y, Z (m)</b>: النقطة اللي لازم يوصلها.</li><li><b>Search candidates</b>: عدد التركيبات اللي يجربها (3–60).</li><li>زرار <b>Optimize link geometry</b>.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>جدول حلول: طول كل وصلة بالـ mm، خطأ الوصول، هامش المدى.</li><li>لكل حل زرار <b>Download STEP package</b>: حزمة فيها 14 جزء + التجميع الكامل (قاعدة، 6 وصلات مجوفة، 6 أغلفة مفاصل، فلانشة أداة) — <span class="en">STEP</span> و <span class="en">STL</span> بالمليمتر وفي وضع Home.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>الهدف نقطة الظرف (1.05, 0.35, 0.95)، 24 تركيبة. أفضل حل متوازن: ذراع علوي 644 mm، ساعد 730 mm، معصم 120 mm، خطأ وصول 0.57 mm، هامش مدى 35 mm. ملاحظة: حلول أقصر (574 / 576 mm) بتوصل برضه وبتقلل عزم J2.</div>
+<div class="note">الهندسة دي تقريبية للمراجعة الأولية — مش رسومات تصنيع.</div>
+
+<h3>1.8 الفحوص الهندسية — Engineering checks</h3>
+<figure><img src="../case-study/screenshots/05-checks.png" alt=""><figcaption>كل فحص بطريقته وافتراضاته ودليله</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>مافيش — الصفحة بتقرا الإصدار المختار.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>كل فحص بحالته: <span class="pass">Pass</span> / <span class="fail">Failed</span> / <span class="unk">Unverified</span>.</li><li>لكل فحص: الطريقة، الافتراضات، القيم، وسبب الفشل.</li></ul></div>
+</div>
+<table>
+  <tr><th>الفحص (في مثالنا)</th><th>الحالة</th><th>معناه</th></tr>
+  <tr><td><code>task_Conveyor / Chuck / Out</code>، <code>family_reach</code>، <code>payload_requirement</code>، <code>cycle_time</code></td><td class="pass">Pass</td><td>الروبوت بيوصل للنقط ويغطي المدى وزمن الدورة</td></tr>
+  <tr><td><code>static_torque_J2 / J3 / J5</code></td><td class="fail">Failed</td><td>العزم أكبر من التقييم المستمر للمحرك/المخفض ⇐ روح لصفحة تحجيم المحاور</td></tr>
+  <tr><td><code>payload_static_wrist</code></td><td class="fail">Failed</td><td>المعصم مش شايل الحمولة استاتيكيًا</td></tr>
+  <tr><td><code>inventory_constraint</code></td><td class="fail">Failed</td><td>ناقص محرك SGM7A-08A</td></tr>
+  <tr><td><code>collision_sampled_aabb</code></td><td class="unk">Unverified</td><td>تداخل محتمل مع العائق — راجع</td></tr>
+  <tr><td><code>dynamic_torque</code> · <code>deflection</code> · <code>thermal</code> · <code>accuracy</code> · <code>repeatability</code></td><td class="unk">Unverified</td><td>خارج نطاق الإصدار الحالي — محتاج حسابات/اختبارات</td></tr>
+</table>
+
+<h2 class="page-break"><span class="mode">MODE 02</span>مقارنة المنافسين — Competitor Benchmark</h2>
+
+<h3>2.1 استيراد ملف منافس وتصدير وصلاته <span class="en">STEP</span> — Import &amp; benchmark</h3>
+<figure><img src="screenshots/G1-import-panel.png" alt="" style="max-height:150mm"><figcaption>بعد فحص ملف ABB IRB 1100: البيانات، أبعاد كل وصلة، جدول DH وحدود المفاصل — واختيار الأسطح الناعمة فوق</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul>
+    <li>ملف <span class="en">RoboDK .robot</span> مسموح لك باستخدامه (من مكتبة RoboDK مثلًا).</li>
+    <li><b>Smooth surfaces</b>: لو متعلّم، البرنامج بيعمل هندسة عكسية لأسطح حقيقية بدل المثلثات.</li>
+    <li><b>Fit tolerance</b>: 0.10 (أدق) / 0.25 (المقترح) / 0.50 mm (أنعم).</li>
+    <li>زرار <b>Inspect benchmark details</b> للفحص، و <b>Export reference STEP ZIP</b> للتصدير.</li>
+  </ul></div>
+  <div class="out"><h4>الخرج</h4><ul>
+    <li><b>Inspect</b>: الحمولة، المدى، الكتلة (من رأس الملف — غير مُتحقق)، أبعاد الغلاف، لكل وصلة عدد المثلثات وأبعادها ومساحتها، جدول <span class="en">DH</span> المعدّل وحدود المفاصل، وبصمة الملف.</li>
+    <li>الروبوت بيتضاف تلقائيًا لجدول المقارنة في Mode 04.</li>
+    <li><b>Export</b>: ملف <span class="en">ZIP</span> فيه <span class="en">STEP</span> لكل وصلة (solid مقفول ومُتحقق منه) متحطوطة في وضع Home + ملف تجميع كامل + تقرير الاستيراد.</li>
+  </ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا (ABB IRB 1100-4/0.58):</b>حمولة 4 kg، مدى 0.58 m، كتلة 21 kg، 7 وصلات، غلاف 474 × 182 × 386 mm. التصدير الناعم طلّع <b>7/7 وصلات</b> كـ solids صالحة بعد قراءة ملف الـ STEP تاني، فرق الحجم عن الشبكة أقل من 0.2%، والمساحة الناعمة من 52% لـ 100% حسب الوصلة. التصدير الكامل خد حوالي 18 دقيقة.</div>
+<figure><img src="../case-study/screenshots/S1-smooth-assembly.png" alt="" style="max-height:95mm"><figcaption>الخرج: الروبوت كامل من ملفات STEP الناعمة — الألوان حسب نوع السطح (الرمادي = مثلثات متبقية)</figcaption></figure>
+<div class="note"><b>خلي بالك:</b> ملف <span class="en">RoboDK</span> فيه الغلاف الخارجي بس (مافيهوش محركات ولا مخفضات). والأسطح الناعمة هندسة عكسية من شبكة عرض — تنفع للتجميع والمقارنة ودراسات الوصول، مش للتصنيع. الوصلات متحطوطة في أماكنها، فلو فتحت الـ 7 ملفات مع بعض في SolidWorks هيتركبوا لوحدهم.</div>
+
+<h3 class="page-break">2.2 بناء روبوت RoboDK من أجزاء <span class="en">STEP</span> — STEP → RoboDK .robot</h3>
+<p>العكس: عندك أجزاء <span class="en">STEP</span> لروبوتك (مثلًا من محسّن الهندسة في 1.7) وعاوز تحوّلها لروبوت يتحرك جوه <span class="en">RoboDK</span>.</p>
+<figure><img src="../case-study/screenshots/r-B2.png" alt=""><figcaption>ربط الأجزاء بالمحاور وجدول حدود المفاصل</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul>
+    <li><b>Robot name</b>.</li>
+    <li><b>7 ملفات STEP منفصلة</b>: القاعدة + وصلة لكل محور J1–J6، ومتركبين مع بعض في وضع Home (ملف تجميع واحد مش هينفع).</li>
+    <li>جدول المفاصل: <b>Home / Minimum / Maximum</b> بالدرجات و <b>Sense</b> (الاتجاه) — من الداتا شيت.</li>
+    <li><b>13 قيمة لآلية RoboDK</b> كـ JSON بنفس ترتيب نافذة Build Mechanism.</li>
+    <li>علامة إن الأجزاء متركبة في وضع Home، وبعدين <b>Build RoboDK .robot package</b>.</li>
+  </ul></div>
+  <div class="out"><h4>الخرج</h4><ul>
+    <li>البرنامج بيربط كل ملف بمحوره (من اسمه) وبيوريك الربط.</li>
+    <li>حزمة بناء: الـ 7 أجزاء + <code>config.json</code> + ماكرو <code>build_in_robodk.py</code> — تشغّله جوه RoboDK فيطلعلك ملف <code>.robot</code>.</li>
+  </ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>أخدنا القاعدة والـ 6 وصلات من حزمة STEP لتصميم عائلة Long، والـ 13 قيمة من أطوال التصميم بالمليمتر <code>[320, 0, 700, 140, 640, 120, 0…]</code>. البرنامج ربط الأجزاء تلقائيًا وطلّع الحزمة.</div>
+<div class="note">البرنامج مش بيستنتج الحركة من الشكل. لازم تتأكد من ترتيب الـ 13 قيمة جوه RoboDK، وبعد البناء حرّك كل مفصل لوحده وتأكد من الاتجاه والحدود.</div>
+
+<h2 class="page-break"><span class="mode">MODE 03</span>هندسة المشغلات — Actuator Engineering</h2>
+
+<h3>3.1 تحجيم المحاور — Axis torque sizing</h3>
+<p>فحص العزم العادي بيبص على وضع واحد بس. الصفحة دي بتلف J2 و J3 و J5 على كل حدودهم، وتجيب أسوأ عزم إمساك لكل محور، وتقارنه بالأقل بين تقييم المخفض وتقييم المحرك بعد نسبة التخفيض.</p>
+<figure><img src="../case-study/screenshots/06-sizing.png" alt=""><figcaption>استغلال كل محور مقابل تقييمه المستمر — الخط = 100%</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>مافيش — بيستخدم الإصدار المحسوب (الحمولة، الأطوال، المحركات والمخفضات المختارة).</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>لكل محور: المحرك/المخفض، أسوأ عزم (N·m)، المسموح ومين اللي محدّده (محرك ولا مخفض)، نسبة الاستغلال.</li><li>العزم المطلوب عند الحمولة المحددة، وأقل نسبة تخفيض للمحرك الحالي.</li><li>أقصى حمولة استاتيكية والمحور اللي محدّدها.</li></ul></div>
+</div>
+<table>
+  <tr><th>المحور (مثالنا)</th><th>المحرك / المخفض</th><th>أسوأ عزم (N·m)</th><th>المسموح (N·m)</th><th>الاستغلال</th><th>المطلوب عند 11 kg</th><th>أقل نسبة</th></tr>
+  <tr><td class="n">J2</td><td class="n">SGM7A-08A / CSG-32-50</td><td class="n">399.2</td><td class="n">89.6 (motor)</td><td class="n fail">445 %</td><td class="n">448.5</td><td class="n">≈ 250</td></tr>
+  <tr><td class="n">J3</td><td class="n">SGM7A-08A / CSG-25-80</td><td class="n">154.4</td><td class="n">75.0 (gearbox)</td><td class="n fail">206 %</td><td class="n">183.3</td><td class="n">≈ 102</td></tr>
+  <tr><td class="n">J5</td><td class="n">SGM7A-04A / CSG-17-100</td><td class="n">29.3</td><td class="n">24.0 (gearbox)</td><td class="n fail">122 %</td><td class="n">39.1</td><td class="n">≈ 41</td></tr>
+</table>
+<div class="ex"><b class="t">القراءة:</b>J2 محتاج مخفض تقييمه المستمر ~450 N·m أو موازنة جاذبية (زنبرك/أسطوانة غاز)، أو نسبة تخفيض ≈ 250 مع نفس المحرك. J1 و J4 و J6 مابيشيلوش عزم جاذبية في النموذج ده وتحجيمهم محتاج حساب ديناميكي.</div>
+<div class="note">ده عزم استاتيكي (جاذبية بس) وتقييمات مستمرة — العزم الديناميكي على المسار الحقيقي أعلى.</div>
+
+<h3 class="page-break">3.2 الكتالوج و BOM والتوريد في مصر — Actuator catalog &amp; BOM</h3>
+<div class="two">
+<figure><img src="../case-study/screenshots/r-C2bom.png" alt="" style="max-height:85mm"><figcaption>بنود الشراء في الـ BOM</figcaption></figure>
+<figure><img src="../case-study/screenshots/r-C2cat.png" alt="" style="max-height:85mm"><figcaption>كتالوج المكونات بمصدر كل قيمة وحالة الدليل</figcaption></figure>
+</div>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>مافيش غير الإصدار المحسوب.</li><li>زرار اختياري <b>Compare supported motor / gearbox configurations</b> بيوديك لصفحة المقارنة.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li><b>BOM</b>: أجزاء تصنيع داخلي + مشتريات، بالكمية والمواصفة، والسعر <span class="unk">Unknown</span> لحد ما يتعمل بحث موردين.</li><li><b>الكتالوج</b>: المحركات والمخفضات والرولمان بلي والمسامير، ومصدر كل قيمة وحالة الدليل.</li><li><b>Procurement in Egypt</b>: الفجوات بوضوح (سعر، توفر، مدة توريد) من غير عروض مخترعة.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>25 بند: 15 جزء تصنيع داخلي (قاعدة، وصلات، أغلفة، فلانشة) و10 مشتريات (محركات، مخفضات، رولمان بلي، مسامير، جريبر، مادة تثبيت). CAD المشتريات المُتحقق منه: 0 من 9، والـ Encoder والـ Drive ظاهرين كفجوة.</div>
+
+<h2 class="page-break"><span class="mode">MODE 04</span>المقارنة والتقارير — Compare &amp; Report</h2>
+
+<h3>4.1 مقارنة البدائل — Design comparison</h3>
+<figure><img src="../case-study/screenshots/09-compare.png" alt=""><figcaption>بدائل الكتالوج وترتيبها</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>زرار <b>Compare designs</b> (فوق جنب Save &amp; calculate).</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>لحد 6 تركيبات (عائلة، خامة، محرك/مخفض) كل واحدة إصدار منفصل محفوظ.</li><li>أي بديل فيه فحص فاشل أو ناقص بيطلع برا الحلول المقبولة وبرا منحنى <span class="en">Pareto</span>.</li></ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>مافيش بديل عدّى الفحوص بالمشغلات الحالية ⇐ نفس رسالة صفحة التحجيم: لازم مشغلات أكبر أو موازنة لـ J2.</div>
+
+<h3>4.2 المقارنة مع RAED R-1 والمنافسين — Benchmark vs RAED R-1</h3>
+<figure><img src="../case-study/screenshots/r-D1.png" alt=""><figcaption>تصميمك، هدف R-1، UP6 و ABB IRB 1100 في جدول واحد</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>زرار <b>Refresh benchmark</b>.</li><li>أي ملف .robot فحصته في Mode 02 بيتضاف لوحده.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li><b>Target checks</b>: تصميمك حقق هدف R-1 في الحمولة والمدى ولا لأ.</li><li><b>Robot comparison</b>: الحمولة، المدى، الكتلة، ومصدر كل رقم ودرجة الثقة فيه.</li></ul></div>
+</div>
+<table>
+  <tr><th>الروبوت (مثالنا)</th><th>الدور</th><th>الحمولة (kg)</th><th>المدى (m)</th><th>الكتلة (kg)</th><th>المصدر</th></tr>
+  <tr><td>تصميم RAED (الإصدار ده)</td><td>تصميم</td><td class="n">0.00 (static)</td><td class="n">1.472</td><td class="n">54.1 (est.)</td><td>حساب استاتيكي</td></tr>
+  <tr><td>RAED R-1 (IND)</td><td>هدف</td><td class="n">11.00</td><td class="n">1.30</td><td>غير معلن</td><td>قائمة سوق عامة — غير مُتحقق</td></tr>
+  <tr><td>Yaskawa UP6</td><td>منافس</td><td class="n">6.00</td><td class="n">1.373</td><td class="n">130</td><td>رأس ملف RoboDK</td></tr>
+  <tr><td>ABB IRB 1100</td><td>منافس</td><td class="n">4.00</td><td class="n">0.58</td><td class="n">21</td><td>رأس ملف RoboDK</td></tr>
+</table>
+<div class="ex"><b class="t">القراءة:</b>المدى اتحقق (1.47 m مقابل هدف 1.30)، لكن الحمولة الاستاتيكية بالمشغلات الحالية صفر لأن J2 مش شايل حتى وزن الذراع — وده متسق مع صفحة التحجيم.</div>
+
+<h3 class="page-break">4.3 المراجعة والتصدير — Review &amp; CAD export</h3>
+<figure><img src="../case-study/screenshots/10-export.png" alt=""><figcaption>تسجيل المراجعة وتنزيل الحزمة وتقرير PDF</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li><b>Reviewer name</b> — اسم المراجع.</li><li><b>Review notes</b> — ملاحظات على الإصدار.</li><li>زرار <b>Record review &amp; prepare package</b>، وزرار <b>Download engineering report PDF</b>.</li></ul></div>
+  <div class="out"><h4>الخرج — حزمة ZIP مربوطة بالإصدار</h4><ul>
+    <li><code>CAD/</code>: أجزاء وتجميع STEP + STL بالمليمتر</li>
+    <li><code>robot.urdf</code>: النموذج الحركي</li>
+    <li><code>BOM.csv</code> · <code>procurement-egypt.html</code></li>
+    <li><code>snapshot.json</code> · <code>solver.json</code> · <code>catalog.json</code>: المدخلات والنتايج</li>
+    <li><code>actuator-sizing.json</code> · <code>benchmark.json</code> · <code>engineering-report.pdf</code></li>
+    <li><code>review.json</code> · <code>manifest.json</code>: قرار المراجعة وبصمة SHA-256 لكل ملف</li>
+  </ul></div>
+</div>
+<div class="ex"><b class="t">في مثالنا:</b>الحزمة طلعت 45 ملف، والتقرير الهندسي PDF فيه المتطلبات والتحجيم ومقارنة R-1 والفحوص والـ BOM للإصدار <code>rev-ec9ec874d2</code>.</div>
+<div class="note">المراجعة مربوطة ببصمة الإصدار بالظبط: لو غيرت أي مدخل، لازم تحسب إصدار جديد وتعمل مراجعة جديدة قبل التصدير. والحزمة للمراجعة الهندسية — مش اعتماد للتصنيع.</div>
+
+<h2>سيناريو كامل في 10 خطوات</h2>
+<ol class="how">
+  <li><b>＋ New project</b> واختار قالب قريب من شغلك (أو اكتب الطلب في Extract from text).</li>
+  <li>راجع الحمولة والمدى وزمن الدورة والخامة، وحدد Payload definition.</li>
+  <li>ضيف نقاط المهمة بالترتيب، والعوائق، والقيود والمخزون لو موجودين.</li>
+  <li><b>Save &amp; calculate</b> ⇐ بص على الكتلة والمشهد.</li>
+  <li>شغّل <b>Optimize link geometry</b> على أهم نقطة ونزّل STEP للحل اللي عاجبك.</li>
+  <li>افتح <b>Engineering checks</b> وابدأ بالفاشل.</li>
+  <li>افتح <b>Axis torque sizing</b> عشان تعرف كل محور محتاج إيه بالظبط.</li>
+  <li>لو عندك ملف منافس: <b>Competitor Benchmark</b> ⇐ Inspect ⇐ Export STEP (ناعم لو محتاجه للعرض والتجميع).</li>
+  <li><b>Compare designs</b> و <b>Refresh benchmark</b> عشان تشوف موقفك من R-1 والمنافسين.</li>
+  <li>سجّل المراجعة ونزّل الـ ZIP والـ PDF.</li>
+</ol>
+
+<h2>أسئلة ومشاكل شائعة</h2>
+<table>
+  <tr><th>المشكلة</th><th>السبب / الحل</th></tr>
+  <tr><td>الصفحات فاضية ومكتوب "Save and calculate a revision…"</td><td>لسه ماعملتش حساب، أو مختار مشروع جديد. دوس Save &amp; calculate.</td></tr>
+  <tr><td>غيرت رقم والنتايج ماتغيرتش</td><td>النتايج بتاعة الإصدار المحفوظ. احسب تاني عشان يطلع إصدار جديد.</td></tr>
+  <tr><td>فحوص كتير "Unverified"</td><td>طبيعي: دي حاجات محتاجة بيانات أو حسابات مش موجودة في الإصدار ده (ديناميكا، انحراف، حرارة…).</td></tr>
+  <tr><td>تصدير STEP الناعم بطيء</td><td>الهندسة العكسية بتاخد من ثانية لـ 5 دقايق للوصلة. لو مستعجل شيل علامة Smooth surfaces أو اختار 0.50 mm.</td></tr>
+  <tr><td>ملف .robot اترفض</td><td>البرنامج بيقبل النوع المعروف الآمن بس، ومش بيخمّن شبكات مفتوحة أو مش معروفة.</td></tr>
+  <tr><td>الـ TCP لونه أحمر</td><td>الطرف نزل تحت الأرضية (Z &lt; 0) في الوضع ده.</td></tr>
+  <tr><td>الأسعار كلها Unknown</td><td>مقصود: مافيش بحث موردين حي في الإصدار ده، والبرنامج مش بيخترع أسعار.</td></tr>
+</table>
+<p class="src">كل الأرقام والصور في الدليل ده جاية من تشغيل حقيقي للبرنامج (مشروع RAED R-1 class وملف ABB IRB 1100). قيم R-1 من قائمة سوق عامة وغير مُتحقق منها، وبيانات المنافسين من رؤوس ملفات RoboDK. التفاصيل الكاملة في تقرير دراسة الحالة <span class="en">RAED-R1-Case-Study.pdf</span>.</p>
+
+</body>
+</html>
