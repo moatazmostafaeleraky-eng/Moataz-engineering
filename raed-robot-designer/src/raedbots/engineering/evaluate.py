@@ -189,6 +189,41 @@ def attached_mass(req: ProjectRequirements, tool: EndEffector) -> float:
     return extra + tool.adapter_mass_kg + wp
 
 
+def dynamic_checks(cfg: RobotConfiguration, req: ProjectRequirements, workcell: Workcell,
+                   task_reach: list[dict]) -> tuple[CheckResult, CheckResult]:
+    """Peak-torque/speed and RMS-torque checks from the task-path dynamics."""
+    from raedbots.engineering.dynamics import SCOPE, trajectory_dynamics
+
+    solved = {entry["id"]: np.asarray(entry["q"]) for entry in task_reach if "q" in entry}
+    order = workcell.path_ids or [tp.id for tp in workcell.task_poses]
+    targets = [(ident, solved[ident]) for ident in order if ident in solved]
+    if len(targets) < 2:
+        reason = "needs at least two reachable task poses"
+        return (CheckResult(name="dynamic_torque", status=CheckStatus.UNKNOWN, method="rigid-body dynamics on the task path",
+                            assumptions=SCOPE, evidence="insufficient path", reasons=[reason]),
+                CheckResult(name="thermal", status=CheckStatus.UNKNOWN, method="RMS torque over the task cycle",
+                            assumptions=SCOPE, evidence="insufficient path", reasons=[reason]))
+    dyn = trajectory_dynamics(cfg, req, workcell, targets)
+    summary = {a["axis"]: {k: a[k] for k in ("peak_torque_nm", "peak_allowed_nm", "peak_motor_speed_rpm",
+                                             "max_motor_speed_rpm", "rms_torque_nm", "continuous_allowed_nm")}
+               for a in dyn["axes"]}
+    peak_reasons = [f"peak_torque_exceeds_rating {a['axis']}" for a in dyn["axes"] if not a["peak_ok"]]
+    peak_reasons += [f"motor_speed_exceeds_max {a['axis']}" for a in dyn["axes"] if not a["speed_ok"]]
+    rms_reasons = [f"rms_torque_exceeds_continuous {a['axis']}" for a in dyn["axes"] if not a["rms_ok"]]
+    return (
+        CheckResult(name="dynamic_torque", status=CheckStatus.FAIL if peak_reasons else CheckStatus.PASS,
+                    value={"cycle_s": dyn["cycle_s"], "path": dyn["path"], "axes": summary},
+                    method="Newton-Euler (Jacobian form) rigid-body dynamics along the task path; peak output torque "
+                           "vs repeated-peak rating of reducer and motor, peak motor speed vs motor and reducer limits",
+                    assumptions=SCOPE, evidence=ENGINE_VERSION, reasons=peak_reasons),
+        CheckResult(name="thermal", status=CheckStatus.FAIL if rms_reasons else CheckStatus.PASS,
+                    value={"cycle_s": dyn["cycle_s"], "rms_torque_nm": {a["axis"]: a["rms_torque_nm"] for a in dyn["axes"]}},
+                    method="RMS output torque over the task cycle vs continuous rating of reducer and motor "
+                           "(servo RMS sizing method; no thermal network model)",
+                    assumptions=SCOPE, evidence=ENGINE_VERSION, reasons=rms_reasons),
+    )
+
+
 def evaluate(cfg: RobotConfiguration, req: ProjectRequirements, workcell: Workcell) -> SolverResult:
     fam = loader.families()[cfg.family_id]
     mot = loader.motors()
@@ -244,13 +279,15 @@ def evaluate(cfg: RobotConfiguration, req: ProjectRequirements, workcell: Workce
             )
         )
 
+    # Dynamic and RMS (thermal) checks need the task-path IK; filled in after the task loop.
+    dynamic_index = len(checks)
     add(
         CheckResult(
             name="dynamic_torque",
             status=CheckStatus.UNKNOWN,
-            method="not implemented in this release",
-            assumptions="tau = M qdd + C + g not evaluated",
-            evidence="solver absent",
+            method="rigid-body dynamics on the task path",
+            assumptions="",
+            evidence="pending",
         )
     )
     add(
@@ -508,6 +545,8 @@ def evaluate(cfg: RobotConfiguration, req: ProjectRequirements, workcell: Workce
                 evidence="insufficient input",
             )
         )
+
+    checks[dynamic_index], checks[dynamic_index + 2] = dynamic_checks(cfg, req, workcell, task_reach)
 
     J = jacobian_numeric(dh_rows, q_nom, tool, base)
     svd0 = min_svd(J)

@@ -15,6 +15,7 @@ import numpy as np
 
 from raedbots.catalog import loader
 from raedbots.domain.models import ProjectRequirements, RobotConfiguration, Workcell
+from raedbots.engineering.dynamics import trajectory_dynamics
 from raedbots.engineering.evaluate import model_gravity_torques, robot_mass, static_load_model
 from raedbots.engineering.kinematics import fk_frames, NOMINAL_JOINTS
 
@@ -131,4 +132,5 @@ def axis_sizing(cfg: RobotConfiguration, req: ProjectRequirements, workcell: Wor
         "reach": reach,
         "postures_sampled": len(postures),
         "scope": SCOPE,
+        "dynamics": trajectory_dynamics(cfg, req, workcell),
     }

@@ -95,3 +95,8 @@ label em{float:none;margin-left:5px;font:10px ui-monospace,monospace;color:#7e90
 .geo-more{grid-column:1/-1}
 .smooth-option{margin:4px 0 12px;color:#c7d3d1}
 .smooth-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:4px 0 12px}.smooth-row .smooth-option{margin:0;flex:1;min-width:260px}.smooth-tol{display:flex;align-items:center;gap:8px;margin:0;font-size:11px;white-space:nowrap}.smooth-tol select{margin:0;width:auto;font-size:11px;padding:6px 8px}
+.torque-chart{width:100%;height:auto;margin:6px 0 2px;font:10px Inter,sans-serif}
+.torque-chart text{fill:var(--muted,#8a9a9e)}
+.torque-chart .grid{stroke:rgba(255,255,255,.08)}
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;margin-bottom:8px;align-items:center}
+.chart-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-left:4px;vertical-align:middle}

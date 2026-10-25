@@ -25,7 +25,7 @@ const tabHeadings={
  checks:['MODE 1 · ENGINEERING CHECKS','Evidence before decisions','Review assumptions, warnings, sources, confidence and revision-bound checks.'],
  benchmark:['MODE 2 · COMPETITOR BENCHMARK','Import. Inspect. Benchmark.','Analyze supported RoboDK reference files without guessing missing manufacturer data.'],
  'robodk-builder':['MODE 2 · STEP TO ROBODK ROBOT','Build a RoboDK .robot file','Map seven STEP link objects and provide the robot-specific kinematics before building.'],
- sizing:['MODE 3 · ACTUATOR ENGINEERING','Size every axis','Worst-case static holding torque, reducer and motor utilization, and the payload the arm can actually hold.'],
+ sizing:['MODE 3 · ACTUATOR ENGINEERING','Size every axis','Worst-case static holding torque, dynamic peak and RMS torque on the task path, motor speed, and the payload the arm can hold.'],
  bom:['MODE 3 · ACTUATOR ENGINEERING','Catalog, BOM & evidence','Review the local component reference data and current sourcing gaps.'],
  compare:['MODE 4 · COMPARE & REPORT','Compare design candidates','Run bounded catalog comparisons and review trade-offs against a saved revision.'],
  'r1-benchmark':['MODE 4 · BENCHMARK','Measure against RAED R-1','Compare the saved design with the R-1 target specification and competitor references.'],
@@ -372,6 +372,24 @@ function renderSizing(d){
   ].map(([t,v,c,n])=>`<div class="metric"><span>${esc(t)}</span><strong class="${c}">${esc(v)}</strong><small>${esc(n)}</small></div>`).join('');
   const el=$('sizing-content');el.className='table-wrap';
   el.innerHTML=`<table class="sizing-table"><thead><tr><th>Axis</th><th>Motor / reducer</th><th>Worst static</th><th>Allowed cont.</th><th>Utilization</th><th>Limited by</th><th>Needed @ ${esc(fmt(need,1))} kg</th><th>Min. ratio for motor</th><th>TCP capacity</th></tr></thead><tbody>${d.axes.map(a=>{const u=a.utilization||0,cls=u>1?'fail':u>.8?'unknown':'pass';return `<tr><td><b>${esc(a.axis)}</b></td><td>${esc(a.motor_id)} / ${esc(a.gearbox_id)} <span class="muted">i=${fmt(a.ratio,0)}</span></td><td>${fmt(a.worst_case_torque_nm,1)} N·m</td><td>${fmt(a.allowed_continuous_nm,1)} N·m</td><td><div class="util"><div class="util-bar ${cls}" style="width:${Math.min(u,1.5)/1.5*100}%"></div><span class="util-limit"></span></div><span class="${cls}">${pct(a.utilization)}</span></td><td>${esc(a.limited_by)}</td><td>${fmt(a.required_static_nm_at_rated_payload,1)} N·m</td><td>${a.min_ratio_for_selected_motor==null?'—':fmt(a.min_ratio_for_selected_motor,0)}</td><td>${a.static_tcp_capacity_kg==null?'∞':fmt(a.static_tcp_capacity_kg,1)+' kg'}</td></tr>`}).join('')}</tbody></table><p class="muted tiny">${esc(d.scope)} Bar marker = 100 % of continuous rating.</p>`;
+  renderDynamics(d.dynamics);
+}
+const AXIS_COLORS=['#7fb8ff','#b5edb2','#f2c46d','#ff8f8f','#c9a0ff','#7ee0d6'];
+function torqueChart(p){
+  const W=760,H=220,L=48,R=12,T=12,B=28,t=p.t_s,rows=p.torque_nm,tmax=t[t.length-1]||1;
+  const vmax=Math.max(1,...rows.flat().map(Math.abs)),x=v=>L+(W-L-R)*v/tmax,y=v=>T+(H-T-B)*(1-(v+vmax)/(2*vmax));
+  const grid=[-vmax,-vmax/2,0,vmax/2,vmax].map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v,0)}</text>`).join('');
+  const lines=[0,1,2,3,4,5].map(i=>`<polyline fill="none" stroke="${AXIS_COLORS[i]}" stroke-width="1.6" points="${t.map((tv,k)=>`${x(tv).toFixed(1)},${y(rows[k][i]).toFixed(1)}`).join(' ')}"/>`).join('');
+  const legend=[0,1,2,3,4,5].map(i=>`<span><i style="background:${AXIS_COLORS[i]}"></i>J${i+1}</span>`).join('');
+  return `<svg class="torque-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Joint torque over the task cycle">${grid}<text x="${W-R}" y="${H-6}" text-anchor="end">${fmt(tmax,2)} s</text><text x="${L}" y="${H-6}">0 s</text>${lines}</svg><div class="chart-legend">${legend}<span class="muted">N·m over one task cycle</span></div>`;
+}
+function renderDynamics(dyn){
+  const el=$('dynamics-content'),pill=$('dynamics-pill');
+  if(!dyn||!dyn.available){el.className='empty';el.textContent=dyn?.reason?`Dynamic analysis ${dyn.reason}.`:'Save and calculate a revision with two or more task poses.';pill.textContent='—';pill.className='pill';return}
+  const ok=dyn.peak_ok&&dyn.rms_ok;pill.textContent=ok?'Peak, RMS and speed within ratings':'Exceeds a rating — see table';pill.className='pill '+(ok?'pass':'fail');
+  const cls=u=>u>1?'fail':u>.8?'unknown':'pass';
+  el.className='';
+  el.innerHTML=`<p class="muted tiny">Path ${dyn.path.map(esc).join(' → ')} · cycle ${fmt(dyn.cycle_s,2)} s at ${fmt(dyn.tcp_speed_m_s,2)} m/s TCP speed</p>${torqueChart(dyn.profile)}<div class="table-wrap"><table class="sizing-table"><thead><tr><th>Axis</th><th>Peak torque</th><th>Peak allowed</th><th>RMS torque</th><th>Continuous allowed</th><th>Peak motor speed</th><th>Min. ratio · peak / RMS</th></tr></thead><tbody>${dyn.axes.map(a=>`<tr><td><b>${esc(a.axis)}</b></td><td>${fmt(a.peak_torque_nm,1)} N·m</td><td>${fmt(a.peak_allowed_nm,1)} N·m <span class="${cls(a.peak_utilization)}">${pct(a.peak_utilization)}</span></td><td>${fmt(a.rms_torque_nm,1)} N·m</td><td>${fmt(a.continuous_allowed_nm,1)} N·m <span class="${cls(a.rms_utilization)}">${pct(a.rms_utilization)}</span></td><td>${fmt(a.peak_motor_speed_rpm,0)} rpm <span class="${a.speed_ok?'pass':'fail'}">/ ${fmt(a.max_motor_speed_rpm,0)}</span></td><td>${fmt(a.min_ratio_for_peak,0)} / ${fmt(a.min_ratio_for_rms,0)}</td></tr>`).join('')}</tbody></table></div><p class="muted tiny">${esc(dyn.scope)}</p>`;
 }
 
 // ---- Benchmark vs RAED R-1 ----

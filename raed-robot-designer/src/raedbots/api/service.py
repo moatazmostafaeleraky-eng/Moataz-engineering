@@ -183,7 +183,7 @@ def export_package(pid,rid,progress):
         store.atomic_json(out/'benchmark.json',benchmark(pid,rid))
         (out/'README.txt').write_text('FOR ENGINEERING REVIEW ONLY. NOT APPROVED FOR MANUFACTURING.\n'
             'CAD contains approximate manufactured geometry only; purchased CAD and verified interfaces are missing.\n'
-            'Dynamics, stiffness, thermal, physical accuracy and repeatability remain unverified.\n'
+            'Dynamic peak and RMS torque are screened on the task path (rigid-body model); stiffness, physical accuracy and repeatability remain unverified.\n'
             'BOM costs and Egypt supplier availability are unknown; no live supplier search has been performed.\n'
             f'{COPYRIGHT_NOTICE}. All rights reserved.\n',encoding='utf-8')
         (out/'COPYRIGHT.txt').write_text(COPYRIGHT_TEXT,encoding='utf-8')

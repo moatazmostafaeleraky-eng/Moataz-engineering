@@ -104,6 +104,20 @@ def build_pdf(*, project: dict, revision_id: str, snapshot: dict, solver: dict, 
         f"(limiting axis {sizing['limiting_axis'] or '—'}). Computed reach: wrist centre "
         f"<b>{_fmt(sizing['reach']['wrist_centre_m'], 3, 'm')}</b>, flange "
         f"<b>{_fmt(sizing['reach']['flange_m'], 3, 'm')}</b>. {sizing['scope']}", note))
+    dyn = sizing.get("dynamics") or {}
+    if dyn.get("available"):
+        story.append(Paragraph("Dynamic torque on the task path", h2))
+        rows = [["Axis", "Peak (N·m)", "Peak allowed (N·m)", "RMS (N·m)", "Cont. allowed (N·m)", "Peak motor speed (rpm)",
+                 "Min. ratio peak / RMS"]]
+        for a in dyn["axes"]:
+            rows.append([a["axis"], _fmt(a["peak_torque_nm"], 1), _fmt(a["peak_allowed_nm"], 1), _fmt(a["rms_torque_nm"], 1),
+                         _fmt(a["continuous_allowed_nm"], 1),
+                         f"{a['peak_motor_speed_rpm']:.0f} / {a['max_motor_speed_rpm']:.0f}",
+                         f"{a['min_ratio_for_peak']:.0f} / {a['min_ratio_for_rms']:.0f}"])
+        story.append(_table(rows, [width * w for w in (.07, .12, .16, .11, .16, .2, .18)]))
+        story.append(Spacer(1, 3))
+        story.append(Paragraph(f"Path {' → '.join(dyn['path'])}, cycle {dyn['cycle_s']:.2f} s at "
+                               f"{dyn['tcp_speed_m_s']:.2f} m/s. {dyn['scope']}", note))
 
     story.append(Paragraph("3 · Benchmark against RAED R-1 target and references", h2))
     rows = [["Robot", "Role", "Payload (kg)", "Reach (m)", "Mass (kg)", "Payload/mass", "Evidence"]]
@@ -136,8 +150,8 @@ def build_pdf(*, project: dict, revision_id: str, snapshot: dict, solver: dict, 
 
     story.append(KeepTogether([
         Paragraph("6 · Limitations", h2),
-        Paragraph("Static gravity screening only: dynamic torque, deflection, thermal behaviour, cable routing and "
-                  "physical accuracy remain unverified. Reference robot values are public, unverified metadata. "
+        Paragraph("Dynamic torque and RMS (thermal) torque are evaluated on the task path with a rigid-body model; "
+                  "deflection, cable routing and physical accuracy remain unverified. Reference robot values are public, unverified metadata. "
                   "Unknown values are reported as unknown rather than estimated.", body),
     ]))
 

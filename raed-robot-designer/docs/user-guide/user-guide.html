@@ -79,7 +79,7 @@ li{margin:2px 0}
   <tr><td class="n">01</td><td>Engineering checks</td><td>— (بتقرا الإصدار المحسوب)</td><td>20 فحص هندسي، كل فحص بطريقته وافتراضاته ودليله</td></tr>
   <tr><td class="n">02</td><td><b>Competitor Benchmark</b> → Import &amp; benchmark</td><td>ملف <span class="en">RoboDK .robot</span> لروبوت منافس</td><td>بيانات الروبوت + أبعاد كل وصلة + <span class="en">DH</span> + حزمة <span class="en">STEP</span> للوصلات (عادي أو ناعم)</td></tr>
   <tr><td class="n">02</td><td>STEP → RoboDK .robot</td><td>7 ملفات <span class="en">STEP</span> (قاعدة + 6 وصلات) + حدود المفاصل + 13 قيمة آلية</td><td>حزمة بناء فيها ماكرو يعمل ملف <span class="en">.robot</span> جوه <span class="en">RoboDK</span></td></tr>
-  <tr><td class="n">03</td><td><b>Actuator Engineering</b> → Axis torque sizing</td><td>— (الإصدار المحسوب)</td><td>أسوأ عزم لكل محور من 1323 وضع، العزم المطلوب عند الحمولة، أقل نسبة تخفيض</td></tr>
+  <tr><td class="n">03</td><td><b>Actuator Engineering</b> → Axis torque sizing</td><td>— (الإصدار المحسوب ومسار المهمة)</td><td>أسوأ عزم استاتيكي من 1323 وضع + <b>تحليل ديناميكي</b> على المسار: عزم الذروة والـ RMS وسرعة المحرك ومنحنى العزم لكل محور</td></tr>
   <tr><td class="n">03</td><td>Actuator catalog &amp; BOM</td><td>— (الإصدار المحسوب)</td><td><span class="en">BOM</span> كامل + كتالوج المكونات بحالة الدليل + فجوات التوريد في مصر</td></tr>
   <tr><td class="n">04</td><td><b>Compare &amp; Report</b> → Design comparison</td><td>زرار Compare designs</td><td>لحد 6 بدائل (عائلة/خامة/محركات) كإصدارات جديدة + ترتيب <span class="en">Pareto</span></td></tr>
   <tr><td class="n">04</td><td>Benchmark vs RAED R-1</td><td>زرار Refresh benchmark</td><td>تصميمك مقابل هدف <span class="en">R-1</span> والمنافسين في جدول واحد</td></tr>
@@ -201,7 +201,8 @@ li{margin:2px 0}
   <tr><td>العزم</td><td><code>static_torque_J1…J6</code></td><td>عزم الجاذبية على كل محور مقابل التقييم المستمر للمحرك والمخفض</td></tr>
   <tr><td>الخلية والزمن</td><td><code>collision_sampled_aabb</code> · <code>cycle_time_path_length</code></td><td>المسافة من العوائق، وزمن المسار مقابل زمن الدورة</td></tr>
   <tr><td>القيود</td><td><code>robot_mass_limit</code> · <code>inventory_constraint</code></td><td>الكتلة القصوى ومطابقة المخزن</td></tr>
-  <tr><td>الأداء المتقدم</td><td><code>dynamic_torque</code> · <code>deflection</code> · <code>thermal</code> · <code>position_accuracy</code> · <code>repeatability</code></td><td>بنود المرحلة الجاية (ديناميكا، انحراف، حرارة، دقة) متسجلة في نفس القائمة عشان تتابعها</td></tr>
+  <tr><td>الديناميكا (جديد)</td><td><code>dynamic_torque</code> · <code>thermal</code></td><td>عزم الذروة وسرعة المحرك على مسار المهمة مقابل التقييم الأقصى، وعزم الـ RMS على الدورة مقابل التقييم المستمر</td></tr>
+  <tr><td>الأداء المتقدم</td><td><code>deflection</code> · <code>position_accuracy</code> · <code>repeatability</code></td><td>بنود المرحلة الجاية (انحراف، دقة) متسجلة في نفس القائمة عشان تتابعها</td></tr>
 </table>
 <div class="ex"><b class="t">في مثالنا:</b>كل نقاط المهمة (Conveyor / Chuck / Out) والمدى وتعريف الحمولة وزمن الدورة <span class="pass">نجحوا</span>، والفحوص كلها متسجلة بدليلها في الإصدار.</div>
 
@@ -261,7 +262,25 @@ li{margin:2px 0}
 </table>
 <div class="ex"><b class="t">الاستفادة:</b>من صفحة واحدة طلعت مواصفة المخفضات: J2 حوالي 450 N·m، J3 حوالي 185 N·m، J5 حوالي 40 N·m — أو نفس المحركات بنسب التخفيض اللي في الجدول. وده كمان بيوريك فين موازنة الجاذبية على J2 هتوفر أكتر.</div>
 
-<h3 class="page-break">3.2 الكتالوج و BOM والتوريد في مصر — Actuator catalog &amp; BOM</h3>
+<h3 class="page-break">3.2 التحليل الديناميكي على مسار المهمة — Dynamic torque <span class="tag">جديد</span></h3>
+<p>تحت جدول التحجيم في نفس الصفحة، البرنامج بيحرّك الروبوت فعليًا على نقاط المهمة بالترتيب ويحسب العزم الديناميكي الكامل لكل محور في كل لحظة: القصور الذاتي للوصلات والمحركات، قوى الكوريوليس والطرد المركزي، والجاذبية — بطريقة <span class="en">Newton–Euler</span>. الحركة بين النقط منحنى سلس (<span class="en">minimum-jerk</span>) مضبوط على سرعة الـ TCP المطلوبة، مع وقفة 0.4 s عند كل نقطة.</p>
+<figure><img src="screenshots/G4-dynamics-chart.png" alt=""><figcaption>منحنى عزم المحاور الستة على دورة كاملة Conveyor → Chuck → Out (2.85 s)</figcaption></figure>
+<div class="io">
+  <div class="in"><h4>الدخل</h4><ul><li>مافيش إدخال جديد — بيستخدم نقاط المهمة وترتيبها، وسرعة الـ TCP، والحمولة، والمحركات والمخفضات المختارة.</li><li>محتاج نقطتين مهمة أو أكتر.</li></ul></div>
+  <div class="out"><h4>الخرج</h4><ul><li>منحنى العزم لكل محور على الدورة كلها.</li><li>لكل محور: <b>عزم الذروة</b>، <b>عزم الـ RMS</b> (للتسخين)، <b>أقصى سرعة محرك</b> بالـ rpm، و<b>أقل نسبة تخفيض</b> تكفي الذروة والـ RMS.</li><li>فحصين جداد في صفحة الفحوص: <code>dynamic_torque</code> و <code>thermal</code>، والنتايج كمان في تقرير الـ PDF.</li></ul></div>
+</div>
+<table>
+  <tr><th>المحور (مثالنا — 11 kg، 1.0 m/s)</th><th>عزم الذروة (N·m)</th><th>عزم RMS (N·m)</th><th>أقصى سرعة محرك (rpm)</th><th>أقل نسبة · ذروة / RMS</th></tr>
+  <tr><td class="n">J1</td><td class="n">138.4</td><td class="n">65.5</td><td class="n">707</td><td class="n">22 / 37</td></tr>
+  <tr><td class="n">J2</td><td class="n">287.6</td><td class="n">249.2</td><td class="n">73</td><td class="n">46 / 139</td></tr>
+  <tr><td class="n">J3</td><td class="n">149.5</td><td class="n">125.0</td><td class="n">449</td><td class="n">24 / 70</td></tr>
+  <tr><td class="n">J4</td><td class="n">35.5</td><td class="n">15.6</td><td class="n">1197</td><td class="n">11 / 16</td></tr>
+  <tr><td class="n">J5</td><td class="n">26.2</td><td class="n">19.7</td><td class="n">503</td><td class="n">8 / 21</td></tr>
+</table>
+<div class="ex"><b class="t">الاستفادة:</b>دلوقتي عندك مواصفة المشغل كاملة لكل محور: عزم ذروة للتسارع، وعزم RMS للتسخين المستمر، وسرعة المحرك. مثلًا J1 — اللي ماعليهوش جاذبية خالص — طلع محتاج 138 N·m ذروة من القصور الذاتي بس، وده رقم ماكانش ممكن يظهر من الحساب الاستاتيكي. والمنحنى بيوريك بالظبط أنهي جزء من الدورة بيحمّل كل محور.</div>
+<p class="src">الحساب اتراجع رياضيًا: عند السكون بيطابق نموذج الجاذبية بفرق 3×10⁻¹⁴ N·m، والقدرة اللحظية للمحركات بتساوي معدل تغيّر الطاقة (حركية + وضع) على المسار — 704.430 W مقابل 704.429 W.</p>
+
+<h3 class="page-break">3.3 الكتالوج و BOM والتوريد في مصر — Actuator catalog &amp; BOM</h3>
 <div class="two">
 <figure><img src="screenshots/G2-bom.png" alt="" style="max-height:85mm"><figcaption>بنود الشراء في الـ BOM</figcaption></figure>
 <figure><img src="screenshots/G3-catalog.png" alt="" style="max-height:85mm"><figcaption>كتالوج المكونات بمواصفات كل بند</figcaption></figure>
@@ -319,7 +338,7 @@ li{margin:2px 0}
   <li><b>Save &amp; calculate</b> ⇐ بص على الكتلة والمشهد.</li>
   <li>شغّل <b>Optimize link geometry</b> على أهم نقطة ونزّل STEP للحل اللي عاجبك.</li>
   <li>افتح <b>Engineering checks</b> وراجع الأدلة بتاعة كل فحص.</li>
-  <li>افتح <b>Axis torque sizing</b> عشان تعرف كل محور محتاج إيه بالظبط.</li>
+  <li>افتح <b>Axis torque sizing</b>: العزم الاستاتيكي، والتحليل الديناميكي على المسار (ذروة، RMS، سرعة) لكل محور.</li>
   <li>لو عندك ملف منافس: <b>Competitor Benchmark</b> ⇐ Inspect ⇐ Export STEP (ناعم لو محتاجه للعرض والتجميع).</li>
   <li><b>Compare designs</b> و <b>Refresh benchmark</b> عشان تشوف موقفك من R-1 والمنافسين.</li>
   <li>سجّل المراجعة ونزّل الـ ZIP والـ PDF.</li>
@@ -331,7 +350,7 @@ li{margin:2px 0}
   <tr><td>تبدأ بسرعة</td><td>اختار قالب قريب من التطبيق وعدّل عليه بدل ما تبدأ من الصفر.</td></tr>
   <tr><td>تحوّل كلام العميل لمتطلبات</td><td>الصق الجملة في Extract requirements from text وراجع القيم.</td></tr>
   <tr><td>تقارن أكتر من فكرة</td><td>كل Save &amp; calculate بيعمل إصدار؛ بدّل بينهم من Current revision أو استخدم Compare designs.</td></tr>
-  <tr><td>تختار المحركات والمخفضات</td><td>صفحة Axis torque sizing بتديك العزم المطلوب وأقل نسبة تخفيض لكل محور.</td></tr>
+  <tr><td>تختار المحركات والمخفضات</td><td>صفحة Axis torque sizing بتديك العزم الاستاتيكي، وتحتها التحليل الديناميكي بعزم الذروة والـ RMS وسرعة المحرك وأقل نسبة تخفيض لكل محور.</td></tr>
   <tr><td>STEP منافس للعرض والتجميع</td><td>علّم Smooth surfaces واختار 0.25 mm؛ ولأسرع تصدير شيل العلامة.</td></tr>
   <tr><td>تبعت شغلك لحد</td><td>Record review ⇐ نزّل الـ ZIP والـ PDF — كل حاجة جوه موقّعة ببصمة.</td></tr>
 </table>
