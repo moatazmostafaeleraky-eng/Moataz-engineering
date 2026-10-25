@@ -1324,19 +1324,156 @@ def _build_faces(mesh, labels, prims, tol, polyline, trace):
     return built, counts, failed
 
 
+class _PatchLocator:
+    """Map points of the built solid back to the patches whose mesh vertices they sit on."""
+
+    def __init__(self, mesh, labels):
+        from scipy.spatial import cKDTree
+
+        self.tree = cKDTree(mesh.V)
+        self.pids = [set() for _ in range(len(mesh.V))]
+        for f, pid in zip(mesh.F, labels):
+            for v in f:
+                self.pids[int(v)].add(int(pid))
+
+    def at(self, points) -> set[int]:
+        """Patches touching every point (all sides of an edge or one face), else any of them."""
+        if not len(points):
+            return set()
+        _, idx = self.tree.query(np.asarray(points, dtype=float))
+        sets = [self.pids[int(i)] for i in np.atleast_1d(idx)]
+        common = set.intersection(*sets)
+        return common or set().union(*sets)
+
+    def of_shape(self, shape) -> set[int]:
+        from OCP.BRep import BRep_Tool
+        from OCP.TopAbs import TopAbs_VERTEX
+        from OCP.TopExp import TopExp_Explorer
+        from OCP.TopoDS import TopoDS
+
+        points = []
+        explorer = TopExp_Explorer(shape, TopAbs_VERTEX)
+        while explorer.More():
+            p = BRep_Tool.Pnt_s(TopoDS.Vertex_s(explorer.Current()))
+            points.append((p.X(), p.Y(), p.Z()))
+            explorer.Next()
+        return self.at(points)
+
+
+def _invalid_face_pids(shape, locate) -> set[int]:
+    from OCP.BRepCheck import BRepCheck_Analyzer
+    from OCP.TopAbs import TopAbs_FACE
+    from OCP.TopExp import TopExp_Explorer
+
+    analyzer = BRepCheck_Analyzer(shape)
+    if analyzer.IsValid():
+        return set()
+    bad = set()
+    explorer = TopExp_Explorer(shape, TopAbs_FACE)
+    while explorer.More():
+        result = analyzer.Result(explorer.Current())
+        if result is not None and any(int(status) != 0 for status in result.Status()):
+            bad |= locate.of_shape(explorer.Current())
+        explorer.Next()
+    # Invalid without a bad face (shell or solid level): no patch to blame, report all as unknown.
+    return bad or {-1}
+
+
+def _count(shape, kind) -> int:
+    from OCP.TopExp import TopExp_Explorer
+
+    explorer = TopExp_Explorer(shape, kind)
+    n = 0
+    while explorer.More():
+        n += 1
+        explorer.Next()
+    return n
+
+
+def _assemble_solids(built, tol_mm, locate):
+    """Sew faces into one solid per closed shell; return (shape, shells, patches to rebuild)."""
+    from OCP.BRep import BRep_Builder
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeSolid, BRepBuilderAPI_Sewing
+    from OCP.ShapeFix import ShapeFix_Shape, ShapeFix_Shell, ShapeFix_Solid
+    from OCP.TopAbs import TopAbs_SHELL, TopAbs_SOLID
+    from OCP.TopExp import TopExp_Explorer
+    from OCP.TopoDS import TopoDS, TopoDS_Compound
+
+    sewing = BRepBuilderAPI_Sewing(tol_mm * 2, True, True, True, False)
+    for face in built:
+        sewing.Add(face)
+    sewing.Perform()
+    # The mesh is closed, so any free edge is a seam two faces failed to share.
+    failed = set()
+    for i in range(1, sewing.NbFreeEdges() + 1):
+        failed |= locate.of_shape(sewing.FreeEdge(i))
+    if failed:
+        return None, 0, failed
+    sewn = sewing.SewedShape()
+    explorer = TopExp_Explorer(sewn, TopAbs_SHELL)
+    if not explorer.More():
+        raise ValueError("smooth faces did not sew into a shell")
+    # A link may consist of several separate closed bodies: one solid per shell.
+    builder = BRep_Builder()
+    solid = TopoDS_Compound()
+    builder.MakeCompound(solid)
+    shells = 0
+    while explorer.More():
+        fix = ShapeFix_Shell(TopoDS.Shell_s(explorer.Current()))
+        fix.Perform()
+        solid_fix = ShapeFix_Solid()
+        solid_fix.Init(BRepBuilderAPI_MakeSolid(fix.Shell()).Solid())
+        solid_fix.Perform()
+        builder.Add(solid, solid_fix.Solid())
+        shells += 1
+        explorer.Next()
+    shape_fix = ShapeFix_Shape(solid)
+    shape_fix.SetPrecision(tol_mm * 0.1)
+    shape_fix.SetMaxTolerance(_trim_limit(tol_mm))
+    shape_fix.Perform()
+    solid = shape_fix.Shape()
+    failed = _invalid_face_pids(solid, locate)
+    if not failed and _count(solid, TopAbs_SOLID) != shells:
+        failed = {-1}
+    return solid, shells, failed
+
+
+def _step_round_trip_failures(shape, shells, locate) -> set[int]:
+    """Write the shape to STEP, read it back, and return patches whose faces did not survive."""
+    import os
+    import tempfile
+
+    from OCP.IFSelect import IFSelect_RetDone
+    from OCP.STEPControl import STEPControl_AsIs, STEPControl_Reader, STEPControl_Writer
+    from OCP.TopAbs import TopAbs_SOLID
+
+    handle, path = tempfile.mkstemp(suffix=".step", prefix="raed-roundtrip-")
+    os.close(handle)
+    try:
+        writer = STEPControl_Writer()
+        if writer.Transfer(shape, STEPControl_AsIs) != IFSelect_RetDone or writer.Write(path) != IFSelect_RetDone:
+            return {-1}
+        reader = STEPControl_Reader()
+        if reader.ReadFile(path) != IFSelect_RetDone:
+            return {-1}
+        reader.TransferRoots()
+        back = reader.OneShape()
+    finally:
+        os.unlink(path)
+    failed = _invalid_face_pids(back, locate)
+    if not failed and _count(back, TopAbs_SOLID) != shells:
+        failed = {-1}
+    return failed
+
+
 def smooth_solid(vertices_mm: np.ndarray, faces: np.ndarray, *, tol_mm: float = 0.25, part_name: str = "part",
                  skip: frozenset[int] = frozenset(), trace=None):
     """Return (solid, report) for a closed, consistently oriented triangle mesh in millimetres."""
     import time
 
-    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeSolid, BRepBuilderAPI_Sewing
     from OCP.BRepCheck import BRepCheck_Analyzer
     from OCP.BRepGProp import BRepGProp
     from OCP.GProp import GProp_GProps
-    from OCP.ShapeFix import ShapeFix_Shell, ShapeFix_Solid
-    from OCP.TopAbs import TopAbs_SHELL
-    from OCP.TopExp import TopExp_Explorer
-    from OCP.TopoDS import TopoDS
 
     started = time.time()
     vertices_mm, faces, cleanup = clean_mesh(vertices_mm, faces)
@@ -1355,15 +1492,26 @@ def smooth_solid(vertices_mm: np.ndarray, faces: np.ndarray, *, tol_mm: float = 
     segmented_s = time.time() - started
     passes = 0
     counts_by_pid = np.bincount(labels, minlength=len(prims))
+    locate = _PatchLocator(mesh, labels)
     # Crash-isolated patches and crease slivers (1-3 triangles) keep their exact triangles.
     polyline = set(skip) | {pid for pid, p in enumerate(prims) if p["kind"] == FREE and 0 < counts_by_pid[pid] <= 3}
-    for _ in range(6):
+    for _ in range(8):
         if _DEBUG is not None:
             _DEBUG.append(("PASS", passes + 1, 0, ""))
         built, counts, failed = _build_faces(mesh, labels, prims, tol_mm, frozenset(polyline), trace)
         passes += 1
         if not failed:
-            break
+            solid, shells, failed = _assemble_solids(built, tol_mm, locate)
+            if not failed:
+                # What a CAD system reads is the STEP file, not this in-memory shape.
+                failed = _step_round_trip_failures(solid, shells, locate)
+            if not failed:
+                break
+            if -1 in failed:
+                raise ValueError(f"{part_name}: solid is invalid at shell level")
+            if not failed - polyline:
+                raise ValueError(f"{part_name}: defect on an exact-triangle region cannot be rebuilt")
+            failed -= polyline
         # Rebuild with failed patches as triangles; their neighbours then share polyline edges.
         polyline |= failed
     if failed:
@@ -1372,36 +1520,6 @@ def smooth_solid(vertices_mm: np.ndarray, faces: np.ndarray, *, tol_mm: float = 
     for pid in polyline:
         if counts_by_pid[pid]:
             fallbacks[prims[pid]["kind"]] += 1
-    sewing = BRepBuilderAPI_Sewing(tol_mm * 2, True, True, True, False)
-    for face in built:
-        sewing.Add(face)
-    sewing.Perform()
-    sewn = sewing.SewedShape()
-    explorer = TopExp_Explorer(sewn, TopAbs_SHELL)
-    if not explorer.More():
-        raise ValueError(f"{part_name}: smooth faces did not sew into a shell")
-    from OCP.BRep import BRep_Builder
-    from OCP.TopoDS import TopoDS_Compound
-    # A link may consist of several separate closed bodies: one solid per shell.
-    builder = BRep_Builder()
-    solid = TopoDS_Compound()
-    builder.MakeCompound(solid)
-    shells = 0
-    while explorer.More():
-        fix = ShapeFix_Shell(TopoDS.Shell_s(explorer.Current()))
-        fix.Perform()
-        solid_fix = ShapeFix_Solid()
-        solid_fix.Init(BRepBuilderAPI_MakeSolid(fix.Shell()).Solid())
-        solid_fix.Perform()
-        builder.Add(solid, solid_fix.Solid())
-        shells += 1
-        explorer.Next()
-    from OCP.ShapeFix import ShapeFix_Shape
-    shape_fix = ShapeFix_Shape(solid)
-    shape_fix.SetPrecision(tol_mm * 0.1)
-    shape_fix.SetMaxTolerance(_trim_limit(tol_mm))
-    shape_fix.Perform()
-    solid = shape_fix.Shape()
     valid = BRepCheck_Analyzer(solid).IsValid()
     props = GProp_GProps()
     BRepGProp.VolumeProperties_s(solid, props)
