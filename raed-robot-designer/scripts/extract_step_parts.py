@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from pathlib import Path
 
 SPEC = Path(r"C:\Users\DELL 2\Downloads\Robot_Designer_Simple_Spec (1).md")

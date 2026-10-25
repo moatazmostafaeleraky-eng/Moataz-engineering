@@ -6,10 +6,7 @@ import io
 import pytest
 from fastapi.testclient import TestClient
 from raedbots.api.app import app
-from raedbots.api import jobs,service
-from raedbots.configuration.engine import default_requirements,propose
-from raedbots.configuration.validation import validate
-from raedbots.domain.models import Workcell
+from raedbots.api import jobs
 from raedbots.storage import store
 from raedbots.assistant.parse import parse_requirements
 from raedbots.procurement.egypt import html_report

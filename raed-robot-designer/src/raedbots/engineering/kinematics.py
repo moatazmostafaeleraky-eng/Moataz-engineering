@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 from raedbots.domain.models import DhRow, EndEffector, Pose
-from raedbots.engineering.math3d import T_from_pose, dh, pose_from_T, so3_error
+from raedbots.engineering.math3d import T_from_pose, dh, so3_error
 
 NOMINAL_JOINTS = np.radians([0, 30, 50, 0, 40, 0])
 

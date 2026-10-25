@@ -325,7 +325,7 @@ def full_design_export(body: FullDesignExport):
 
     tmp_root = Path(tempfile.mkdtemp(prefix='raed-full-design-'))
     try:
-        result = export_full_robot(body.design, body.tool_id, tmp_root / 'RAED-FULL-ROBOT')
+        export_full_robot(body.design, body.tool_id, tmp_root / 'RAED-FULL-ROBOT')
         (tmp_root / 'RAED-FULL-ROBOT' / 'COPYRIGHT.txt').write_text(COPYRIGHT_TEXT, encoding='utf-8')
         package = tmp_root / 'RAED-FULL-ROBOT-STEP-PACKAGE.zip'
         with zipfile.ZipFile(package, 'w', zipfile.ZIP_DEFLATED) as archive:

@@ -21,7 +21,6 @@ from raedbots.engineering.kinematics import (
     default_seeds,
     fk_tcp,
     ik_dls,
-    in_limits,
     jacobian_numeric,
     min_svd,
     NOMINAL_JOINTS,

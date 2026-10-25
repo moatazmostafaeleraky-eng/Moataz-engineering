@@ -834,7 +834,7 @@ def patch_loops(mesh: Mesh, labels: np.ndarray, pid: int) -> list[list[tuple[int
 
     def next_edge(u, v, f):
         # Rotate around v inside the patch until reaching the outgoing boundary half-edge.
-        cur_face, prev = f, u
+        cur_face = f
         for _ in range(64):
             tri = mesh.F[cur_face].tolist()
             i = tri.index(v)
@@ -842,7 +842,7 @@ def patch_loops(mesh: Mesh, labels: np.ndarray, pid: int) -> list[list[tuple[int
             g = mesh.half_edge.get((w, v))
             if g is None or labels[g] != pid:
                 return (v, w, cur_face)
-            cur_face, prev = g, w
+            cur_face = g
         return None
 
     used: set[tuple[int, int]] = set()
@@ -1243,7 +1243,6 @@ def _orient_like_mesh(face, mesh, faces):
     from OCP.BRep import BRep_Tool
     from OCP.TopoDS import TopoDS
     surface = BRep_Tool.Surface_s(face)
-    outward = (mesh.normal[faces] * mesh.area[faces, None]).sum(0)
     # Sample the face normal at the patch's largest triangle, projected onto the surface.
     f = faces[int(np.argmax(mesh.area[faces]))]
     proj = GeomAPI_ProjectPointOnSurf(gp_Pnt(*map(float, mesh.centroid[f])), surface)

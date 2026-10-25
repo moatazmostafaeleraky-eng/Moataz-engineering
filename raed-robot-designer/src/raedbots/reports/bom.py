@@ -3,7 +3,6 @@ from __future__ import annotations
 from raedbots.cad.geometry import part_boxes
 from raedbots.catalog import loader
 from raedbots.domain.models import BomLine, CadMatch, MakeBuy, RobotConfiguration, SolverResult
-from raedbots.engineering.evaluate import robot_mass
 
 
 def build_bom(cfg: RobotConfiguration, sol: SolverResult) -> list[BomLine]:
@@ -45,7 +44,7 @@ def build_bom(cfg: RobotConfiguration, sol: SolverResult) -> list[BomLine]:
         n += 1
     used = {}
     for ax in cfg.axes:
-        for cid, kind in ((ax.motor_id, "motor"), (ax.gearbox_id, "gearbox"), (ax.bearing_id, "bearing")):
+        for cid in (ax.motor_id, ax.gearbox_id, ax.bearing_id):
             used[cid] = used.get(cid, 0) + 1
     catalog = {**loader.motors(), **loader.gearboxes(), **loader.bearings(), **loader.fasteners()}
     for cid, qty in used.items():

@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from raedbots.catalog import loader
-from raedbots.cad.step_writer import _box_facets, write_step_faceted, write_stl_ascii
 from raedbots.domain.models import RobotConfiguration
 
 

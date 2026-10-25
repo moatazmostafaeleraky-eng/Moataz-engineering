@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
-import math
 import uuid
 
 import numpy as np
@@ -10,7 +8,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from raedbots.catalog import loader
 from raedbots.domain.models import Pose
-from raedbots.engineering.kinematics import fk_tcp, ik_dls, default_seeds, in_limits
+from raedbots.engineering.kinematics import fk_tcp, ik_dls, default_seeds
 from raedbots.domain.models import DhRow
 from raedbots.robot_geometry.categories import validate_category
 

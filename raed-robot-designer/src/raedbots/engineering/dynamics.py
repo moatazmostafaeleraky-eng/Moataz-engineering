@@ -74,7 +74,7 @@ def _kinematics(model: dict, q: np.ndarray):
 
 def _jacobians(bodies, origins, axes):
     out = []
-    for m, p, last, inertia in bodies:
+    for _, p, last, _ in bodies:
         jv = np.zeros((3, 6))
         jw = np.zeros((3, 6))
         for j in range(last + 1):

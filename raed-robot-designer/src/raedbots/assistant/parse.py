@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 from raedbots.configuration.engine import default_requirements, q
-from raedbots.domain.models import Binding, ProjectRequirements
+from raedbots.domain.models import ProjectRequirements
 
 
 def parse_requirements(text: str) -> dict:

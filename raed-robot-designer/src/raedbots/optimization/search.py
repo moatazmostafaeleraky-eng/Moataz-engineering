@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from raedbots.catalog import loader
-from raedbots.configuration.engine import assign_axes, pick_family, pick_tool
-from raedbots.domain.models import ProjectRequirements, RobotConfiguration, SolverResult, Workcell
+from raedbots.configuration.engine import assign_axes, pick_tool
+from raedbots.domain.models import ProjectRequirements, RobotConfiguration, Workcell
 from raedbots.engineering.evaluate import evaluate
 from raedbots import ENGINE_VERSION
 import uuid
