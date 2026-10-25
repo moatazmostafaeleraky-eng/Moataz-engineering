@@ -1285,6 +1285,98 @@ def _max_tolerance(face) -> float:
     return worst
 
 
+def refine_triangle_borders(mesh, labels, prims, polyline, limit, rounds=6):
+    """Split chords where a curved analytic patch borders exact triangles.
+
+    The shared edge is a straight chord whose midpoint can sit well off a cylinder,
+    cone or sphere (sagitta of a coarse facet). Each such chord is split at its
+    midpoint projected onto the curved surface, so the smooth face gets an edge
+    that follows its surface; the triangle side stays exact (triangles are planar).
+    Returns (mesh, labels, number of splits).
+    """
+    curved = (CYLINDER, CONE, SPHERE)
+    total = 0
+    for _ in range(rounds):
+        V = mesh.V.tolist()
+        F = mesh.F.tolist()
+        lab = labels.tolist()
+        busy = set()
+        splits = []
+        for (u, v), f in mesh.half_edge.items():
+            if u > v:
+                continue
+            g = mesh.half_edge.get((v, u))
+            if g is None or f in busy or g in busy:
+                continue
+            lf, lg = lab[f], lab[g]
+            if (lf in polyline) == (lg in polyline):
+                continue
+            smooth = lg if lf in polyline else lf
+            prim = prims[smooth]
+            if prim["kind"] not in curved:
+                continue
+            mid = (mesh.V[u] + mesh.V[v]) / 2
+            sag = float(_distance(prim, mid[None])[0])
+            length = float(np.linalg.norm(mesh.V[u] - mesh.V[v]))
+            # Only genuine chord sag: a large offset means the neighbour does not follow this surface.
+            if sag <= limit or sag > max(1.5, 0.25 * length) or length < 8 * limit:
+                continue
+            point = _project(prim, mid)
+            corners = mesh.V[list(set(mesh.F[f].tolist() + mesh.F[g].tolist()))]
+            if np.min(np.linalg.norm(corners - point, axis=1)) < 0.2 * length:
+                continue
+            busy.update((f, g))
+            splits.append((u, v, f, g, point))
+        if not splits:
+            break
+        for u, v, f, g, point in splits:
+            m = len(V)
+            V.append([float(x) for x in point])
+            for face, a, b in ((f, u, v), (g, v, u)):
+                tri = F[face]
+                i = tri.index(a)
+                c = tri[(i + 2) % 3]  # tri = (a, b, c) in its own orientation
+                F[face] = [a, m, c]
+                F.append([m, b, c])
+                lab.append(lab[face])
+        total += len(splits)
+        mesh = Mesh(np.asarray(V), np.asarray(F))
+        labels = np.asarray(lab, dtype=labels.dtype)
+    return mesh, labels, total
+
+
+def _small_neighbours_at(face, pid, limit, locate, patch_area, polyline, ratio=0.25) -> set[int]:
+    """Smooth patches much smaller than ``pid`` that meet it where its tolerance exceeds ``limit``."""
+    from OCP.BRep import BRep_Tool
+    from OCP.BRepAdaptor import BRepAdaptor_Curve
+    from OCP.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
+    from OCP.TopExp import TopExp_Explorer
+    from OCP.TopoDS import TopoDS
+
+    points = []
+    explorer = TopExp_Explorer(face, TopAbs_VERTEX)
+    while explorer.More():
+        vertex = TopoDS.Vertex_s(explorer.Current())
+        if BRep_Tool.Tolerance_s(vertex) > limit:
+            p = BRep_Tool.Pnt_s(vertex)
+            points.append((p.X(), p.Y(), p.Z()))
+        explorer.Next()
+    explorer = TopExp_Explorer(face, TopAbs_EDGE)
+    while explorer.More():
+        edge = TopoDS.Edge_s(explorer.Current())
+        if BRep_Tool.Tolerance_s(edge) > limit:
+            curve = BRepAdaptor_Curve(edge)
+            for t in np.linspace(curve.FirstParameter(), curve.LastParameter(), 5):
+                p = curve.Value(float(t))
+                points.append((p.X(), p.Y(), p.Z()))
+        explorer.Next()
+    if not points:
+        return set()
+    _, idx = locate.tree.query(np.asarray(points))
+    near = set().union(*(locate.pids[int(i)] for i in np.atleast_1d(idx)))
+    return {other for other in near - {pid} - set(polyline) if patch_area[other] < ratio * patch_area[pid]}
+
+
 def _build_faces(mesh, labels, prims, tol, polyline, trace):
     """One build pass; returns faces, per-kind counts and the patches that could not be fitted.
 
@@ -1295,6 +1387,8 @@ def _build_faces(mesh, labels, prims, tol, polyline, trace):
     """
     bank = _EdgeBank(mesh, polyline, prims)
     built, counts, failed = [], defaultdict(int), set()
+    locate = _PatchLocator(mesh, labels)
+    patch_area = np.bincount(labels, weights=mesh.area, minlength=len(prims))
     for pid in sorted(polyline):
         fs = np.where(labels == pid)[0]
         if len(fs):
@@ -1313,6 +1407,14 @@ def _build_faces(mesh, labels, prims, tol, polyline, trace):
                 face = _analytic_face(bank, prim, loops, mesh, fs, tol, pid)
             # A face whose trimming needed a loose tolerance is not accurate enough.
             if _max_tolerance(face) > _trim_limit(tol):
+                # Usually a small, poorly fitted neighbour (a hole from a few facets) spoils one
+                # corner of a large face: rebuild that neighbour from triangles instead.
+                culprits = _small_neighbours_at(face, pid, _trim_limit(tol), locate, patch_area, polyline)
+                if culprits:
+                    failed |= culprits
+                    if _DEBUG is not None:
+                        _DEBUG.append((pid, prim["kind"], len(fs), f"blamed small neighbours {sorted(culprits)}"))
+                    continue
                 raise ValueError("face trimming tolerance too large")
             built.append(face)
             counts[prim["kind"]] += 1
@@ -1494,9 +1596,12 @@ def smooth_solid(vertices_mm: np.ndarray, faces: np.ndarray, *, tol_mm: float = 
     locate = _PatchLocator(mesh, labels)
     # Crash-isolated patches and crease slivers (1-3 triangles) keep their exact triangles.
     polyline = set(skip) | {pid for pid, p in enumerate(prims) if p["kind"] == FREE and 0 < counts_by_pid[pid] <= 3}
-    for _ in range(8):
+    for _ in range(10):
         if _DEBUG is not None:
             _DEBUG.append(("PASS", passes + 1, 0, ""))
+        mesh, labels, refined = refine_triangle_borders(mesh, labels, prims, polyline, 0.5 * tol_mm)
+        if refined:
+            locate = _PatchLocator(mesh, labels)
         built, counts, failed = _build_faces(mesh, labels, prims, tol_mm, frozenset(polyline), trace)
         passes += 1
         if not failed:
