@@ -299,14 +299,28 @@ $('robodk-build').onclick=action(async()=>{
 $('robodk-import').onclick=action(async()=>{
   const input=$('robodk-robot-file');
   if(!input.files?.length)throw new Error('Choose an authorized .robot file first.');
-  const smooth=$('robodk-smooth').checked;
-  $('job-message').textContent=smooth?'Reverse-engineering smooth surfaces for every link… this can take 10+ minutes.':'Reconstructing validated solids from the RoboDK meshes… this can take several minutes.';
-  const form=new FormData();form.append('file',input.files[0]);form.append('smooth',smooth?'true':'false');form.append('smooth_tolerance_mm',$('robodk-smooth-tol').value);
+  const mode=$('robodk-surface-mode').value,smooth=mode==='smooth',feature=mode==='feature';
+  $('job-message').textContent=feature?'Rebuilding every link as feature CAD (planes, cylinders, cones)… this can take 10+ minutes.':smooth?'Reverse-engineering smooth surfaces for every link… this can take 10+ minutes.':'Reconstructing validated solids from the RoboDK meshes… this can take several minutes.';
+  const form=new FormData();form.append('file',input.files[0]);form.append('surface_mode',mode);form.append('smooth',smooth?'true':'false');form.append('smooth_tolerance_mm',$('robodk-smooth-tol').value);
   const response=await fetch('/api/reference-import/robodk-robot',{method:'POST',body:form});
   if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.detail||'RoboDK import failed')}
-  const parts=response.headers.get('X-RAED-PARTS'),skipped=(response.headers.get('X-RAED-SKIPPED')||'').split(',').filter(Boolean),smoothCount=response.headers.get('X-RAED-SMOOTH');
+  const parts=response.headers.get('X-RAED-PARTS'),skipped=(response.headers.get('X-RAED-SKIPPED')||'').split(',').filter(Boolean),smoothCount=response.headers.get('X-RAED-SMOOTH'),featureCount=response.headers.get('X-RAED-FEATURE');
   const blob=await response.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='ROBDK-REFERENCE-IMPORT.zip';a.click();URL.revokeObjectURL(url);
-  notice(`RoboDK reference package downloaded: ${parts||'?'} validated solid link(s)`+(smooth?` · ${smoothCount||0} with smooth surfaces`:'')+(skipped.length?`; skipped ${skipped.join(', ')} (mesh could not be closed — see robot-import-report.json).`:'.')+' Review robot-import-report.json before using it.',!skipped.length);
+  notice(`RoboDK reference package downloaded: ${parts||'?'} validated solid link(s)`+(smooth?` · ${smoothCount||0} with smooth surfaces`:'')+(feature?` · ${featureCount||0} as feature CAD (no triangles)`:'')+(skipped.length?`; skipped ${skipped.join(', ')} (mesh could not be closed — see robot-import-report.json).`:'.')+' Review robot-import-report.json before using it.',!skipped.length);
+});
+
+$('stl-convert').onclick=action(async()=>{
+  const input=$('stl-file');
+  if(!input.files?.length)throw new Error('Choose an .stl file first.');
+  const mode=$('stl-surface-mode').value;
+  $('job-message').textContent=mode==='feature'?'Rebuilding the part as feature CAD (planes, cylinders, cones)… this can take a few minutes.':'Converting the STL to a STEP solid…';
+  const form=new FormData();form.append('file',input.files[0]);form.append('surface_mode',mode);form.append('units_mm',$('stl-units').value);
+  const response=await fetch('/api/convert/stl-to-step',{method:'POST',body:form});
+  if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.detail||'STL conversion failed')}
+  const surface=response.headers.get('X-RAED-SURFACE'),within=response.headers.get('X-RAED-WITHIN-1MM');
+  const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=input.files[0].name.replace(/\.stl$/i,'')+'-STEP.zip';a.click();URL.revokeObjectURL(url);
+  const ok=surface===mode;
+  notice(`STEP downloaded · surfaces: ${surface||'?'}`+(within?` · ${within}% of the STL surface within 1 mm`:'')+(ok?'.':` (requested ${mode}; see conversion-report.json).`),ok);
 });
 
 $('robodk-inspect').onclick=action(async()=>{
@@ -419,3 +433,4 @@ $('pdf-report').onclick=handle(async()=>{
   notice('Engineering report PDF downloaded.',true);
 });
 $('robodk-robot-file').addEventListener('change',e=>{$('robodk-file-name').textContent=e.target.files?.[0]?.name||'No file selected'});
+$('stl-file').addEventListener('change',e=>{$('stl-file-name').textContent=e.target.files?.[0]?.name||'No file selected'});

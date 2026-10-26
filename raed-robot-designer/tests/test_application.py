@@ -121,3 +121,19 @@ def test_instruction_defined_workflow_modes_are_present():
     assert 'defaultTabForMode' in script
     assert 'PRIMARY' in page and 'fallback shell preview' in page
     assert 'No encoder items in the current catalog' in script
+
+def test_stl_to_step_endpoint_returns_feature_cad(client):
+    import manifold3d
+    import numpy as np
+    import trimesh
+    part=manifold3d.Manifold.cube([40,30,10],True)-manifold3d.Manifold.cylinder(12,6,6,48,True)
+    mesh=part.to_mesh();stl=io.BytesIO()
+    trimesh.Trimesh(np.asarray(mesh.vert_properties[:,:3]),np.asarray(mesh.tri_verts)).export(stl,file_type='stl')
+    r=client.post('/api/convert/stl-to-step',files={'file':('plate.stl',stl.getvalue(),'model/stl')},data={'surface_mode':'feature'})
+    assert r.status_code==200,r.text
+    assert r.headers['X-RAED-SURFACE']=='feature' and float(r.headers['X-RAED-WITHIN-1MM'])>=98
+    names=zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+    assert 'plate.step' in names and 'conversion-report.json' in names
+    bad=client.post('/api/convert/stl-to-step',files={'file':('plate.stl',stl.getvalue(),'model/stl')},data={'surface_mode':'magic'})
+    assert bad.status_code==422
+    assert client.post('/api/convert/stl-to-step',files={'file':('plate.obj',b'x','text/plain')}).status_code==415

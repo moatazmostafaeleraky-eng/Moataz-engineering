@@ -12,3 +12,4 @@ manifold3d>=3.0.0
 trimesh>=4.0.0
 tzdata==2025.2
 reportlab==4.2.5
+shapely>=2.0

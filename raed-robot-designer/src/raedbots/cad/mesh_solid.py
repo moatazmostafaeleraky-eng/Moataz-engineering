@@ -453,9 +453,25 @@ def _try_smooth(closed_positions: list[float], faceted, report: dict[str, Any], 
     return faceted, report
 
 
+def _try_feature(closed_positions: list[float], faceted, report: dict[str, Any], part_name: str):
+    """Swap the faceted solid for feature CAD (analytic surfaces only) when it validates."""
+    from raedbots.cad.feature_worker import feature_in_subprocess
+
+    points = np.asarray(closed_positions, dtype=np.float64).reshape(-1, 3) * 1000.0
+    vertices, inverse = np.unique(points, axis=0, return_inverse=True)
+    shape, feature_report = feature_in_subprocess(vertices, inverse.reshape(-1, 3), part_name=part_name)
+    if shape is not None and feature_report.get("valid") and feature_report.get("analytic_only"):
+        report.update(surface="feature", feature=feature_report)
+        return shape, report
+    if shape is not None:
+        feature_report = {**feature_report, "status": "feature_rejected_validation"}
+    report.update(surface="faceted", feature=feature_report)
+    return faceted, report
+
+
 def mesh_to_solid(
     positions: list[float], *, tolerance_mm: float = 0.05, part_name: str = "part", smooth: bool = False,
-    smooth_tol_mm: float = 0.25,
+    smooth_tol_mm: float = 0.25, feature: bool = False,
 ) -> tuple[TopoDS_Shape, dict[str, Any]]:
     """Return validated OCCT solids; reconstruct open visual meshes when needed.
 
@@ -466,9 +482,14 @@ def mesh_to_solid(
     With ``smooth`` the closed mesh is also reverse-engineered into planes,
     cylinders, cones, spheres and NURBS plates; the faceted solid is kept when
     that result does not validate.
+    With ``feature`` the part is instead rebuilt from ordinary CAD features
+    (extruded outlines, revolves, bores) so every face is a plane, cylinder, cone,
+    sphere or torus - no mesh triangles; the faceted solid is kept if that fails.
     """
     def finish(closed, shape, report):
         report.setdefault("surface", "faceted")
+        if feature:
+            return _try_feature(closed, shape, report, part_name)
         return _try_smooth(closed, shape, report, part_name, smooth_tol_mm) if smooth else (shape, report)
 
     flattened, repair_report = _manifold_repair(positions)

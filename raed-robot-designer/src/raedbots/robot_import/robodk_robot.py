@@ -229,7 +229,8 @@ def home_pose_frames(mdh: list[dict[str, float]]) -> list[np.ndarray]:
     return frames
 
 
-def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False, smooth_tol_mm: float = 0.25) -> dict[str, Any]:
+def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False, smooth_tol_mm: float = 0.25,
+                           feature: bool = False) -> dict[str, Any]:
     from raedbots.cad import occt_backend as oc
     from raedbots.cad.mesh_solid import mesh_to_solid
 
@@ -253,9 +254,17 @@ def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False,
         # RoboDK stores each body in its own joint frame; place it in the home pose
         # so the parts assemble into the robot (and can feed the STEP -> RoboDK builder).
         frame = frames[index - 1] if index - 1 < len(frames) else np.eye(4)
-        positions = (local @ frame[:3, :3].T + frame[:3, 3]).reshape(-1).tolist()
         try:
-            shape, report = mesh_to_solid(positions, part_name=part_number, smooth=smooth, smooth_tol_mm=smooth_tol_mm)
+            if feature:
+                # Feature CAD is built in the link's own frame (its outlines and turning axes
+                # follow the joint axes), then moved into the home pose.
+                shape, report = mesh_to_solid(local.reshape(-1).tolist(), part_name=part_number, feature=True)
+                placement = frame.copy()
+                placement[:3, 3] *= 1000.0
+                shape = oc.move(shape, placement)
+            else:
+                positions = (local @ frame[:3, :3].T + frame[:3, 3]).reshape(-1).tolist()
+                shape, report = mesh_to_solid(positions, part_name=part_number, smooth=smooth, smooth_tol_mm=smooth_tol_mm)
         except ValueError as exc:
             # One unrecoverable visual mesh must not discard the other validated links.
             solid_reports.append({"part": part_number, "status": "reconstruction_failed", "solid_count": 0, "error": str(exc)})
@@ -281,9 +290,15 @@ def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False,
     manifest["skipped_links"] = skipped_links
     manifest["cad_status"] = "reconstructed_validated_solids"
     smooth_parts = [r["part"] for r in solid_reports if r.get("surface") == "smooth"]
+    feature_parts = [r["part"] for r in solid_reports if r.get("surface") == "feature"]
     manifest["smooth_surface_parts"] = smooth_parts
-    manifest["cad_kind"] = ("reverse_engineered_smooth_brep" if smooth and len(smooth_parts) == len(placed)
-                            else "occt_brep_solids_from_closed_triangle_mesh")
+    manifest["feature_cad_parts"] = feature_parts
+    if feature and len(feature_parts) == len(placed):
+        manifest["cad_kind"] = "feature_cad_analytic_surfaces_only"
+    elif smooth and len(smooth_parts) == len(placed):
+        manifest["cad_kind"] = "reverse_engineered_smooth_brep"
+    else:
+        manifest["cad_kind"] = "occt_brep_solids_from_closed_triangle_mesh"
     manifest["placement"] = "home_pose_world_frame_from_modified_dh"
     manifest["smooth_tolerance_mm"] = smooth_tol_mm if smooth else None
     manifest["stl_exported"] = False
@@ -306,6 +321,9 @@ def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False,
         "All parts are placed in the robot's home pose (world frame, mm) from the file's modified DH chain, so they assemble in place.\n"
         "With smooth surfaces enabled, each link is reverse-engineered into planes, cylinders, cones, spheres and NURBS plates\n"
         "within 0.1 mm of the mesh; a link whose smooth result does not validate keeps its faceted solid (see 'surface' per part).\n"
+        "With feature CAD enabled, each link is rebuilt from ordinary CAD features (extruded outlines, revolves, bores) in its\n"
+        "own joint frame, so every face is a plane, cylinder, cone, sphere or torus - no mesh triangles. Its deviation from\n"
+        "the mesh is reported per part ('feature' -> 'deviation'); it captures the external form only.\n"
         "They are mesh-derived solids, not the manufacturer's native CAD or design-intent feature trees.\n"
         "Surface reconstruction may smooth or close gaps in the visual mesh and is not manufacturing-accurate CAD.\n"
         "actuator-market-screen.* contains market-screening combinations from the local catalog; these are not identified ABB components.\n"
@@ -319,10 +337,11 @@ def export_reference_robot(source: Path, output_dir: Path, smooth: bool = False,
     return manifest
 
 
-def make_import_zip(source: Path, output_zip: Path, smooth: bool = False, smooth_tol_mm: float = 0.25) -> dict[str, Any]:
+def make_import_zip(source: Path, output_zip: Path, smooth: bool = False, smooth_tol_mm: float = 0.25,
+                    feature: bool = False) -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix="raed-robodk-import-") as tmp:
         root = Path(tmp) / "ROBDK-REFERENCE-IMPORT"
-        manifest = export_reference_robot(source, root, smooth=smooth, smooth_tol_mm=smooth_tol_mm)
+        manifest = export_reference_robot(source, root, smooth=smooth, smooth_tol_mm=smooth_tol_mm, feature=feature)
         with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as archive:
             for path in root.rglob("*"):
                 if path.is_file():

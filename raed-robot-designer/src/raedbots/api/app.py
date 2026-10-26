@@ -1,3 +1,4 @@
+import functools
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 import asyncio
@@ -338,7 +339,8 @@ def full_design_export(body: FullDesignExport):
         raise
 
 @app.post('/api/reference-import/robodk-robot')
-async def import_robodk_robot(file: UploadFile = File(...), smooth: bool = Form(False), smooth_tolerance_mm: float = Form(0.25)):
+async def import_robodk_robot(file: UploadFile = File(...), smooth: bool = Form(False), smooth_tolerance_mm: float = Form(0.25),
+                              surface_mode: str = Form('')):
     """Import an authorized RoboDK .robot reference asset.
 
     The converter only accepts the recognized legacy qCompress triangle-mesh
@@ -352,6 +354,9 @@ async def import_robodk_robot(file: UploadFile = File(...), smooth: bool = Form(
         raise HTTPException(415, 'Upload a RoboDK .robot file')
     if not 0.05 <= smooth_tolerance_mm <= 1.0:
         raise HTTPException(422, 'Smooth-surface tolerance must be between 0.05 and 1.0 mm')
+    mode = surface_mode or ('smooth' if smooth else 'faceted')
+    if mode not in ('faceted', 'smooth', 'feature'):
+        raise HTTPException(422, 'surface_mode must be faceted, smooth or feature')
     tmp_root = Path(tempfile.mkdtemp(prefix='raed-robodk-upload-'))
     source = tmp_root / filename
     package = tmp_root / 'ROBDK-REFERENCE-IMPORT.zip'
@@ -360,11 +365,54 @@ async def import_robodk_robot(file: UploadFile = File(...), smooth: bool = Form(
         if len(data) > 200 * 1024 * 1024:
             raise HTTPException(413, 'The .robot file is larger than the 200 MB local import limit')
         source.write_bytes(data)
-        manifest = await asyncio.get_running_loop().run_in_executor(_cad_pool(), make_import_zip, source, package, smooth, smooth_tolerance_mm)
+        manifest = await asyncio.get_running_loop().run_in_executor(_cad_pool(), make_import_zip, source, package, mode == 'smooth',
+                                                                     smooth_tolerance_mm, mode == 'feature')
         skipped = [item['part'] for item in manifest.get('skipped_links', [])]
         return FileResponse(package, filename='ROBDK-REFERENCE-IMPORT.zip', media_type='application/zip', background=None,
                             headers={'X-RAED-PARTS': str(manifest.get('part_count', 0)), 'X-RAED-SKIPPED': ','.join(skipped),
-                                     'X-RAED-SMOOTH': str(len(manifest.get('smooth_surface_parts', [])))})
+                                     'X-RAED-SMOOTH': str(len(manifest.get('smooth_surface_parts', []))),
+                                     'X-RAED-FEATURE': str(len(manifest.get('feature_cad_parts', [])))})
+    except HTTPException:
+        shutil.rmtree(tmp_root, ignore_errors=True)
+        raise
+    except Exception:
+        shutil.rmtree(tmp_root, ignore_errors=True)
+        raise
+
+@app.post('/api/convert/stl-to-step')
+async def convert_stl_to_step(file: UploadFile = File(...), surface_mode: str = Form('feature'), units_mm: float = Form(1.0),
+                              smooth_tolerance_mm: float = Form(0.25)):
+    """Convert one STL part into a validated STEP solid (faceted, smooth or feature CAD)."""
+    import shutil
+    import tempfile
+
+    from raedbots.cad.stl_convert import MODES, convert_stl
+
+    filename = Path(file.filename or '').name
+    if not filename.lower().endswith('.stl'):
+        raise HTTPException(415, 'Upload an .stl file')
+    if surface_mode not in MODES:
+        raise HTTPException(422, 'surface_mode must be faceted, smooth or feature')
+    if not 0.001 <= units_mm <= 1000:
+        raise HTTPException(422, 'units_mm must be between 0.001 and 1000')
+    tmp_root = Path(tempfile.mkdtemp(prefix='raed-stl-upload-'))
+    source = tmp_root / filename
+    package = tmp_root / f'{Path(filename).stem}-STEP.zip'
+    try:
+        data = await file.read()
+        if len(data) > 200 * 1024 * 1024:
+            raise HTTPException(413, 'The STL file is larger than the 200 MB local import limit')
+        source.write_bytes(data)
+        try:
+            report = await asyncio.get_running_loop().run_in_executor(
+                _cad_pool(), functools.partial(convert_stl, source, package, mode=surface_mode, units_mm=units_mm,
+                                               smooth_tol_mm=smooth_tolerance_mm))
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
+        dev = (report.get('feature') or {}).get('deviation') or {}
+        return FileResponse(package, filename=package.name, media_type='application/zip', background=None,
+                            headers={'X-RAED-SURFACE': str(report.get('surface', '')),
+                                     'X-RAED-WITHIN-1MM': str(dev.get('within_1mm_pct', ''))})
     except HTTPException:
         shutil.rmtree(tmp_root, ignore_errors=True)
         raise
