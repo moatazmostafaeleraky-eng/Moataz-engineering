@@ -89,7 +89,7 @@ export class Scene3D {
     this.root.add(this.inP.points);
     this.outdoorWorld.add(this.outP.points);
     this.plume = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
-    this.centre = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x2f7fc1, transparent: true, opacity: 0.55 }));
+    this.centre = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineDashedMaterial({ color: 0x2f7fc1, transparent: true, opacity: 0.35, dashSize: 0.05, gapSize: 0.06, depthWrite: false }));
     this.stream = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85 }));
     this.root.add(this.plume, this.centre, this.stream);
     this.sliceH = new THREE.Mesh(new THREE.PlaneGeometry(this.dims.W, this.dims.D), new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, depthWrite: false }));
@@ -441,7 +441,7 @@ export class Scene3D {
     if (this.jet && this.jet.pts.length > 2 && (this.plume.visible || this.centre.visible)) {
       if (this.plume.visible) { const g = plumeGeometry(this.jet); if (g) { this.plume.geometry.dispose(); this.plume.geometry = g; } }
       const cg = new THREE.BufferGeometry().setFromPoints(this.jet.pts.filter((p) => p.u >= 0.15).map((p) => new THREE.Vector3(...p.p)));
-      this.centre.geometry.dispose(); this.centre.geometry = cg;
+      this.centre.geometry.dispose(); this.centre.geometry = cg; this.centre.computeLineDistances(); // dashed: needs line distances
     } else this.centre.visible = false;
     this.stream.visible = this.show.stream && !!this.field;
     if (this.stream.visible && this.field && this.frameCount % 15 === 0) {
