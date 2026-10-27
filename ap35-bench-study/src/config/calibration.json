@@ -1,0 +1,21 @@
+{
+  "Vd": 0.00000963077,
+  "etaIsPeak": 0.849987,
+  "etaIsPr": 0.0863335,
+  "prOpt": 3.25055,
+  "fOpt": 60.5144,
+  "etaIsHi": 0.276936,
+  "etaIsLo": 0.45711,
+  "etaVlow": 0.118413,
+  "etaVpr": 0.116472,
+  "pInvFixed": 22.9531,
+  "uaInAir": 696.754,
+  "uaInRef": 597.778,
+  "uaOutAir": 639.173,
+  "uaOutRef": 2242.47,
+  "ifanEta": 0.487436,
+  "ifanPbase": 3.4082,
+  "eevCv": 5.54667e-7,
+  "_generated": "2026-10-27",
+  "_method": "Nelder-Mead on sigmoid-bounded parameters; objective = relative errors on calibration rows + S3 p.23 cooling curves + rated points + weak priors"
+}

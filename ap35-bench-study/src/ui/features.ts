@@ -1,0 +1,22 @@
+/** Model-specific original-operation versus experimental-feature matrix (also exported in FEATURE_MATRIX.md). */
+export const FEATURE_MATRIX = [
+  { fn: 'STOP/OPERATE, OPERATION SELECT (AUTO/COOL/DRY/HEAT/FAN)', original: 'Yes', source: 'S2 p.21-23', app: 'Remote. AUTO uses the documented 15 min / 1 °C changeover; DRY target from initial room temperature (rule assumed).' },
+  { fn: 'Set temperature 16-31 °C (COOL/DRY), 10-31 °C (HEAT)', original: 'Yes', source: 'S2 p.22-23, p.27', app: 'Validated per mode; 0.5 °C steps (step size assumed).' },
+  { fn: 'FAN SPEED: AUTO, Silent, Low, Med, High, Super High', original: 'Yes (5 steps + AUTO)', source: 'S2 p.6', app: 'Published rpm and airflow per step; AUTO logic is a surrogate.' },
+  { fn: 'VANE (up/down): AUTO, 1-5, SWING', original: 'Yes', source: 'S2 p.24', app: 'Positions sourced, angles assumed; dew prevention, cold-air upward vane, upper-only swing in COOL/DRY/FAN.' },
+  { fn: 'WIDE VANE (left/right): 1-5, SWING', original: 'Yes', source: 'S2 p.25', app: 'Stepping-motor vertical vanes; angles assumed.' },
+  { fn: 'ECONO COOL (+2 °C, vane swing)', original: 'Yes', source: 'S2 p.24', app: '+2 °C internal setpoint and swing; swing pattern assumed.' },
+  { fn: 'NIGHT MODE (outdoor noise limit)', original: 'Yes', source: 'S2 p.27', app: 'Compressor and outdoor-fan caps (values assumed); indoor fan unchanged.' },
+  { fn: 'i-save (2 presets)', original: 'Yes', source: 'S2 p.28', app: 'COOL/ECONO COOL and HEAT presets; not in DRY/AUTO.' },
+  { fn: 'ON/OFF timer, weekly timer (4/day, 28/week)', original: 'Yes', source: 'S2 p.25-27', app: 'Simulated clock; weekly timer validated to 4/day and 28/week.' },
+  { fn: 'Operation lock', original: 'Yes', source: 'S2 p.28', app: 'Locks mode changes only.' },
+  { fn: '3-minute restart delay', original: 'Yes', source: 'S2 p.28', app: 'Enforced with visible countdown.' },
+  { fn: 'POWERFUL', original: 'No (AP60/71 only)', source: 'S2 p.24', app: 'Not offered as original; "Turbo" exists only as an experiment.' },
+  { fn: 'LONG mode', original: 'No (AP60/71 only)', source: 'S2 p.25', app: 'Not offered.' },
+  { fn: 'Eco power cap', original: 'No', source: '-', app: 'Experiment layer: declared input cap; no fixed saving claimed.' },
+  { fn: 'Sleep schedule (setpoint drift)', original: 'No', source: '-', app: 'Experiment layer, editable rate and limit.' },
+  { fn: 'Turbo (15 min higher demand)', original: 'No', source: '-', app: 'Experiment layer; stays inside the frequency envelope and protections.' },
+  { fn: 'Manual compressor Hz, fan rpm, LEV %, vane angles', original: 'No', source: '-', app: 'Engineering override; clipped by envelope and protections; limiting reason shown.' },
+  { fn: 'Outlet / mounting geometry edits', original: 'No', source: '-', app: 'Design Lab experiment profiles with baseline overlay; vane count is visual-only.' },
+  { fn: 'Wi-Fi / MELCloud control', original: 'Yes (VGK)', source: 'S2 p.20', app: 'Shown as a part only; no network or hardware control in this simulator.' },
+];

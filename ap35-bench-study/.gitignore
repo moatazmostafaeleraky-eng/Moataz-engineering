@@ -1,0 +1,5 @@
+node_modules/
+e2e/shots/
+*.log
+.DS_Store
+# dist/ is committed on purpose so Windows users can run start-windows.bat without a build
