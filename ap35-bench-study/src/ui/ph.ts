@@ -10,11 +10,11 @@ export function drawPH(c: HTMLCanvasElement, o: Outputs | null, opts: { gauge: b
   if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
   const g = c.getContext('2d')!; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, hh);
   const pad = { l: 52, r: 12, t: 12, b: 28 };
-  const hMin = 150e3, hMax = 650e3, pMin = 4e5, pMax = 50e5;
+  const hMin = 150e3, hMax = 650e3, pMin = 4e5, pMax = 62e5; // above the R32 critical pressure (57.8 bar)
   const X = (hv: number) => pad.l + ((hv - hMin) / (hMax - hMin)) * (w - pad.l - pad.r);
   const Y = (p: number) => hh - pad.b - ((Math.log(p) - Math.log(pMin)) / (Math.log(pMax) - Math.log(pMin))) * (hh - pad.t - pad.b);
   g.font = '10px monospace'; g.fillStyle = '#8a857a'; g.strokeStyle = '#ece6da';
-  for (const p of [4e5, 5e5, 7e5, 10e5, 15e5, 20e5, 30e5, 40e5, 50e5]) {
+  for (const p of [4e5, 5e5, 7e5, 10e5, 15e5, 20e5, 30e5, 40e5, 60e5]) {
     const y = Y(p); g.beginPath(); g.moveTo(pad.l, y); g.lineTo(w - pad.r, y); g.stroke();
     const shown = opts.gauge ? (p - opts.patm) / 1e5 : p / 1e5;
     g.textAlign = 'right'; g.fillText(shown.toFixed(shown < 10 ? 1 : 0), pad.l - 4, y + 3);
@@ -25,6 +25,9 @@ export function drawPH(c: HTMLCanvasElement, o: Outputs | null, opts: { gauge: b
   // dome
   g.strokeStyle = '#6d6a62'; g.lineWidth = 1.4; g.beginPath();
   D.P.forEach((p, i) => { const x = X(D.hl[i]), y = Y(p); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
+  // the tables end at 75 degC: close the dome through the critical point (enthalpy approximated as the mean of the last hl/hv)
+  const last = D.P.length - 1;
+  g.lineTo(X((D.hl[last] + D.hv[last]) / 2), Y(R32_META.critical.P));
   for (let i = D.P.length - 1; i >= 0; i--) g.lineTo(X(D.hv[i]), Y(D.P[i]));
   g.stroke();
   g.fillStyle = '#8a857a'; g.textAlign = 'left'; g.fillText('R32 saturation dome · ' + R32_META.backend, pad.l + 4, pad.t + 10);
